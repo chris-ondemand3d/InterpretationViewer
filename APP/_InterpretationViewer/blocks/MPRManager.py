@@ -22,6 +22,9 @@ from .MPR2DSlice import MPR2DSlice
 from .DicomWeb import cyDicomWeb
 
 
+from COMMON import WorkerThread
+
+
 # DCM_PATH = "/Users/scott/Dicom/OD3DData/20180425/S0000000099/"
 DCM_PATH = "/Users/scott/Dicom/1/"
 DCM_INTERVAL = 1
@@ -99,7 +102,7 @@ class MPRManager(QObject):
     def read_dcm_test2(self):
         dcm_reader = cyDicomWeb()
         dcm_reader.initialize()
-        frames = dcm_reader.requests_buf16()
+        dcm_reader.sig_update_imgbuf.connect(self.on_update_imgbuf)
         dim = [dcm_reader.width, dcm_reader.height, dcm_reader.length]
         o = dcm_reader.origin
         s = [dcm_reader.spacing[0], dcm_reader.spacing[1], dcm_reader.thickness]
@@ -108,9 +111,12 @@ class MPRManager(QObject):
         vtk_img.SetDimensions(dim)
         vtk_img.SetOrigin(o)
         vtk_img.SetSpacing(s)
-        # vtk_img.SetExtent(e)
+        # # vtk_img.SetExtent(e)
         vtk_img.AllocateScalars(vtk.VTK_CHAR, 1)
-        vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(frames))
+        vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(np.zeros(np.product(dim))))
+
+        WorkerThread.start_worker(dcm_reader.requests_buf16, _finished_func=lambda: print("ALL DICOM Files had been loaded!! :)"))
+
         return vtk_img
 
     def get_vtk_img(self):
@@ -125,4 +131,15 @@ class MPRManager(QObject):
             if _attr is None or _attr is self.sender():
                 continue
             _attr.update_slabplane(slabplanes)
+            _attr.refresh()
+
+    @pyqtSlot(object, object)
+    def on_update_imgbuf(self, imgbuf, offset):
+        d = self.vtk_img.GetDimensions()
+        narray = numpy_support.vtk_to_numpy(self.vtk_img.GetPointData().GetScalars())
+        narray = narray.reshape(d, order='F')
+        narray[:, :, offset] = imgbuf.reshape(d[:2], order='F')
+
+        self.vtk_img.Modified()
+        for _attr in [getattr(self, i) for i in ['coronal', 'sagittal', 'axial']]:
             _attr.refresh()

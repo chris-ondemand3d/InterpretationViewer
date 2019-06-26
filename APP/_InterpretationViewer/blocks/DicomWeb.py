@@ -2,6 +2,8 @@ import requests
 import json
 import numpy as np
 
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+
 
 TAG_StudyInstanceUID = '0020000D'
 TAG_SeriesInstanceUID = '0020000E'
@@ -27,8 +29,12 @@ STUDY_UID = "1.2.410.200034.0.50551229.0.96050.22743.20111229.41"
 SERIES_UID = "1.2.410.200034.0.50551229.1.96055.227436784.16435555000241"
 
 
-class cyDicomWeb:
+class cyDicomWeb(QObject):
+
+    sig_update_imgbuf = pyqtSignal(object, object, object)
+
     def __init__(self, host_url=HOST_URL, qidors_prefix=QIDORS_PREFIX, wadors_prefix=WADORS_PREFIX):
+        super().__init__()
         self.host_url = host_url
         self.qidors_prefix = qidors_prefix
         self.wadors_prefix = wadors_prefix
@@ -64,7 +70,7 @@ class cyDicomWeb:
 
     def requests_buf16(self):
         # retrieve instances with WADO RS
-        frames = np.array([])
+        # frames = np.array([])
         num_of_img = len(self.instance_uids)
         for i, uid in enumerate(self.instance_uids):
             url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" % (self.host_url, self.wadors_prefix,
@@ -82,6 +88,6 @@ class cyDicomWeb:
             frame = np.frombuffer(buf16, dtype=np.int16)
             new_frame = np.copy(frame)
             new_frame[:] = new_frame[:] * self.rescale_slope + self.rescale_intercept
-            frames = np.append(frames, new_frame)
-        print("!!!!!!!!!!!!!! :: ", frames.shape)
-        return frames
+            # frames = np.append(frames, new_frame)
+            self.sig_update_imgbuf.emit(new_frame, i, len(new_frame))
+        # return frames
