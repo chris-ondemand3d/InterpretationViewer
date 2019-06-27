@@ -34,7 +34,7 @@ class mpr_app(CyQQuickView):
         self.mpr_win = MPRWindow(_win=self, _mgr=self.mpr_mgr)
 
     def eventFilter(self, obj, event):
-        print("event filter (mpr_app):: ", obj, event)
+        # print("event filter (mpr_app):: ", obj, event)
         if event.type() == QEvent.HoverLeave:
             QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)

@@ -113,9 +113,11 @@ class MPRManager(QObject):
         vtk_img.SetSpacing(s)
         # # vtk_img.SetExtent(e)
         vtk_img.AllocateScalars(vtk.VTK_CHAR, 1)
-        vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(np.zeros(np.product(dim))))
+        buf = np.zeros(np.product(dim))
+        buf.fill(-1000)
+        vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
 
-        WorkerThread.start_worker(dcm_reader.requests_buf16, _finished_func=lambda: print("ALL DICOM Files had been loaded!! :)"))
+        WorkerThread.start_worker(dcm_reader.requests_buf16, _finished_func=lambda: print("All DICOM Files had been loaded!! :)"))
 
         return vtk_img
 
