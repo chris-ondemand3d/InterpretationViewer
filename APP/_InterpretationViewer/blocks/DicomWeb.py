@@ -45,8 +45,8 @@ class cyDicomWeb(QObject):
 
     sig_update_imgbuf = pyqtSignal(object, object, object)
 
-    def __init__(self, host_url=HOST_URL, qidors_prefix=QIDORS_PREFIX, wadors_prefix=WADORS_PREFIX):
-        super().__init__()
+    def __init__(self, host_url=HOST_URL, qidors_prefix=QIDORS_PREFIX, wadors_prefix=WADORS_PREFIX, *args, **kwds):
+        super().__init__(*args, **kwds)
         self.host_url = host_url
         self.qidors_prefix = qidors_prefix
         self.wadors_prefix = wadors_prefix
@@ -80,7 +80,7 @@ class cyDicomWeb(QObject):
         # metadata.reverse()
         return metadata
 
-    def requests_buf16(self, mode):
+    def requests_buf16(self, mode, vtk_img_narray, vtk_img):
         # retrieve instances with WADO RS
         # frames = np.array([])
         num_of_img = len(self.instance_uids)
@@ -93,7 +93,7 @@ class cyDicomWeb(QObject):
                 return x + b
         elif mode == 'lower':
             b, e = 0, num_of_img // 2
-            uids = reversed(self.instance_uids[b:e])
+            uids = list(reversed(self.instance_uids[b:e]))
             def _get_index(x):
                 return e - x - 1
         else:
@@ -117,8 +117,34 @@ class cyDicomWeb(QObject):
             # print("idx_end :: ", idx_end)
             buf16 = v[idx_begin:idx_end]
             frame = np.frombuffer(buf16, dtype=np.int16)
-            frame.setflags(write=1)
-            frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
+            # frame.setflags(write=1)
+            new_frame = np.ndarray(frame.shape)
+            new_frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
             # frames = np.append(frames, new_frame)
-            self.sig_update_imgbuf.emit(frame, i, True)
+
+            vtk_img_narray[:, :, i] = new_frame.reshape(vtk_img.GetDimensions()[:2], order='F')
+            vtk_img.Modified()
+            self.sig_update_imgbuf.emit(new_frame, i, True)
         # return frames
+
+    def requests_buf16_2(self, instance_uid):
+        # retrieve instances with WADO RS
+        url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" % (self.host_url, self.wadors_prefix,
+                                                                    self.study_uid, self.series_uid, instance_uid)
+        x = requests.get(url, headers=HEADERS2)
+        c = x.status_code
+        v = x.content
+        idx_begin = v.find(b"\r\n\r\n")
+        idx_begin = idx_begin + 4
+        # print("idx_begin :: ", idx_begin)
+        idx_end = v.rfind(b"\r\n--DICOM DATA BOUNDARY--")
+        # print("idx_end :: ", idx_end)
+        buf16 = v[idx_begin:idx_end]
+        frame = np.frombuffer(buf16, dtype=np.int16)
+        # frame.setflags(write=1)
+        new_frame = np.ndarray(frame.shape)
+        new_frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
+        return new_frame
+
+    def get_instance_uids(self):
+        return self.instance_uids if hasattr(self, 'instance_uids') else None

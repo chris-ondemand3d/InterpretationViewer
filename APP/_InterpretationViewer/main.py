@@ -5,7 +5,7 @@ from cyhub.cy_image_holder import CyQQuickView
 from PyQt5.QtQuick import QQuickView
 from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, QEvent
 from PyQt5.QtQml import QQmlProperty
-from PyQt5.Qt  import QApplication, Qt, QScreen
+from PyQt5.Qt  import QApplication, Qt, QScreen, QStyle
 from PyQt5.QtGui import QCursor
 
 import _qapp
@@ -65,6 +65,7 @@ if __name__ == '__main__':
 
     # multiple monitor
     screens = _qapp.qapp.screens()
+    titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)
     if len(screens) >= 2:
         screen1 = screens[0]
         screen2 = screens[1]
@@ -80,8 +81,8 @@ if __name__ == '__main__':
         mpr_sz = [int(w * 2 / 3), h]
         app_dbm.resize(*dbm_sz)
         app_mpr.resize(*mpr_sz)
-        app_dbm.setPosition(0, 0)
-        app_mpr.setPosition(dbm_sz[0], 0)
+        app_dbm.setPosition(0, titlebar_height)
+        app_mpr.setPosition(dbm_sz[0], titlebar_height)
         app_dbm.show(isMaximize=False)
         app_mpr.show(isMaximize=False)
 

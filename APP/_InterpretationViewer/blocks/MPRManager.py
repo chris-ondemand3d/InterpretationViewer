@@ -11,7 +11,7 @@ from cyhub.cy_image_holder import CyQQuickView
 from cyhub.cy_vtk import Vtk_image_holder
 
 from PyQt5.QtQuick import QQuickView
-from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSlot
+from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot, QThread
 from PyQt5.QtQml import QQmlProperty
 
 # from cgal.cython import cy_cgal
@@ -32,6 +32,9 @@ DCM_INTERVAL = 1
 
 
 class MPRManager(QObject):
+
+    sig_refresh_all = pyqtSignal()
+
     def __init__(self, *args, **kdws):
         super().__init__()
 
@@ -79,6 +82,8 @@ class MPRManager(QObject):
         self.sagittal.guide_line.update({'coronal': coronal_plane, 'axial': axial_plane, 'handle': vol_center})
         self.axial.guide_line.update({'coronal': coronal_plane, 'sagittal': sagittal_plane, 'handle': vol_center})
 
+        self.sig_refresh_all.connect(self.on_refresh_all)
+
     def reset(self):
         self.coronal = None
         self.sagittal = None
@@ -124,11 +129,39 @@ class MPRManager(QObject):
         self.vtk_dims = dim
         self.vtk_img_narray = buf.reshape(dim, order='F')
 
+        # Thread function
+        def _do(_mode):
+            instance_uids = dcm_reader.get_instance_uids()
+            num_of_img = len(instance_uids)
+
+            if _mode == 'upper':
+                b, e = num_of_img // 2, num_of_img
+                uids = instance_uids[b:e]
+                def _get_index(x):
+                    return x + b
+            elif _mode == 'lower':
+                b, e = 0, num_of_img // 2
+                uids = list(reversed(instance_uids[b:e]))
+                def _get_index(x):
+                    return e - x - 1
+            else:
+                b, e = 0, num_of_img
+                uids = instance_uids
+                def _get_index(x):
+                    return x
+
+            for i, uid in enumerate(uids):
+                i = _get_index(i)
+                new_frame = dcm_reader.requests_buf16_2(uid)
+                self.vtk_img_narray[:, :, i] = new_frame.reshape(dim[:2], order='F')
+                vtk_img.Modified()
+                self.sig_refresh_all.emit()
+
         # upper
-        WorkerThread.start_worker2(dcm_reader.requests_buf16, 'upper',
-                                  _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
+        WorkerThread.start_worker2(_do, 'upper',
+                                   _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
         # lower
-        WorkerThread.start_worker(dcm_reader.requests_buf16, 'lower',
+        WorkerThread.start_worker(_do, 'lower',
                                   _finished_func=lambda: print("DICOM Files(Lower) had been loaded!! :)"))
 
         return vtk_img
@@ -149,9 +182,9 @@ class MPRManager(QObject):
 
     @pyqtSlot(object, object, object)
     def on_update_imgbuf(self, imgbuf, offset, refresh):
-        self.vtk_img_narray[:, :, offset] = imgbuf.reshape(self.vtk_dims[:2], order='F')
+        # self.vtk_img_narray[:, :, offset] = imgbuf.reshape(self.vtk_dims[:2], order='F')
         if refresh:
-            self.vtk_img.Modified()
+            # self.vtk_img.Modified()
             for _attr in [getattr(self, i) for i in ['coronal', 'sagittal', 'axial']]:
                 _attr.refresh()
 
