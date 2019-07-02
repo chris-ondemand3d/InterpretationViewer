@@ -26,7 +26,8 @@ from COMMON import WorkerThread
 
 
 # DCM_PATH = "/Users/scott/Dicom/OD3DData/20180425/S0000000099/"
-DCM_PATH = "/Users/scott/Dicom/1/"
+# DCM_PATH = "/Users/scott/Dicom/1/"
+DCM_PATH = "/Users/scott/Dicom/uncompressed/S0000000007/"
 DCM_INTERVAL = 1
 
 
@@ -54,16 +55,19 @@ class MPRManager(QObject):
         # coronal
         self.coronal = MPR2DSlice('coronal')
         self.coronal.sig_update_slabplane.connect(self.on_update_slabplane)
+        self.coronal.sig_refresh_all.connect(self.on_refresh_all)
         self.coronal.set_vtk_img(self.vtk_img)
         self.coronal.set_actor_property(p)
         # sagittal
         self.sagittal = MPR2DSlice('sagittal')
         self.sagittal.sig_update_slabplane.connect(self.on_update_slabplane)
+        self.sagittal.sig_refresh_all.connect(self.on_refresh_all)
         self.sagittal.set_vtk_img(self.vtk_img)
         self.sagittal.set_actor_property(p)
         # axial
         self.axial = MPR2DSlice('axial')
         self.axial.sig_update_slabplane.connect(self.on_update_slabplane)
+        self.axial.sig_refresh_all.connect(self.on_refresh_all)
         self.axial.set_vtk_img(self.vtk_img)
         self.axial.set_actor_property(p)
 
@@ -117,7 +121,15 @@ class MPRManager(QObject):
         buf.fill(-1000)
         vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
 
-        WorkerThread.start_worker(dcm_reader.requests_buf16, _finished_func=lambda: print("All DICOM Files had been loaded!! :)"))
+        self.vtk_dims = dim
+        self.vtk_img_narray = buf.reshape(dim, order='F')
+
+        # upper
+        WorkerThread.start_worker2(dcm_reader.requests_buf16, 'upper',
+                                  _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
+        # lower
+        WorkerThread.start_worker(dcm_reader.requests_buf16, 'lower',
+                                  _finished_func=lambda: print("DICOM Files(Lower) had been loaded!! :)"))
 
         return vtk_img
 
@@ -135,13 +147,15 @@ class MPRManager(QObject):
             _attr.update_slabplane(slabplanes)
             _attr.refresh()
 
-    @pyqtSlot(object, object)
-    def on_update_imgbuf(self, imgbuf, offset):
-        d = self.vtk_img.GetDimensions()
-        narray = numpy_support.vtk_to_numpy(self.vtk_img.GetPointData().GetScalars())
-        narray = narray.reshape(d, order='F')
-        narray[:, :, offset] = imgbuf.reshape(d[:2], order='F')
+    @pyqtSlot(object, object, object)
+    def on_update_imgbuf(self, imgbuf, offset, refresh):
+        self.vtk_img_narray[:, :, offset] = imgbuf.reshape(self.vtk_dims[:2], order='F')
+        if refresh:
+            self.vtk_img.Modified()
+            for _attr in [getattr(self, i) for i in ['coronal', 'sagittal', 'axial']]:
+                _attr.refresh()
 
-        self.vtk_img.Modified()
+    @pyqtSlot()
+    def on_refresh_all(self):
         for _attr in [getattr(self, i) for i in ['coronal', 'sagittal', 'axial']]:
             _attr.refresh()

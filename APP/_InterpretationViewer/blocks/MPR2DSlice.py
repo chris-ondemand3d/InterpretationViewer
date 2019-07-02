@@ -17,7 +17,7 @@ import platform
 IS_OSX = (platform.system() == 'Darwin')
 
 CY_VTK_STATE_LOCK = 9919
-CAM_SCALE_NORMAL = 0.35
+CAM_SCALE_NORMAL = 0.50
 
 
 # 0: sagittal, 1: coronal, 2: axial
@@ -273,6 +273,7 @@ class MPR2DSlice(I2G_IMG_HOLDER):
     """
 
     sig_update_slabplane = pyqtSignal(object)
+    sig_refresh_all = pyqtSignal()
 
     def __init__(self, slice_type, *args, **kwds):
         super().__init__(*args, **kwds)
@@ -373,13 +374,13 @@ class MPR2DSlice(I2G_IMG_HOLDER):
                 self.ren.AddViewProp(a)
 
         if self.slice_type == "axial":
-            _params = [self.vtk_img.GetCenter(), np.array([0, 0, 1]), np.array([0, -1, 0]), CAM_SCALE_NORMAL]
+            _params = [self.vtk_img.GetCenter(), np.array([0, 0, -1]), np.array([0, -1, 0]), CAM_SCALE_NORMAL]
         elif self.slice_type == "coronal":
-            _params = [self.vtk_img.GetCenter(), np.array([0, 1, 0]), np.array([0, 0, 1]), CAM_SCALE_NORMAL]
+            _params = [self.vtk_img.GetCenter(), np.array([0, -1, 0]), np.array([0, 0, 1]), CAM_SCALE_NORMAL]
         elif self.slice_type == "sagittal":
             _params = [self.vtk_img.GetCenter(), np.array([1, 0, 0]), np.array([0, 0, 1]), CAM_SCALE_NORMAL]
         else:
-            _params = [self.vtk_img.GetCenter(), np.array([0, 0, 1]), np.array([0, -1, 0]), CAM_SCALE_NORMAL]
+            _params = [self.vtk_img.GetCenter(), np.array([0, 0, -1]), np.array([0, -1, 0]), CAM_SCALE_NORMAL]
 
         # set plane and camera
         self.set_plane(_params[0], _params[1], _params[2], _camera_fit_type=1)
@@ -554,6 +555,7 @@ class MPR2DSlice(I2G_IMG_HOLDER):
         self.r_btn_pressed = False
         self.guide_line.move_activated = False
         self.guide_line.rotate_activated = False
+
         # # Measure
         # if self.EventMode_Measure is not ENUM_EVENT_MEASURE.E_NONE:
         #     self.on_mouse_release_measure(_rwi, _event)
@@ -605,7 +607,8 @@ class MPR2DSlice(I2G_IMG_HOLDER):
                 self.sig_update_slabplane.emit(slabplanes)
 
         elif self.r_btn_pressed:
-            pass
+            if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
+                self.sig_refresh_all.emit()
         else:
             obj_move = self.guide_line.get_actors()[-1]
             obj_rotate = None  # self.guide_line.get_actors()[...] # TODO!!!

@@ -16,17 +16,29 @@ TAG_Rows = '00280010'
 TAG_Columns = '00280011'
 TAG_RescaleIntercept = '00281052'
 TAG_RescaleSlope = '00281053'
+TAG_MODALITY = '00080060'
 
 
 HOST_URL = "http://dicomcloud.iptime.org:44301"
+# HOST_URL = "http://192.168.0.17:44301"
 # HOST_URL = "http://localhost:44301"
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
+STOWRS_PREFIX = 'stowrs'
 HEADERS1 = {"Accept": "application/json"}
 HEADERS2 = {"Accept": "multipart/related; type=\"application/octet-stream\""}
+# HEADERS2 = {"Accept": "multipart/related; type=\"image/jpeg\""}
 
-STUDY_UID = "1.2.410.200034.0.50551229.0.96050.22743.20111229.41"
-SERIES_UID = "1.2.410.200034.0.50551229.1.96055.227436784.16435555000241"
+
+# Data1
+# STUDY_UID = "1.2.410.200034.0.50551229.0.96050.22743.20111229.41"
+# SERIES_UID = "1.2.410.200034.0.50551229.1.96055.227436784.16435555000241"
+# Data2
+STUDY_UID = "1.3.6.1.4.1.25403.114374082075733.11648.20190114105523.1"
+SERIES_UID = "1.3.6.1.4.1.25403.114374082075733.11648.20190114105928.2"
+
+
+DEFAULT_RESCALE_INTERCEPT = 1024
 
 
 class cyDicomWeb(QObject):
@@ -68,14 +80,33 @@ class cyDicomWeb(QObject):
         # metadata.reverse()
         return metadata
 
-    def requests_buf16(self):
+    def requests_buf16(self, mode):
         # retrieve instances with WADO RS
         # frames = np.array([])
         num_of_img = len(self.instance_uids)
-        for i, uid in enumerate(self.instance_uids):
+        # refresh_step = int(num_of_img * 0.10)
+
+        if mode == 'upper':
+            b, e = num_of_img // 2, num_of_img
+            uids = self.instance_uids[b:e]
+            def _get_index(x):
+                return x + b
+        elif mode == 'lower':
+            b, e = 0, num_of_img // 2
+            uids = reversed(self.instance_uids[b:e])
+            def _get_index(x):
+                return e - x - 1
+        else:
+            b, e = 0, num_of_img
+            uids = self.instance_uids
+            def _get_index(x):
+                return x
+
+        for i, uid in enumerate(uids):
             url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" % (self.host_url, self.wadors_prefix,
                                                                         self.study_uid, self.series_uid, uid)
-            print("%d/%d - " % (i+1, num_of_img), url)
+            i = _get_index(i)
+            print("%d/%d - " % (i + 1, num_of_img), url)
             x = requests.get(url, headers=HEADERS2)
             c = x.status_code
             v = x.content
@@ -86,8 +117,8 @@ class cyDicomWeb(QObject):
             # print("idx_end :: ", idx_end)
             buf16 = v[idx_begin:idx_end]
             frame = np.frombuffer(buf16, dtype=np.int16)
-            new_frame = np.copy(frame)
-            new_frame[:] = new_frame[:] * self.rescale_slope + self.rescale_intercept
+            frame.setflags(write=1)
+            frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
             # frames = np.append(frames, new_frame)
-            self.sig_update_imgbuf.emit(new_frame, i, len(new_frame))
+            self.sig_update_imgbuf.emit(frame, i, True)
         # return frames
