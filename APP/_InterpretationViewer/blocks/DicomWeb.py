@@ -71,6 +71,21 @@ class cyDicomWeb(QObject):
         print("spacing :: ", self.spacing)
         print("thickness :: ", self.thickness)
 
+    def get_origin(self):
+        return self.origin
+
+    def get_dimensions(self):
+        return self.width, self.height, self.length
+
+    def get_spacing(self):
+        return self.spacing
+
+    def get_thickness(self):
+        return self.thickness
+
+    def get_rescale_params(self):
+        return self.rescale_slope, self.rescale_intercept
+
     def requests_metadata(self):
         url = "%s/%s/studies/%s/series/%s/metadata" % (self.host_url, self.wadors_prefix, self.study_uid, self.series_uid)
         x = requests.get(url, headers=HEADERS1)
@@ -127,7 +142,10 @@ class cyDicomWeb(QObject):
             self.sig_update_imgbuf.emit(new_frame, i, True)
         # return frames
 
-    def requests_buf16_2(self, instance_uid):
+    def requests_buf16_2(self, instance_uid_info):
+        instance_uid = instance_uid_info[0]
+        idx = instance_uid_info[1]
+
         # retrieve instances with WADO RS
         url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" % (self.host_url, self.wadors_prefix,
                                                                     self.study_uid, self.series_uid, instance_uid)
@@ -144,7 +162,7 @@ class cyDicomWeb(QObject):
         # frame.setflags(write=1)
         new_frame = np.ndarray(frame.shape)
         new_frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
-        return new_frame
+        return new_frame, idx
 
     def get_instance_uids(self):
         return self.instance_uids if hasattr(self, 'instance_uids') else None

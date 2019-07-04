@@ -21,8 +21,10 @@ import gc
 from .MPR2DSlice import MPR2DSlice
 from .DicomWeb import cyDicomWeb
 
-
 from COMMON import WorkerThread
+
+import multiprocessing
+from multiprocessing.managers import BaseManager
 
 
 # DCM_PATH = "/Users/scott/Dicom/OD3DData/20180425/S0000000099/"
@@ -47,7 +49,7 @@ class MPRManager(QObject):
 
     def initialize(self):
         # TODO!!!
-        self.vtk_img = self.read_dcm_test2()
+        self.vtk_img = self.read_dcm_test3()
         vol_center = self.vtk_img.GetCenter()
 
         p = vtk.vtkImageProperty()
@@ -109,12 +111,18 @@ class MPRManager(QObject):
         return vtk_img
 
     def read_dcm_test2(self):
-        dcm_reader = cyDicomWeb()
+
+        BaseManager.register('cyDicomWeb', cyDicomWeb)
+        manager = BaseManager()
+        manager.start()
+        dcm_reader = manager.cyDicomWeb()
+
+        print("!!!!!!!!!!!!!!! :: ", dcm_reader.sig_update_imgbuf)
+        # dcm_reader = cyDicomWeb()
         dcm_reader.initialize()
-        dcm_reader.sig_update_imgbuf.connect(self.on_update_imgbuf)
-        dim = [dcm_reader.width, dcm_reader.height, dcm_reader.length]
-        o = dcm_reader.origin
-        s = [dcm_reader.spacing[0], dcm_reader.spacing[1], dcm_reader.thickness]
+        dim = dcm_reader.get_dimensions()
+        o = dcm_reader.get_origin()
+        s = [*dcm_reader.get_spacing(), dcm_reader.get_thickness()]
 
         vtk_img = vtk.vtkImageData()
         vtk_img.SetDimensions(dim)
@@ -156,6 +164,77 @@ class MPRManager(QObject):
                 self.vtk_img_narray[:, :, i] = new_frame.reshape(dim[:2], order='F')
                 vtk_img.Modified()
                 self.sig_refresh_all.emit()
+
+        # # upper
+        # WorkerThread.start_worker2(_do, 'upper',
+        #                            _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
+        # # lower
+        # WorkerThread.start_worker(_do, 'lower',
+        #                           _finished_func=lambda: print("DICOM Files(Lower) had been loaded!! :)"))
+
+        return vtk_img
+
+    def read_dcm_test3(self):
+
+        BaseManager.register('cyDicomWeb', cyDicomWeb)
+        manager = BaseManager()
+        manager.start()
+        dcm_reader = manager.cyDicomWeb()
+
+        # dcm_reader = cyDicomWeb()
+        dcm_reader.initialize()
+        dim = dcm_reader.get_dimensions()
+        o = dcm_reader.get_origin()
+        s = [*dcm_reader.get_spacing(), dcm_reader.get_thickness()]
+
+        vtk_img = vtk.vtkImageData()
+        vtk_img.SetDimensions(dim)
+        vtk_img.SetOrigin(o)
+        vtk_img.SetSpacing(s)
+        # # vtk_img.SetExtent(e)
+        vtk_img.AllocateScalars(vtk.VTK_CHAR, 1)
+        buf = np.zeros(np.product(dim))
+        buf.fill(-1000)
+        vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
+
+        self.vtk_dims = dim
+        self.vtk_img_narray = buf.reshape(dim, order='F')
+
+        # Thread function
+        def _do(_mode):
+            instance_uids = dcm_reader.get_instance_uids()
+            num_of_img = len(instance_uids)
+
+            if _mode == 'upper':
+                b, e = num_of_img // 2, num_of_img
+                uids = instance_uids[b:e]
+                def _get_index(x):
+                    return x + b
+            elif _mode == 'lower':
+                b, e = 0, num_of_img // 2
+                uids = list(reversed(instance_uids[b:e]))
+                def _get_index(x):
+                    return e - x - 1
+            else:
+                b, e = 0, num_of_img
+                uids = instance_uids
+                def _get_index(x):
+                    return x
+
+            def _update(_frame_info):
+                for _frame, _idx in _frame_info:
+                    self.vtk_img_narray[:, :, _idx] = _frame.reshape(dim[:2], order='F')
+                vtk_img.Modified()
+                self.sig_refresh_all.emit()
+
+            pool = multiprocessing.Pool(processes=4)
+            uid_infos = [[uid, _get_index(i)] for i, uid in enumerate(uids)]
+            a = len(uid_infos) // 4
+            b = len(uid_infos) % 4
+            for i in range(a):
+                pool.map_async(dcm_reader.requests_buf16_2, uid_infos[i*4:i*4+4], callback=_update)
+            pool.close()
+            pool.join()
 
         # upper
         WorkerThread.start_worker2(_do, 'upper',

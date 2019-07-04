@@ -65,7 +65,6 @@ if __name__ == '__main__':
 
     # multiple monitor
     screens = _qapp.qapp.screens()
-    titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)
     if len(screens) >= 2:
         screen1 = screens[0]
         screen2 = screens[1]
@@ -75,8 +74,10 @@ if __name__ == '__main__':
         app_mpr.show(isMaximize=True)
     else:
         screen = screens[0]
+        titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)
         w = screen.size().width()
-        h = screen.size().height()
+        # h = screen.size().height() - titlebar_height
+        h = screen.availableGeometry().height() - titlebar_height
         dbm_sz = [int(w * 1 / 3), h]
         mpr_sz = [int(w * 2 / 3), h]
         app_dbm.resize(*dbm_sz)
