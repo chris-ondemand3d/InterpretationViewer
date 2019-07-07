@@ -19,7 +19,7 @@ from PyQt5.QtQml import QQmlProperty
 import gc
 
 from .MPR2DSlice import MPR2DSlice
-from .DicomWeb import cyDicomWeb
+from .DicomWeb import cyDicomWeb, HEADERS1, HEADERS2, requests_buf16
 
 from COMMON import WorkerThread
 
@@ -111,14 +111,7 @@ class MPRManager(QObject):
         return vtk_img
 
     def read_dcm_test2(self):
-
-        BaseManager.register('cyDicomWeb', cyDicomWeb)
-        manager = BaseManager()
-        manager.start()
-        dcm_reader = manager.cyDicomWeb()
-
-        print("!!!!!!!!!!!!!!! :: ", dcm_reader.sig_update_imgbuf)
-        # dcm_reader = cyDicomWeb()
+        dcm_reader = cyDicomWeb()
         dcm_reader.initialize()
         dim = dcm_reader.get_dimensions()
         o = dcm_reader.get_origin()
@@ -160,28 +153,22 @@ class MPRManager(QObject):
 
             for i, uid in enumerate(uids):
                 i = _get_index(i)
-                new_frame = dcm_reader.requests_buf16_2(uid)
-                self.vtk_img_narray[:, :, i] = new_frame.reshape(dim[:2], order='F')
+                new_frame = dcm_reader.requests_buf16((uid, 0))
+                self.vtk_img_narray[:, :, i] = new_frame[0].reshape(dim[:2], order='F')
                 vtk_img.Modified()
                 self.sig_refresh_all.emit()
 
-        # # upper
-        # WorkerThread.start_worker2(_do, 'upper',
-        #                            _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
-        # # lower
-        # WorkerThread.start_worker(_do, 'lower',
-        #                           _finished_func=lambda: print("DICOM Files(Lower) had been loaded!! :)"))
+        # upper
+        WorkerThread.start_worker2(_do, 'upper',
+                                   _finished_func=lambda: print("DICOM Files(Upper) had been loaded!! :)"))
+        # lower
+        WorkerThread.start_worker(_do, 'lower',
+                                  _finished_func=lambda: print("DICOM Files(Lower) had been loaded!! :)"))
 
         return vtk_img
 
     def read_dcm_test3(self):
-
-        BaseManager.register('cyDicomWeb', cyDicomWeb)
-        manager = BaseManager()
-        manager.start()
-        dcm_reader = manager.cyDicomWeb()
-
-        # dcm_reader = cyDicomWeb()
+        dcm_reader = cyDicomWeb()
         dcm_reader.initialize()
         dim = dcm_reader.get_dimensions()
         o = dcm_reader.get_origin()
@@ -199,6 +186,11 @@ class MPRManager(QObject):
 
         self.vtk_dims = dim
         self.vtk_img_narray = buf.reshape(dim, order='F')
+
+        url = "%s/%s/studies/%s/series/%s/" % (dcm_reader.host_url, dcm_reader.wadors_prefix,
+                                               dcm_reader.study_uid, dcm_reader.series_uid)
+        header = HEADERS2
+        rescale_params = dcm_reader.rescale_slope, dcm_reader.rescale_intercept
 
         # Thread function
         def _do(_mode):
@@ -228,11 +220,11 @@ class MPRManager(QObject):
                 self.sig_refresh_all.emit()
 
             pool = multiprocessing.Pool(processes=4)
-            uid_infos = [[uid, _get_index(i)] for i, uid in enumerate(uids)]
+            uid_infos = [[url + "instances/%s/frames/1" % uid, header, _get_index(i), rescale_params] for i, uid in enumerate(uids)]
             a = len(uid_infos) // 4
             b = len(uid_infos) % 4
             for i in range(a):
-                pool.map_async(dcm_reader.requests_buf16_2, uid_infos[i*4:i*4+4], callback=_update)
+                pool.map_async(requests_buf16, uid_infos[i*4:i*4+4], callback=_update)
             pool.close()
             pool.join()
 

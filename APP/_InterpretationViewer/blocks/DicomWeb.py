@@ -19,8 +19,9 @@ TAG_RescaleSlope = '00281053'
 TAG_MODALITY = '00080060'
 
 
-HOST_URL = "http://dicomcloud.iptime.org:44301"
+# HOST_URL = "http://dicomcloud.iptime.org:44301"
 # HOST_URL = "http://192.168.0.17:44301"
+HOST_URL = "http://192.168.200.140:44301"
 # HOST_URL = "http://localhost:44301"
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
@@ -41,9 +42,7 @@ SERIES_UID = "1.3.6.1.4.1.25403.114374082075733.11648.20190114105928.2"
 DEFAULT_RESCALE_INTERCEPT = 1024
 
 
-class cyDicomWeb(QObject):
-
-    sig_update_imgbuf = pyqtSignal(object, object, object)
+class cyDicomWeb(object):
 
     def __init__(self, host_url=HOST_URL, qidors_prefix=QIDORS_PREFIX, wadors_prefix=WADORS_PREFIX, *args, **kwds):
         super().__init__(*args, **kwds)
@@ -95,54 +94,7 @@ class cyDicomWeb(QObject):
         # metadata.reverse()
         return metadata
 
-    def requests_buf16(self, mode, vtk_img_narray, vtk_img):
-        # retrieve instances with WADO RS
-        # frames = np.array([])
-        num_of_img = len(self.instance_uids)
-        # refresh_step = int(num_of_img * 0.10)
-
-        if mode == 'upper':
-            b, e = num_of_img // 2, num_of_img
-            uids = self.instance_uids[b:e]
-            def _get_index(x):
-                return x + b
-        elif mode == 'lower':
-            b, e = 0, num_of_img // 2
-            uids = list(reversed(self.instance_uids[b:e]))
-            def _get_index(x):
-                return e - x - 1
-        else:
-            b, e = 0, num_of_img
-            uids = self.instance_uids
-            def _get_index(x):
-                return x
-
-        for i, uid in enumerate(uids):
-            url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" % (self.host_url, self.wadors_prefix,
-                                                                        self.study_uid, self.series_uid, uid)
-            i = _get_index(i)
-            print("%d/%d - " % (i + 1, num_of_img), url)
-            x = requests.get(url, headers=HEADERS2)
-            c = x.status_code
-            v = x.content
-            idx_begin = v.find(b"\r\n\r\n")
-            idx_begin = idx_begin + 4
-            # print("idx_begin :: ", idx_begin)
-            idx_end = v.rfind(b"\r\n--DICOM DATA BOUNDARY--")
-            # print("idx_end :: ", idx_end)
-            buf16 = v[idx_begin:idx_end]
-            frame = np.frombuffer(buf16, dtype=np.int16)
-            # frame.setflags(write=1)
-            new_frame = np.ndarray(frame.shape)
-            new_frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
-            # frames = np.append(frames, new_frame)
-
-            vtk_img_narray[:, :, i] = new_frame.reshape(vtk_img.GetDimensions()[:2], order='F')
-            vtk_img.Modified()
-            self.sig_update_imgbuf.emit(new_frame, i, True)
-        # return frames
-
-    def requests_buf16_2(self, instance_uid_info):
+    def requests_buf16(self, instance_uid_info):
         instance_uid = instance_uid_info[0]
         idx = instance_uid_info[1]
 
@@ -166,3 +118,20 @@ class cyDicomWeb(QObject):
 
     def get_instance_uids(self):
         return self.instance_uids if hasattr(self, 'instance_uids') else None
+
+
+def requests_buf16(params):
+    url, headers, idx, rescale_params = params
+    x = requests.get(url, headers=headers)
+    c = x.status_code
+    v = x.content
+    idx_begin = v.find(b"\r\n\r\n")
+    idx_begin = idx_begin + 4
+    # print("idx_begin :: ", idx_begin)
+    idx_end = v.rfind(b"\r\n--DICOM DATA BOUNDARY--")
+    # print("idx_end :: ", idx_end)
+    buf16 = v[idx_begin:idx_end]
+    frame = np.frombuffer(buf16, dtype=np.int16)
+    new_frame = np.ndarray(frame.shape)
+    new_frame[:] = frame[:] * rescale_params[0] + rescale_params[1] + DEFAULT_RESCALE_INTERCEPT
+    return new_frame, idx
