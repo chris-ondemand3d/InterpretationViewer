@@ -12,12 +12,14 @@ import _qapp
 
 import gc
 
+from APP._InterpretationViewer.blocks.DicomWeb import cyDicomWeb, HEADERS1
+from APP._InterpretationViewer.blocks.DBMWindow import DBMWindow
+from APP._InterpretationViewer.blocks.DBMManager import DBMManager
 from APP._InterpretationViewer.blocks.MPRWindow import MPRWindow
 from APP._InterpretationViewer.blocks.MPRManager import MPRManager
 
 
 _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), './main.qml'))
-_dbm_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), './layout/DBM_layout.qml'))
 
 
 class mpr_app(CyQQuickView):
@@ -41,12 +43,12 @@ class mpr_app(CyQQuickView):
 
 
 class dbm_app(CyQQuickView):
-    def __init__(self, *args, **kwds):
+    def __init__(self, dicom_web=None, *args, **kwds):
         super().__init__(*args, **kwds)
         self.setResizeMode(QQuickView.SizeRootObjectToView)
-        self.setSource(_dbm_source)
-        self.resize(1300, 650)
-        # self.show(isMaximize=True)
+
+        self.dbm_mgr = DBMManager(dicom_web)
+        self.dbm_win = DBMWindow(_win=self, _mgr=self.dbm_mgr)
 
     def eventFilter(self, obj, event):
         print("event filter (dbm_app):: ", obj, event)
@@ -58,7 +60,9 @@ def onClose(event):
 
 
 if __name__ == '__main__':
-    app_dbm = dbm_app()
+
+    dcm_web = cyDicomWeb()
+    app_dbm = dbm_app(dicom_web=dcm_web)
     app_dbm.closing.connect(onClose)
     app_mpr = mpr_app()
     app_mpr.closing.connect(onClose)
@@ -78,8 +82,8 @@ if __name__ == '__main__':
         w = screen.size().width()
         # h = screen.size().height() - titlebar_height
         h = screen.availableGeometry().height() - titlebar_height
-        dbm_sz = [int(w * 1 / 3), h]
-        mpr_sz = [int(w * 2 / 3), h]
+        dbm_sz = [int(w * 1 / 2), h]
+        mpr_sz = [int(w * 1 / 2), h]
         app_dbm.resize(*dbm_sz)
         app_mpr.resize(*mpr_sz)
         app_dbm.setPosition(0, titlebar_height)

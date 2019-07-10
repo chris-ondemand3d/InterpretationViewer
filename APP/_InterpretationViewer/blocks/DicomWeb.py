@@ -5,8 +5,18 @@ import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 
+TAG_PatientName = '00100010'
+TAG_PatientID = '00100020'
+TAG_PatientSex = '00100040'
+TAG_PatientAge = '00101010'
 TAG_StudyInstanceUID = '0020000D'
+TAG_StudyID = '00200010'
+TAG_StudyDate = '00080020'
+TAG_StudyDescription = '00081030'
 TAG_SeriesInstanceUID = '0020000E'
+TAG_SeriesNumber = '00200011'
+TAG_SeriesDate = '00080021'
+TAG_SeriesDescription = '0008103E'
 TAG_SOPInstanceUID = '00080018'
 TAG_PixelSpacing = '00280030'
 TAG_ImagePosition = '00200032'
@@ -16,13 +26,21 @@ TAG_Rows = '00280010'
 TAG_Columns = '00280011'
 TAG_RescaleIntercept = '00281052'
 TAG_RescaleSlope = '00281053'
-TAG_MODALITY = '00080060'
+TAG_Modality = '00080060'
+TAG_BodyPartExamined = '00180015'
+TAG_NumberofStudyRelatedInstances = '00201208'
+TAG_NumberofSeriesRelatedInstances = '00201209'
 
 
 # HOST_URL = "http://dicomcloud.iptime.org:44301"
 # HOST_URL = "http://192.168.0.17:44301"
-HOST_URL = "http://192.168.200.140:44301"
+# HOST_URL = "http://192.168.200.140:44301"
 # HOST_URL = "http://localhost:44301"
+
+# gasan url
+# HOST_URL = "http://221.118.26.3:44301"
+HOST_URL = "http://192.168.0.110:44301"
+
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
 STOWRS_PREFIX = 'stowrs'
@@ -50,10 +68,18 @@ class cyDicomWeb(object):
         self.qidors_prefix = qidors_prefix
         self.wadors_prefix = wadors_prefix
 
-    def initialize(self, study_uid=STUDY_UID, series_uid=SERIES_UID):
+    def query_studies(self):
+        return self.requests_studies()
+
+    def query_series(self, study_uid):
+        return self.requests_series(study_uid)
+
+    def query_metadata(self, study_uid=STUDY_UID, series_uid=SERIES_UID):
         self.study_uid = study_uid
         self.series_uid = series_uid
         self.metadata = self.requests_metadata()
+        if self.metadata is None:
+            return False
         self.instance_uids = [i[TAG_SOPInstanceUID]['Value'][0] for i in self.metadata]
         self.width = self.metadata[0][TAG_Columns]['Value'][0]
         self.height = self.metadata[0][TAG_Rows]['Value'][0]
@@ -69,6 +95,7 @@ class cyDicomWeb(object):
         print("origin :: ", self.origin)
         print("spacing :: ", self.spacing)
         print("thickness :: ", self.thickness)
+        return True
 
     def get_origin(self):
         return self.origin
@@ -85,10 +112,27 @@ class cyDicomWeb(object):
     def get_rescale_params(self):
         return self.rescale_slope, self.rescale_intercept
 
+    def requests_studies(self):
+        url = "%s/%s/studies/" % (self.host_url, self.qidors_prefix)
+        x = requests.get(url, headers=HEADERS1)
+        if x.status_code != 200:
+            return None
+        x = eval(x.text)
+        return x
+
+    def requests_series(self, study_uid):
+        url = "%s/%s/series?StudyInstanceUID=%s" % (self.host_url, self.qidors_prefix, study_uid)
+        x = requests.get(url, headers=HEADERS1)
+        if x.status_code != 200:
+            return None
+        x = eval(x.text)
+        return x
+
     def requests_metadata(self):
         url = "%s/%s/studies/%s/series/%s/metadata" % (self.host_url, self.wadors_prefix, self.study_uid, self.series_uid)
         x = requests.get(url, headers=HEADERS1)
-        c = x.status_code
+        if x.status_code != 200:
+            return None
         x = eval(x.text)
         metadata = sorted(x, key=lambda _key: _key[TAG_ImagePosition]['Value'][2])
         # metadata.reverse()

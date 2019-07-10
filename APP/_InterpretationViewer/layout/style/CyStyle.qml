@@ -60,6 +60,7 @@ Item{
     property color db_connect_rect_bg_color: style_object.dbmwindow.db_connect_rect_bg_color
     property color db_connect_title_bg_color: style_object.dbmwindow.db_connect_title_bg_color
     property color data_infomation_bg_color: style_object.dbmwindow.data_infomation_bg_color
+    property color treeview_header_bg_color: style_object.dbmwindow.treeview_header_bg_color
     property color treeview_bg_color: style_object.dbmwindow.treeview_bg_color
     property color treeview_select_bg_color: style_object.dbmwindow.treeview_select_bg_color
 

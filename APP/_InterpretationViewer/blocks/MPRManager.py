@@ -48,6 +48,7 @@ class MPRManager(QObject):
         self.initialize()
 
     def initialize(self):
+        # VTK IMG INIT
         # TODO!!!
         self.vtk_img = self.read_dcm_test3()
         vol_center = self.vtk_img.GetCenter()
@@ -169,7 +170,7 @@ class MPRManager(QObject):
 
     def read_dcm_test3(self):
         dcm_reader = cyDicomWeb()
-        dcm_reader.initialize()
+        dcm_reader.query_metadata()
         dim = dcm_reader.get_dimensions()
         o = dcm_reader.get_origin()
         s = [*dcm_reader.get_spacing(), dcm_reader.get_thickness()]
@@ -219,12 +220,14 @@ class MPRManager(QObject):
                 vtk_img.Modified()
                 self.sig_refresh_all.emit()
 
-            pool = multiprocessing.Pool(processes=4)
+            processes_cnt = 4
+            pool = multiprocessing.Pool(processes=processes_cnt)
             uid_infos = [[url + "instances/%s/frames/1" % uid, header, _get_index(i), rescale_params] for i, uid in enumerate(uids)]
-            a = len(uid_infos) // 4
-            b = len(uid_infos) % 4
+            a = len(uid_infos) // processes_cnt
+            b = len(uid_infos) % processes_cnt
             for i in range(a):
-                pool.map_async(requests_buf16, uid_infos[i*4:i*4+4], callback=_update)
+                _i = i * processes_cnt
+                pool.map_async(requests_buf16, uid_infos[_i:_i+processes_cnt], callback=_update)
             pool.close()
             pool.join()
 

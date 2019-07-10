@@ -26,6 +26,7 @@ QtObject{
     property color db_connect_rect_bg_color: "#232523"
     property color db_connect_title_bg_color: "#282A27"
     property color data_infomation_bg_color: "#1b1d1b"
+    property color treeview_header_bg_color: "#171917"
     property color treeview_bg_color: "#232523"
     property color treeview_select_bg_color: "#1B1D1B"
 
