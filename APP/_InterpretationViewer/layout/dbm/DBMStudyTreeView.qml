@@ -34,8 +34,8 @@ Item {
     frameVisible: false
     focus: true
 
-    horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
-    verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+    //horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+    //verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
 
     selectionMode: SelectionMode.ExtendedSelection
 
@@ -78,12 +78,14 @@ Item {
       backgroundColor: CyStyle.dbmwindow.treeview_bg_color
 
       handle: Rectangle {
-        implicitWidth: 15
+        implicitWidth: 13
+        implicitHeight: 13
         radius: 7
-        color: "#282A27"
+        color: "#474747"
       }
       scrollBarBackground: Rectangle {
-        implicitWidth: 15
+        implicitWidth: 13
+        implicitHeight: 13
         color: "transparent"
       }
       decrementControl: Rectangle {
@@ -92,6 +94,10 @@ Item {
       incrementControl: Rectangle {
         color: "transparent"
       }
+      corner: Rectangle {
+        color: "transparent"
+      }
+
     }
 
     rowDelegate: Component{

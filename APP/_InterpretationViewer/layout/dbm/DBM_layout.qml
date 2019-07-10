@@ -46,7 +46,7 @@ Item {
 
     // Top
     Rectangle {
-      color: 'red'
+      color: CyStyle.dbmwindow.treeview_bg_color
       height: dbm_split_view.height * 4 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 1000
@@ -85,7 +85,7 @@ Item {
 
     // Middle
     Rectangle {
-      color: 'green'
+      color: CyStyle.dbmwindow.treeview_bg_color
       height: dbm_split_view.height * 2.5 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 700
@@ -123,7 +123,7 @@ Item {
 
     // Bottom
     Rectangle {
-      color: 'blue'
+      color: CyStyle.dbmwindow.treeview_bg_color
       height: dbm_split_view.height * 3.5 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 700
