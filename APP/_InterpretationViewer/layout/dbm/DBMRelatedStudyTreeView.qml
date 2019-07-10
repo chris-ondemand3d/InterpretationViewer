@@ -34,6 +34,9 @@ Item {
     frameVisible: false
     focus: true
 
+    horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+    verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+
     selectionMode: SelectionMode.ExtendedSelection
 
     selection: ItemSelectionModel{
