@@ -34,6 +34,18 @@ __WORKER_THREAD2 = QThread()
 __WORKER2.finished.connect(__WORKER_THREAD2.quit)
 __WORKER_THREAD2.started.connect(__WORKER2.run)
 
+__WORKER3 = __Worker()
+__WORKER3.set_id(3)
+__WORKER_THREAD3 = QThread()
+__WORKER3.finished.connect(__WORKER_THREAD3.quit)
+__WORKER_THREAD3.started.connect(__WORKER3.run)
+
+__WORKER4 = __Worker()
+__WORKER4.set_id(4)
+__WORKER_THREAD4 = QThread()
+__WORKER4.finished.connect(__WORKER_THREAD4.quit)
+__WORKER_THREAD4.started.connect(__WORKER4.run)
+
 
 MUTEX = QMutex()
 STOP = False
@@ -43,7 +55,7 @@ def get_event():
 EVENT = get_event
 
 
-def start_worker(func, *args, _finished_func=None):
+def start_worker1(func, *args, _finished_func=None):
     # clean up
     global STOP
     STOP = False
@@ -72,11 +84,44 @@ def start_worker2(func, *args, _finished_func=None):
     __WORKER2.moveToThread(__WORKER_THREAD2)
     __WORKER_THREAD2.start()
 
+def start_worker3(func, *args, _finished_func=None):
+    # clean up
+    global STOP
+    STOP = False
+    try: __WORKER_THREAD3.finished.disconnect()
+    except TypeError: pass
+    __WORKER_THREAD3.finished.connect(lambda: print("    Worker3 Thread is Finished :)"))
+    if _finished_func:
+        __WORKER_THREAD3.finished.connect(_finished_func)
+    # run
+    __WORKER3.set_params(func, *args)
+    __WORKER3.moveToThread(__WORKER_THREAD3)
+    __WORKER_THREAD3.start()
+
+def start_worker4(func, *args, _finished_func=None):
+    # clean up
+    global STOP
+    STOP = False
+    try: __WORKER_THREAD4.finished.disconnect()
+    except TypeError: pass
+    __WORKER_THREAD4.finished.connect(lambda: print("    Worker4 Thread is Finished :)"))
+    if _finished_func:
+        __WORKER_THREAD4.finished.connect(_finished_func)
+    # run
+    __WORKER4.set_params(func, *args)
+    __WORKER4.moveToThread(__WORKER_THREAD4)
+    __WORKER_THREAD4.start()
+
 
 def is_running():
     return __WORKER_THREAD.isRunning()
+
+def is_running2():
+    return __WORKER_THREAD2.isRunning()
 
 
 def stop_all():
     __WORKER_THREAD.quit()
     __WORKER_THREAD2.quit()
+    __WORKER_THREAD3.quit()
+    __WORKER_THREAD4.quit()

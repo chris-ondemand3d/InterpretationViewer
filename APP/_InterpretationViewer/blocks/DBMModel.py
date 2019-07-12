@@ -15,6 +15,8 @@ class SeriesItem(object):
         self.parentItem = parent
 
     def create_parent_item(self, data):
+
+        self.itemData['StudyInstanceUID'] = data['StudyInstanceUID']
         self.itemData['PatientID'] = data['PatientID']
         self.itemData['PatientName'] = data['PatientName']
         self.itemData['PatientSex'] = data['PatientSex']
@@ -46,6 +48,7 @@ class SeriesItem(object):
     def add_child_item(self, data):
         _data = data
         child_item = SeriesItem(self)
+        child_item.itemData['SeriesInstanceUID'] = _data['SeriesInstanceUID']
         child_item.itemData['PatientID'] = _data['SeriesNumber']
         child_item.itemData['PatientName'] = None
         child_item.itemData['PatientSex'] = None

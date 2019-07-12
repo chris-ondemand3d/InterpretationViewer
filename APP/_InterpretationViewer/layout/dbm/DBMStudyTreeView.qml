@@ -24,7 +24,8 @@ Item {
   }
 
   TreeView{
-    id : study_treeview
+    id: study_treeview
+    objectName: "study_treeview"
     width: parent.width
     height: parent.height
     anchors.centerIn: parent

@@ -354,10 +354,8 @@ class MPR2DSlice(I2G_IMG_HOLDER):
         # and then, re initialize()
         self.initialize()
 
-    # def initialize_components(self, vtk_img, img_prop):
-    #     self.set_vtk_img(vtk_img, arch_infos)
-    #     self.set_actor_property(img_prop)
-    #     self.Measure.set_vtk_img_for_measure(vtk_img)
+    def clear_all_actors(self):
+        self.ren.RemoveAllViewProps()
 
     def set_vtk_img(self, vtk_img):
         assert vtk_img, 'vtk_img is invalid!!!'

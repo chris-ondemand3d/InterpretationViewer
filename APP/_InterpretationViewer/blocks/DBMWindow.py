@@ -3,7 +3,7 @@ import os, sys
 from cyhub.cy_image_holder import CyQQuickView
 
 from PyQt5.QtQuick import QQuickView
-from PyQt5.QtCore import QObject, QUrl, QTimer, Qt
+from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSlot, QVariant
 from PyQt5.QtQml import QQmlProperty
 
 
@@ -30,6 +30,10 @@ class DBMWindow(QObject):
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/dbm/DBM_layout.qml'))
         self._win.setSource(_win_source)
 
+        # connect signals
+        study_treeview = self._win.rootObject().findChild(QObject, 'study_treeview')
+        study_treeview.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+
     def reset(self):
         #TODO!!!
         # win reset
@@ -40,3 +44,14 @@ class DBMWindow(QObject):
                 for o in X:
                     del o
             X.clear()
+
+    @pyqtSlot(QVariant, QVariant)
+    def on_childitem_dblclick(self, index, prev_index_info):
+        prev_index_info = prev_index_info.toVariant()
+        prev_index = dict()
+        prev_index['parent'] = prev_index_info[0]
+        prev_index['child'] = prev_index_info[1]
+        selected_model = index.internalPointer()
+        vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
+                                           selected_model.itemData['SeriesInstanceUID'])
+        self._win.send_message.emit(['mpr::init_vtk', vtk_img])
