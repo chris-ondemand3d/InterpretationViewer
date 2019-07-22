@@ -98,6 +98,9 @@ class DBMManager(QObject):
         print("study uid :: ", study_uid)
         print("series uid :: ", series_uid)
 
+        if hasattr(self, 'vtk_img_narray'):
+            del self.vtk_img_narray
+
         if hasattr(self, 'vtk_img'):
             self.vtk_img.ReleaseData()
             del self.vtk_img
@@ -151,15 +154,19 @@ class DBMManager(QObject):
                 self._win.send_message.emit(['mpr::refresh_all', None])
 
             processes_cnt = 4
-            pool = multiprocessing.Pool(processes=processes_cnt)
             uid_infos = [[url + "instances/%s/frames/1" % uid, header, _get_index(i), rescale_params] for i, uid in enumerate(uids)]
             a = len(uid_infos) // processes_cnt
             b = len(uid_infos) % processes_cnt
-            for i in range(a):
-                _i = i * processes_cnt
-                pool.map_async(dw.requests_buf16, uid_infos[_i:_i+processes_cnt], callback=_update)
-            pool.close()
-            pool.join()
+
+            with multiprocessing.Pool(processes=processes_cnt) as pool:
+                pool.daemon = True
+                for i in range(a):
+                    _i = i * processes_cnt
+                    _pool = pool.map_async(dw.requests_buf16, uid_infos[_i:_i+processes_cnt], callback=_update)
+                    _pool.wait()
+                pool.close()
+                pool.join()
+                gc.collect()
 
         # upper
         thread_idx = 1 if not WorkerThread.is_running() else 3

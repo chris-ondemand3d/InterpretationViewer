@@ -15,6 +15,8 @@ import gc
 from APP._InterpretationViewer.blocks.DicomWeb import cyDicomWeb, HEADERS1
 from APP._InterpretationViewer.blocks.DBMWindow import DBMWindow
 from APP._InterpretationViewer.blocks.DBMManager import DBMManager
+from APP._InterpretationViewer.blocks.SliceViewWindow import SliceViewWindow
+from APP._InterpretationViewer.blocks.SliceViewManager import SliceViewManager
 from APP._InterpretationViewer.blocks.MPRWindow import MPRWindow
 from APP._InterpretationViewer.blocks.MPRManager import MPRManager
 
@@ -35,6 +37,28 @@ class dbm_app(CyQQuickView):
 
     def eventFilter(self, obj, event):
         print("event filter (dbm_app):: ", obj, event)
+        return super().eventFilter(obj, event)
+
+
+class slice_app(CyQQuickView):
+
+    sig_refresh_all = pyqtSignal()
+
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+        self.setResizeMode(QQuickView.SizeRootObjectToView)
+        self.setSource(_win_source)
+        self.resize(1300, 650)
+        # self.show(isMaximize=True)
+
+        self.slice_mgr = SliceViewManager()
+        self.slice_win = SliceViewWindow(_win=self, _mgr=self.slice_mgr)
+        self.sig_refresh_all.connect(lambda: self.slice_mgr.on_refresh_all())
+
+    def eventFilter(self, obj, event):
+        # print("event filter (mpr_app):: ", obj, event)
+        if event.type() == QEvent.HoverLeave:
+            QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)
 
 
@@ -87,8 +111,8 @@ if __name__ == '__main__':
     app_dbm.send_message.connect(onMsg)
     app_mpr = mpr_app()
     app_mpr.closing.connect(onClose)
-    app_mpr2 = mpr_app()
-    app_mpr2.closing.connect(onClose)
+    app_slice = slice_app()
+    app_slice.closing.connect(onClose)
 
     # multiple monitor
     screens = _qapp.qapp.screens()
@@ -98,21 +122,21 @@ if __name__ == '__main__':
         screen1 = screens[0]
         screen2 = screens[1]
         app_dbm.setScreen(screen1)
-        app_mpr.setScreen(screen2)
-        app_mpr2.setScreen(screen2)
+        # app_mpr.setScreen(screen2)
+        app_slice.setScreen(screen2)
 
         titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)
         w = screen2.geometry().width()
         h = screen2.availableGeometry().height() - titlebar_height
         mpr_sz = [int(w * 1 / 2), h]
-        app_mpr.resize(*mpr_sz)
-        app_mpr.setPosition(screen2.geometry().x(), screen2.geometry().y() + titlebar_height)
-        app_mpr2.resize(*mpr_sz)
-        app_mpr2.setPosition(screen2.geometry().x() + mpr_sz[0], screen2.geometry().y() + titlebar_height)
+        # app_mpr.resize(*mpr_sz)
+        # app_mpr.setPosition(screen2.geometry().x(), screen2.geometry().y() + titlebar_height)
+        app_slice.resize(*mpr_sz)
+        app_slice.setPosition(screen2.geometry().x() + mpr_sz[0], screen2.geometry().y() + titlebar_height)
 
         app_dbm.show(isMaximize=True)
-        app_mpr.show(isMaximize=False)
-        app_mpr2.show(isMaximize=False)
+        # app_mpr.show(isMaximize=False)
+        app_slice.show(isMaximize=False)
     else:
         screen = screens[0]
         titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)

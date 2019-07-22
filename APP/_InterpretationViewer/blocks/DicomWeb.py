@@ -5,6 +5,7 @@ import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 
+TAG_InstanceNumber = '00200013'
 TAG_PatientName = '00100010'
 TAG_PatientID = '00100020'
 TAG_PatientSex = '00100040'
@@ -68,6 +69,34 @@ class cyDicomWeb(object):
         self.qidors_prefix = qidors_prefix
         self.wadors_prefix = wadors_prefix
 
+    def reset(self):
+        if hasattr(self, 'study_uid'):
+            del self.study_uid
+        if hasattr(self, 'series_uid'):
+            del self.series_uid
+        if hasattr(self, 'metadata'):
+            del self.metadata
+        if hasattr(self, 'instance_uids'):
+            self.instance_uids.clear()
+            del self.instance_uids
+        if hasattr(self, 'width'):
+            del self.width
+        if hasattr(self, 'height'):
+            del self.height
+        if hasattr(self, 'length'):
+            del self.length
+        if hasattr(self, 'rescale_slope'):
+            del self.rescale_slope
+        if hasattr(self, 'rescale_intercept'):
+            del self.rescale_intercept
+        if hasattr(self, 'spacing'):
+            self.spacing.clear()
+            del self.spacing
+        if hasattr(self, 'thickness'):
+            del self.thickness
+        if hasattr(self, 'origin'):
+            del self.origin
+
     def query_studies(self):
         return self.requests_studies()
 
@@ -75,6 +104,7 @@ class cyDicomWeb(object):
         return self.requests_series(study_uid)
 
     def query_metadata(self, study_uid=STUDY_UID, series_uid=SERIES_UID):
+        self.reset()
         self.study_uid = study_uid
         self.series_uid = series_uid
         self.metadata = self.requests_metadata()
@@ -134,7 +164,7 @@ class cyDicomWeb(object):
         if x.status_code != 200:
             return None
         x = eval(x.text)
-        metadata = sorted(x, key=lambda _key: _key[TAG_ImagePosition]['Value'][2])
+        metadata = sorted(x, key=lambda _key: _key[TAG_InstanceNumber]['Value'])
         # metadata.reverse()
         return metadata
 
@@ -158,6 +188,7 @@ class cyDicomWeb(object):
         # frame.setflags(write=1)
         new_frame = np.ndarray(frame.shape)
         new_frame[:] = frame[:] * self.rescale_slope + self.rescale_intercept + DEFAULT_RESCALE_INTERCEPT
+        del buf16, frame
         return new_frame, idx
 
     def get_instance_uids(self):
@@ -178,4 +209,5 @@ def requests_buf16(params):
     frame = np.frombuffer(buf16, dtype=np.int16)
     new_frame = np.ndarray(frame.shape)
     new_frame[:] = frame[:] * rescale_params[0] + rescale_params[1] + DEFAULT_RESCALE_INTERCEPT
+    del buf16, frame, v, c, x
     return new_frame, idx

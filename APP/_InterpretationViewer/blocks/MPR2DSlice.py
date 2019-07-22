@@ -275,7 +275,7 @@ class MPR2DSlice(I2G_IMG_HOLDER):
     sig_update_slabplane = pyqtSignal(object)
     sig_refresh_all = pyqtSignal()
 
-    def __init__(self, slice_type, *args, **kwds):
+    def __init__(self, slice_type=None, *args, **kwds):
         super().__init__(*args, **kwds)
 
         self.l_btn_pressed = False
@@ -361,6 +361,8 @@ class MPR2DSlice(I2G_IMG_HOLDER):
         assert vtk_img, 'vtk_img is invalid!!!'
         self.vtk_img = vtk_img
         self.slice_img.set_vtk_img(self.vtk_img)
+
+        self.spacing = self.vtk_img.GetSpacing()
 
         # add actor to renderer, once
         if not self.slice_img.get_actor() in self.ren.GetActors():
@@ -657,7 +659,7 @@ class MPR2DSlice(I2G_IMG_HOLDER):
         _sign *= -1 if IS_OSX else 1
         _interval = 5 if _ctrl else 1
 
-        thickness = 0.2     # TODO
+        thickness = self.spacing[2] if hasattr(self, 'spacing') else 0.2
 
         o, n = self.get_plane()
         o = list(np.array(o) + np.array(n) * (thickness * _interval * _sign))
