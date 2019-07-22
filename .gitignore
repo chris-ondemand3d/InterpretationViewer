@@ -2,3 +2,4 @@ APP/test
 .idea
 *.qmlc
 *.pyc
+vtklog.txt
