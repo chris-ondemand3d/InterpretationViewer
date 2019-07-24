@@ -12,7 +12,6 @@ import _qapp
 
 import gc
 
-from APP._InterpretationViewer.blocks.DicomWeb import cyDicomWeb, HEADERS1
 from APP._InterpretationViewer.blocks.DBMWindow import DBMWindow
 from APP._InterpretationViewer.blocks.DBMManager import DBMManager
 from APP._InterpretationViewer.blocks.SliceViewWindow import SliceViewWindow
@@ -90,23 +89,26 @@ def onClose(event):
 def onMsg(msg):
     _msg, _params = msg
 
-    if _msg == 'mpr::init_vtk':
+    if _msg == 'slice::init_vtk':
+        app_slice.slice_mgr.init_vtk(*_params)
+    elif _msg == 'slice::refresh_all':
+        app_slice.sig_refresh_all.emit()
+    elif _msg == 'mpr::init_vtk':
         app_mpr.mpr_mgr.init_vtk(_params)
-        app_mpr2.mpr_mgr.init_vtk(_params)
+        # app_mpr2.mpr_mgr.init_vtk(_params)
     elif _msg == 'mpr::clear_all_actors':
         app_mpr.mpr_mgr.clear_all_actors()
         app_mpr.mpr_mgr.on_refresh_all()
-        app_mpr2.mpr_mgr.clear_all_actors()
-        app_mpr2.mpr_mgr.on_refresh_all()
+        # app_mpr2.mpr_mgr.clear_all_actors()
+        # app_mpr2.mpr_mgr.on_refresh_all()
     elif _msg == 'mpr::refresh_all':
         app_mpr.sig_refresh_all.emit()
-        app_mpr2.sig_refresh_all.emit()
+        # app_mpr2.sig_refresh_all.emit()
 
 
 if __name__ == '__main__':
 
-    dcm_web = cyDicomWeb()
-    app_dbm = dbm_app(dicom_web=dcm_web)
+    app_dbm = dbm_app()
     app_dbm.closing.connect(onClose)
     app_dbm.send_message.connect(onMsg)
     app_mpr = mpr_app()

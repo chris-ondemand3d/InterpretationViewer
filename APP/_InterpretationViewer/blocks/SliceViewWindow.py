@@ -21,17 +21,21 @@ class SliceViewWindow(QObject):
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/slice_view/SliceView_layout.qml'))
         self._win.setSource(_win_source)
 
-        # test
         repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
         cnt = QQmlProperty.read(repeater_imgholder, 'count')
-        for i in range(cnt):
+
+        if not hasattr(self, '_mgr'):
+            return
+
+        self._mgr.init_slice(cnt)
+
+        for i, s in enumerate(self._mgr.SLICES):
             item = repeater_imgholder.itemAt(i)
-            # print("obj (%d):: "%i, item)
             _w = QQmlProperty.read(item, 'width')
             _h = QQmlProperty.read(item, 'height')
             item.setHeight(1000)
             item.setWidth(1000)
-            # item.set_vtk(_slice)
+            item.set_vtk(s)
             item.setHeight(_w)
             item.setWidth(_h)
             item.installEventFilter(self._win) # to grab mouse hover leave, add eventfilter

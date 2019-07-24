@@ -26,7 +26,6 @@ class DBMWindow(QObject):
         self.study_model.addData(_data)
         self.study_model.endResetModel()
 
-        # win init
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/dbm/DBM_layout.qml'))
         self._win.setSource(_win_source)
 
@@ -45,13 +44,26 @@ class DBMWindow(QObject):
                     del o
             X.clear()
 
-    @pyqtSlot(QVariant, QVariant)
-    def on_childitem_dblclick(self, index, prev_index_info):
-        prev_index_info = prev_index_info.toVariant()
-        prev_index = dict()
-        prev_index['parent'] = prev_index_info[0]
-        prev_index['child'] = prev_index_info[1]
+    @pyqtSlot(QVariant)
+    def on_childitem_dblclick(self, index):
         selected_model = index.internalPointer()
-        vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
-                                           selected_model.itemData['SeriesInstanceUID'])
-        self._win.send_message.emit(['mpr::init_vtk', vtk_img])
+        if selected_model.parent() is None:
+            """
+            case of study
+            """
+            children = selected_model.children()
+            layout_idx = 0
+            for series in children[:4]:
+                if int(series.itemData['Imgs']) < 50:
+                    continue
+                vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
+                                                   series.itemData['SeriesInstanceUID'])
+                self._win.send_message.emit(['slice::init_vtk', (vtk_img, layout_idx)])
+                layout_idx += 1
+        else:
+            """
+            case of series
+            """
+            vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
+                                               selected_model.itemData['SeriesInstanceUID'])
+            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 0)])

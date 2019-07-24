@@ -24,10 +24,7 @@ try:
 except ImportError:
     print_memory = lambda: print()
 
-from .MPR2DSlice import MPR2DSlice
-from .DicomWeb import cyDicomWeb, HEADERS1, HEADERS2, requests_buf16
-
-from COMMON import WorkerThread
+from .Slice import Slice
 
 import multiprocessing
 from multiprocessing.managers import BaseManager
@@ -46,61 +43,41 @@ class SliceViewManager(QObject):
     def __init__(self, *args, **kdws):
         super().__init__()
 
-        self.slice1 = None
-        self.slice2 = None
+        self.SLICES = []
 
         self.reset()
         self.initialize()
 
     def initialize(self):
-        # slice 1
-        self.slice1 = MPR2DSlice()
-        self.slice1.sig_refresh_all.connect(self.on_refresh_all)
-        # slice 2
-        self.slice2 = MPR2DSlice()
-        self.slice2.sig_refresh_all.connect(self.on_refresh_all)
-
-        self.sig_refresh_all.connect(self.on_refresh_all)
+        pass
 
     def reset(self):
-        if self.slice1:
-            self.slice1.reset()
-            self.slice1 = None
+        for s in self.SLICES:
+            s.reset()
+            del s
+        self.SLICES.clear()
 
-        if self.slice2:
-            self.slice2.reset()
-            self.slice1 = None
+    def init_vtk(self, vtk_img, layout_idx):
 
-
-        if hasattr(self, 'vtk_img'):
-            del self.vtk_img
-
-    def init_vtk(self, vtk_img):
-        if hasattr(self, 'vtk_img'):
-            self.vtk_img.ReleaseData()
-            del self.vtk_img
-            gc.collect()
-
-        self.clear_all_actors()
-
-        self.vtk_img = vtk_img
-        vol_center = self.vtk_img.GetCenter()
         p = vtk.vtkImageProperty()
         p.SetColorWindow(3000)
         p.SetColorLevel(1000)
         p.SetInterpolationTypeToLinear()
-
         # set vtk_img
-        self.coronal.set_vtk_img(self.vtk_img)
-        self.coronal.set_actor_property(p)
-        self.sagittal.set_vtk_img(self.vtk_img)
-        self.sagittal.set_actor_property(p)
-        self.axial.set_vtk_img(self.vtk_img)
-        self.axial.set_actor_property(p)
+        self.SLICES[layout_idx].set_vtk_img(vtk_img)
+        self.SLICES[layout_idx].set_actor_property(p)
 
     def clear_all_actors(self):
-        self.slice1.clear_all_actors()
-        self.slice2.clear_all_actors()
+        for s in self.SLICES:
+            s.clear_all_actors()
+
+    def init_slice(self, num):
+        self.SLICES = []
+        for i in range(num):
+            slice = Slice()
+            slice.sig_refresh_all.connect(self.on_refresh_all)
+            self.SLICES.append(slice)
+        self.sig_refresh_all.connect(self.on_refresh_all)
 
     def read_dcm_test(self):
         # # DCM Read
@@ -121,21 +98,7 @@ class SliceViewManager(QObject):
         vtk_img = dcm_reader.get_vtk_img()
         return vtk_img
 
-    def get_vtk_img(self):
-        if hasattr(self, 'vtk_img'):
-            return self.vtk_img
-        else:
-            return None
-
-    @pyqtSlot(object, object, object)
-    def on_update_imgbuf(self, imgbuf, offset, refresh):
-        # self.vtk_img_narray[:, :, offset] = imgbuf.reshape(self.vtk_dims[:2], order='F')
-        if refresh:
-            # self.vtk_img.Modified()
-            for _attr in [getattr(self, i) for i in ['slice1', 'slice2']]:
-                _attr.refresh()
-
     @pyqtSlot()
     def on_refresh_all(self):
-        for _attr in [getattr(self, i) for i in ['slice1', 'slice2']]:
-            _attr.refresh()
+        for slice in self.SLICES:
+            slice.refresh()
