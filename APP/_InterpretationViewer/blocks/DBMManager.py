@@ -143,12 +143,29 @@ class DBMManager(QObject):
 
             def _update(_frame_info):
                 for _frame, _idx in _frame_info:
-                    vtk_img_narray[:, :, _idx] = _frame.reshape(dim[:2], order='F')
+                    _shape_of_dest = vtk_img_narray.shape
+                    _w = _dicom_web.metadata[_idx][dw.TAG_Columns]['Value'][0]
+                    _h = _dicom_web.metadata[_idx][dw.TAG_Rows]['Value'][0]
+
+                    if _shape_of_dest[0] - _w == 0:
+                        x_b, x_e = 0, _shape_of_dest[0]
+                    else:
+                        _dif_x = (_shape_of_dest[0] - _w) // 2
+                        x_b, x_e = _dif_x, -_dif_x
+
+                    if _shape_of_dest[1] - _h == 0:
+                        y_b, y_e = 0, _shape_of_dest[1]
+                    else:
+                        _dif_y = (_shape_of_dest[1] - _h) // 2
+                        y_b, y_e = _dif_y, -_dif_y
+
+                    vtk_img_narray[x_b:x_e, y_b:y_e, _idx] = _frame.reshape((_w, _h), order='F')[:, :]
+
                 vtk_img.Modified()
                 self._win.send_message.emit(['slice::refresh_all', None])
 
             processes_cnt = 4
-            uid_infos = [[url + "instances/%s/frames/1" % uid, header, i, rescale_params] for i, uid in enumerate(uids)]
+            uid_infos = [[url + "instances/%s/frames/1" % uid, header, i, dicom_web.bits, rescale_params] for i, uid in enumerate(uids)]
             a = len(uid_infos) // processes_cnt
             b = len(uid_infos) % processes_cnt
 
@@ -156,10 +173,10 @@ class DBMManager(QObject):
                 pool.daemon = True
                 for i in range(a):
                     _i = i * processes_cnt
-                    _pool = pool.map_async(dw.requests_buf16, uid_infos[_i:_i+processes_cnt], callback=_update)
+                    _pool = pool.map_async(dw.requests_buf, uid_infos[_i:_i+processes_cnt], callback=_update)
                     _pool.wait()
                 _i = a * processes_cnt
-                _pool = pool.map_async(dw.requests_buf16, uid_infos[_i:_i+b], callback=_update)
+                _pool = pool.map_async(dw.requests_buf, uid_infos[_i:_i+b], callback=_update)
                 _pool.wait()
                 pool.close()
                 pool.join()
@@ -177,10 +194,10 @@ class DBMManager(QObject):
         # do
         if not hasattr(self, 'WORKERS'):
             self.WORKERS = []
-        W0 = WorkerThread2.create_worker(0)
+        W0 = WorkerThread.create_worker(0)
         self.WORKERS.append(W0)
         # NOTE
         _dicom_web = copy.deepcopy(self.DICOM_WEB[study_uid])
-        WorkerThread2.start_worker(*W0, _do, _dicom_web,
+        WorkerThread.start_worker(*W0, _do, _dicom_web,
                                    _finished_func=lambda: _on_finished(W0))
         return vtk_img

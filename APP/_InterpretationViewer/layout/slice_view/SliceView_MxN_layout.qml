@@ -64,35 +64,51 @@ Item {
       }
       */
 
-      ImageHolder {
-        id: vtk_img_holder
-        property var name: "vtk_img_holder"
+      ColumnLayout {
+
+        spacing: 0
+        width: grid.colMulti * columnSpan - 0.5
+        height: grid.rowMulti * rowSpan - 0.5
 
         property var column: 0
         property var columnSpan: 1
         property var row: 0
         property var rowSpan: 1
-        Layout.alignment: Qt.AlignTop
-        Layout.column: column
-        Layout.columnSpan: columnSpan
-        Layout.row: row
-        Layout.rowSpan: rowSpan
-        Layout.preferredWidth  : grid.colMulti * columnSpan - 0.5
-        Layout.preferredHeight : grid.rowMulti * rowSpan - 0.5
 
-        /*onColumnChanged: {
-          Layout.column = column
+        Rectangle {
+          width : vtk_img_holder.width
+          height : 30
+          implicitWidth: vtk_img_holder.width
+          implicitHeight: 30
+          color: 'darkgray'
         }
-        onColumnSpanChanged: {
-          Layout.columnSpan = columnSpan
-        }
-        onRowChanged: {
-          Layout.row = row
-        }
-        onRowSpanChanged: {
-          Layout.rowSpan = rowSpan
-        }*/
 
+        ImageHolder {
+          id: vtk_img_holder
+          property var name: "vtk_img_holder"
+
+          Layout.alignment: Qt.AlignTop
+          Layout.column: parent.column
+          Layout.columnSpan: parent.columnSpan
+          Layout.row: parent.row
+          Layout.rowSpan: parent.rowSpan
+          Layout.preferredWidth  : grid.colMulti * parent.columnSpan - 0.5
+          Layout.preferredHeight : grid.rowMulti * parent.rowSpan - 0.5
+
+          /*onColumnChanged: {
+            Layout.column = column
+          }
+          onColumnSpanChanged: {
+            Layout.columnSpan = columnSpan
+          }
+          onRowChanged: {
+            Layout.row = row
+          }
+          onRowSpanChanged: {
+            Layout.rowSpan = rowSpan
+          }*/
+
+        }
       }
     }
   }

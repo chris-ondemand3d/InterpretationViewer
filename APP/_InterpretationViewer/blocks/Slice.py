@@ -119,7 +119,7 @@ class Slice(I2G_IMG_HOLDER):
     def set_camera_scale(self, scale):
         cam = self.ren.GetActiveCamera()
         cam.ParallelProjectionOn()
-        B = self.slice_img.get_actor().GetMaxYBound() - self.slice_img.get_actor().GetMinYBound()
+        B = self.slice_img.get_actor().GetMaxXBound() - self.slice_img.get_actor().GetMinXBound()
         cameraResetParallelScale = B * scale
         cam.SetParallelScale(cameraResetParallelScale)
 
@@ -327,6 +327,9 @@ class Slice(I2G_IMG_HOLDER):
         _sign = 1 if _event == r'MouseWheelForwardEvent' else -1
         _sign *= -1 if IS_OSX else 1
         _interval = 5 if _ctrl else 1
+
+        if self.vtk_img is None:
+            return
 
         thickness = self.spacing[2] if hasattr(self, 'spacing') else 0.2
 

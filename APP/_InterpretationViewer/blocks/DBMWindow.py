@@ -53,9 +53,7 @@ class DBMWindow(QObject):
             """
             children = selected_model.children()
             layout_idx = 0
-            for series in children[:4]:
-                if int(series.itemData['Imgs']) < 50:
-                    continue
+            for series in children[:]:
                 vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
                                                    series.itemData['SeriesInstanceUID'])
                 self._win.send_message.emit(['slice::init_vtk', (vtk_img, layout_idx)])

@@ -24,10 +24,21 @@ Item {
   SliceView_topbar_panel {
     id: sliceview_topbar_panel
     objectName: "sliceview_topbar_panel"
-    height: 35
+    height: 70
 
     anchors.left: sliceview_menu_panel.right
     anchors.top: parent.top
+    anchors.right: parent.right
+  }
+
+  // Topbar Thumbnail
+  SliceView_topbar_thumbnail {
+    id: sliceview_topbar_thumbnail
+    objectName: "sliceview_topbar_thumbnail"
+    height: 100
+
+    anchors.left: sliceview_menu_panel.right
+    anchors.top: sliceview_topbar_panel.bottom
     anchors.right: parent.right
   }
 
@@ -61,7 +72,7 @@ Item {
     objectName: "sliceview_mxn_layout"
 
     anchors.left: sliceview_menu_panel.right
-    anchors.top: sliceview_topbar_panel.bottom
+    anchors.top: sliceview_topbar_thumbnail.bottom
     anchors.right: parent.right
     anchors.bottom: bottombar_panel.top
   }

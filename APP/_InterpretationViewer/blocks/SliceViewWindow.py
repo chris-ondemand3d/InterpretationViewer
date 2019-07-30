@@ -30,7 +30,7 @@ class SliceViewWindow(QObject):
         self._mgr.init_slice(cnt)
 
         for i, s in enumerate(self._mgr.SLICES):
-            item = repeater_imgholder.itemAt(i)
+            item = repeater_imgholder.itemAt(i).childItems()[1]
             _w = QQmlProperty.read(item, 'width')
             _h = QQmlProperty.read(item, 'height')
             item.setHeight(1000)

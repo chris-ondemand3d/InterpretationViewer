@@ -64,6 +64,11 @@ class SliceViewManager(QObject):
         p.SetColorLevel(1000)
         p.SetInterpolationTypeToLinear()
         # set vtk_img
+
+        # TODO
+        if layout_idx >= 4:
+            layout_idx = layout_idx - 4
+
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
         self.SLICES[layout_idx].set_actor_property(p)
 
@@ -78,6 +83,14 @@ class SliceViewManager(QObject):
             slice.sig_refresh_all.connect(self.on_refresh_all)
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
+
+    def is_available(self):
+        # # TODO !!!!!!!!!!!!!!!
+        print( [s.vtk_img is None for s in self.SLICES] )
+        if any([s.vtk_img is None for s in self.SLICES]):
+           return True
+        else:
+            return False
 
     def read_dcm_test(self):
         # # DCM Read
