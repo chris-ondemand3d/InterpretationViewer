@@ -84,12 +84,14 @@ class SliceViewManager(QObject):
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 
-    def is_available(self, _type='append'):
-        _fn = any if _type == 'append' else all if _type == 'new' else any
-        if _fn([s.vtk_img is None for s in self.SLICES]):
-           return True
-        else:
-            return False
+    def get_next_layout_id(self):
+        for i, s in enumerate(self.SLICES):
+            if s.vtk_img is None:
+                return i
+        return -1
+
+    def get_vtk_img_count(self):
+        return len(list(filter(lambda x: x.vtk_img is True, self.SLICES)))
 
     def read_dcm_test(self):
         # # DCM Read

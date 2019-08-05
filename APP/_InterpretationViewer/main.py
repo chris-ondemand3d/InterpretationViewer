@@ -90,10 +90,16 @@ def onMsg(msg):
     _msg, _params = msg
 
     if _msg == 'slice::init_vtk':
-        if app_slice.slice_mgr.is_available():
-            app_slice.slice_mgr.init_vtk(*_params)
-        elif app_slice2.slice_mgr.is_available():
-            app_slice2.slice_mgr.init_vtk(*_params)
+        _vtk_img, _open_type = _params
+        next_id = app_slice.slice_win.get_next_layout_id()
+        if next_id >= 0:
+            app_slice.slice_mgr.init_vtk(_vtk_img, next_id)
+        else:
+            next_id = app_slice2.slice_win.get_next_layout_id()
+            if next_id >= 0:
+                app_slice2.slice_mgr.init_vtk(_vtk_img, next_id)
+    elif _msg == 'set_layout':
+        pass
     elif _msg == 'slice::refresh_all':
         app_slice.sig_refresh_all.emit()
         app_slice2.sig_refresh_all.emit()
@@ -125,7 +131,28 @@ if __name__ == '__main__':
     # multiple monitor
     screens = _qapp.qapp.screens()
     if len(screens) == 3:
-        pass
+        screen1 = screens[2]
+        screen2 = screens[1]
+        app_dbm.setScreen(screen1)
+        app_slice.setScreen(screen2)
+        app_slice2.setScreen(screen2)
+        # app_mpr.setScreen(screen2)
+
+        titlebar_height = _qapp.qapp.style().pixelMetric(QStyle.PM_TitleBarHeight)
+        w = screen2.geometry().width()
+        h = screen2.availableGeometry().height() - titlebar_height
+        mpr_sz = [int(w * 1 / 2), h]
+        app_slice.resize(*mpr_sz)
+        app_slice.setPosition(screen2.geometry().x(), screen2.geometry().y() + titlebar_height)
+        app_slice2.resize(*mpr_sz)
+        app_slice2.setPosition(screen2.geometry().x() + mpr_sz[0], screen2.geometry().y() + titlebar_height)
+        # app_mpr.resize(*mpr_sz)
+        # app_mpr.setPosition(screen2.geometry().x(), screen2.geometry().y() + titlebar_height)
+
+        app_dbm.show(isMaximize=True)
+        app_slice.show(isMaximize=False)
+        app_slice2.show(isMaximize=False)
+        # app_mpr.show(isMaximize=False)
     elif len(screens) == 2:
         screen1 = screens[0]
         screen2 = screens[1]

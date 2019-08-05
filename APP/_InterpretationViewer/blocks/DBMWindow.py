@@ -89,12 +89,10 @@ class DBMWindow(QObject):
             # self._win.send_message.emit(['slice::set_layout', layout])
 
             # init vtk
-            layout_idx = 0
             for series in children[:]:
                 vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
                                                    series.itemData['SeriesInstanceUID'])
-                self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'append', layout_idx)])
-                layout_idx += 1
+                self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'append')])
         else:
             """
             case of series
@@ -102,4 +100,4 @@ class DBMWindow(QObject):
             vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
                                                selected_model.itemData['SeriesInstanceUID'])
             # self._win.send_message.emit(['slice::set_layout', (1,1)])
-            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'new', 0)])
+            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'new')])

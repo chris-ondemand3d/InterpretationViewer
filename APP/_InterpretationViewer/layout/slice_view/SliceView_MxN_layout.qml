@@ -63,7 +63,7 @@ Item {
           height : 30
           implicitWidth: vtk_img_holder.width
           implicitHeight: 30
-          color: 'darkgray'
+          color: '#232323'
         }
 
         ImageHolder {

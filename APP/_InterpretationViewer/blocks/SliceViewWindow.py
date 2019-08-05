@@ -21,8 +21,8 @@ class SliceViewWindow(QObject):
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/slice_view/SliceView_layout.qml'))
         self._win.setSource(_win_source)
 
-        repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
-        cnt = QQmlProperty.read(repeater_imgholder, 'count')
+        self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
+        cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
 
         if not hasattr(self, '_mgr'):
             return
@@ -30,7 +30,7 @@ class SliceViewWindow(QObject):
         self._mgr.init_slice(cnt)
 
         for i, s in enumerate(self._mgr.SLICES):
-            item = repeater_imgholder.itemAt(i).childItems()[1]
+            item = self.repeater_imgholder.itemAt(i).childItems()[1]
             _w = QQmlProperty.read(item, 'width')
             _h = QQmlProperty.read(item, 'height')
             item.setHeight(1000)
@@ -53,3 +53,15 @@ class SliceViewWindow(QObject):
 
         if hasattr(self, 'items'):
             _remove(self.items)
+
+    def get_next_layout_id(self):
+        # get next available id
+        next_id = self._mgr.get_next_layout_id()
+        # get fullscreen status
+        F = [QQmlProperty.read(self.repeater_imgholder.itemAt(i).childItems()[1], 'fullscreenTrigger')
+             for i, s in enumerate(self._mgr.SLICES)]
+        # if any views are fullscreen mode, return -1 for skip to next application.
+        if any(F):
+            return -1
+        # else, return next available id
+        return next_id
