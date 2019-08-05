@@ -98,8 +98,18 @@ def onMsg(msg):
             next_id = app_slice2.slice_win.get_next_layout_id()
             if next_id >= 0:
                 app_slice2.slice_mgr.init_vtk(_vtk_img, next_id)
-    elif _msg == 'set_layout':
-        pass
+    elif _msg == 'slice::try_fullscreen_mode':
+        _full_screen_mode = _params
+        if app_slice.slice_mgr.get_vtk_img_count() > 0:
+            if app_slice2.slice_mgr.get_vtk_img_count() > 0:
+                return
+            else:
+                next_id = app_slice2.slice_win.get_next_layout_id()
+                app_slice2.slice_win.fullscreen(next_id, _full_screen_mode)
+        else:
+            next_id = app_slice.slice_win.get_next_layout_id()
+            app_slice.slice_win.fullscreen(next_id, _full_screen_mode)
+
     elif _msg == 'slice::refresh_all':
         app_slice.sig_refresh_all.emit()
         app_slice2.sig_refresh_all.emit()

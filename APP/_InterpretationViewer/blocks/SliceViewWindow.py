@@ -57,11 +57,30 @@ class SliceViewWindow(QObject):
     def get_next_layout_id(self):
         # get next available id
         next_id = self._mgr.get_next_layout_id()
+
+        if next_id == -1:
+            return next_id
+
         # get fullscreen status
         F = [QQmlProperty.read(self.repeater_imgholder.itemAt(i).childItems()[1], 'fullscreenTrigger')
              for i, s in enumerate(self._mgr.SLICES)]
-        # if any views are fullscreen mode, return -1 for skip to next application.
+        F_IDX = [i for i, elem in enumerate(F) if elem is True]
+        # get vtk image init status
+        I = [s.vtk_img for i, s in enumerate(self._mgr.SLICES)]
+
+        # if any views are fullscreen mode,
         if any(F):
+            # if vtk img isn't initialized at fullscreen idx, return fullscreen idx
+            if len(F_IDX) > 0 and I[F_IDX[0]] is None:
+                return F_IDX[0]
+            # vtk img isn't initialized at next idx, return next_id. so, it's an available next_id!
+            elif F[next_id] and I[next_id] is None:
+                return next_id
+            # else, return -1 for skip to next application.
             return -1
         # else, return next available id
         return next_id
+
+    def fullscreen(self, layout_idx, fullscreen_mode):
+        item = self.repeater_imgholder.itemAt(layout_idx).childItems()[1]
+        item.setProperty('fullscreenTrigger', fullscreen_mode)

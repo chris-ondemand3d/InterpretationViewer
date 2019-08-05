@@ -91,7 +91,7 @@ class SliceViewManager(QObject):
         return -1
 
     def get_vtk_img_count(self):
-        return len(list(filter(lambda x: x.vtk_img is True, self.SLICES)))
+        return len(list(filter(lambda x: x.vtk_img is not None, self.SLICES)))
 
     def read_dcm_test(self):
         # # DCM Read

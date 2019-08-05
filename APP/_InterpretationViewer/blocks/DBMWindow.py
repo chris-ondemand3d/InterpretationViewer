@@ -89,6 +89,9 @@ class DBMWindow(QObject):
             # self._win.send_message.emit(['slice::set_layout', layout])
 
             # init vtk
+            if len(children[:]) == 1:
+                self._win.send_message.emit(['slice::try_fullscreen_mode', True])
+
             for series in children[:]:
                 vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
                                                    series.itemData['SeriesInstanceUID'])
