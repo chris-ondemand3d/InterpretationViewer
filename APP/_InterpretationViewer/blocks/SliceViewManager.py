@@ -84,10 +84,9 @@ class SliceViewManager(QObject):
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 
-    def is_available(self):
-        # # TODO !!!!!!!!!!!!!!!
-        print( [s.vtk_img is None for s in self.SLICES] )
-        if any([s.vtk_img is None for s in self.SLICES]):
+    def is_available(self, _type='append'):
+        _fn = any if _type == 'append' else all if _type == 'new' else any
+        if _fn([s.vtk_img is None for s in self.SLICES]):
            return True
         else:
             return False

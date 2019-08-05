@@ -221,6 +221,10 @@ class Vtk_image_holder(QObject):
     def keyReleaseEvent(self, e):
         self.view.keyReleaseEvent(e)
 
+    def mouseDoubleClickEvent(self, e):
+        # TODO
+        print("mouse double clicked :: ", e)
+
     @pyqtSlot()
     def refresh(self):
         self.view._RenderWindow.Render()

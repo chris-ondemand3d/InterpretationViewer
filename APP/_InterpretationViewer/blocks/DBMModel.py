@@ -26,18 +26,20 @@ class SeriesItem(object):
 
         _count_CT = 0
         _count_CT_series = 0
-        _count_PRJ_series = 0
+        _count_PX = 0
+        _count_PX_series = 0
 
         for k, v in enumerate(data['Series']):
             if data['Series'][v]['Modality'] == "CT":
                 _count_CT_series += 1
                 _count_CT += data['Series'][v]['NumberOfImages']
-            # elif data['Series'][v]['Modality'] == "PRJ":
-            #     _count_PRJ_series += 1
+            elif data['Series'][v]['Modality'] == "PX":
+                _count_PX_series += 1
+                _count_PX += data['Series'][v]['NumberOfImages']
             else:
                 pass
 
-        _imgs_str = str(_count_CT + _count_PRJ_series) + '(' + str(_count_CT_series + _count_PRJ_series) + ')'
+        _imgs_str = str(_count_CT + _count_PX) + '(' + str(_count_CT_series + _count_PX_series) + ')'
 
         self.itemData['Imgs'] = _imgs_str
         self.itemData['Modality'] = None

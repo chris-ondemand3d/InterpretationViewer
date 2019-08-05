@@ -41,7 +41,7 @@ TAG_BitsAllocated = '00280100'
 
 # gasan url
 # HOST_URL = "http://221.118.26.3:44301"
-HOST_URL = "http://192.168.0.110:44301"
+HOST_URL = "http://192.168.50.14:44301"
 
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
@@ -119,7 +119,7 @@ class cyDicomWeb(object):
         # TODO have to check modality and bits allocated
         for i in self.metadata:
             _modality = i[TAG_Modality]['Value'][0]
-            if not(_modality is 'CT' or _modality is 'MR'):
+            if not(_modality is 'CT' or _modality is 'MR' or _modality is 'PX'):
                 self.metadata.remove(i)
                 continue
             if i[TAG_BitsAllocated]['Value'][0] != 16:
@@ -135,8 +135,8 @@ class cyDicomWeb(object):
         self.rescale_intercept = self.metadata[0][TAG_RescaleIntercept]['Value'][0]
         self.spacing = self.metadata[0][TAG_PixelSpacing]['Value']
         # self.thickness = self.metadata[0][TAG_SliceThickness]['Value'][0]
-        self.thickness = abs(self.metadata[0][TAG_ImagePosition]['Value'][2] - self.metadata[1][TAG_ImagePosition]['Value'][2])
-        self.origin = self.metadata[0][TAG_ImagePosition]['Value']
+        self.thickness = abs(self.metadata[0][TAG_ImagePosition]['Value'][2] - self.metadata[1][TAG_ImagePosition]['Value'][2]) if len(self.metadata) > 1 else 1
+        self.origin = self.metadata[0][TAG_ImagePosition]['Value'] if TAG_ImagePosition in self.metadata[0] else [0,0,0]
         print("width, height :: ", self.width, self.height)
         print("slope, intercept:: ", self.rescale_slope, self.rescale_intercept)
         print("origin :: ", self.origin)

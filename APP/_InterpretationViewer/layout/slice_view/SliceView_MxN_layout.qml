@@ -46,26 +46,9 @@ Item {
       objectName: 'repeater_imgholder_sliceview'
       model: grid.rows * grid.columns
 
-      /*
-      Rectangle{
-        property var column: 0
-        property var columnSpan: 1
-        property var row: 0
-        property var rowSpan: 1
-        id: rect_in_repeater
-        Layout.alignment: Qt.AlignTop
-        Layout.column: column
-        Layout.columnSpan: columnSpan
-        Layout.row: row
-        Layout.rowSpan: rowSpan
-        Layout.preferredWidth  : grid.colMulti * columnSpan - grid.columnSpacing
-        Layout.preferredHeight : grid.rowMulti * rowSpan - grid.rowSpacing
-        color: "green"
-      }
-      */
-
       ColumnLayout {
 
+        id: img_holder_root
         spacing: 0
         width: grid.colMulti * columnSpan - 0.5
         height: grid.rowMulti * rowSpan - 0.5
@@ -94,19 +77,15 @@ Item {
           Layout.rowSpan: parent.rowSpan
           Layout.preferredWidth  : grid.colMulti * parent.columnSpan - 0.5
           Layout.preferredHeight : grid.rowMulti * parent.rowSpan - 0.5
+          fullscreenTrigger: false
 
-          /*onColumnChanged: {
-            Layout.column = column
+          onMouseDoubleClicked: {
+            fullscreenTrigger = !fullscreenTrigger;
           }
-          onColumnSpanChanged: {
-            Layout.columnSpan = columnSpan
+
+          onFullscreenTriggerChanged: {
+            onFullscreen(fullscreenTrigger, img_holder_root)
           }
-          onRowChanged: {
-            Layout.row = row
-          }
-          onRowSpanChanged: {
-            Layout.rowSpan = rowSpan
-          }*/
 
         }
       }
@@ -116,11 +95,6 @@ Item {
   Component.onCompleted: {
     for (var i=0; i < repeater_imgholder_sliceview.count; i++)
     {
-        var column = 0
-        var columnSpan = 1
-        var row = 0
-        var rowSpan = 1
-
         var y = parseInt((i / grid.columns))
         var x = i % grid.columns
         var item = repeater_imgholder_sliceview.itemAt(i)
@@ -128,5 +102,45 @@ Item {
         item.column = x
         item.row = y
     }
+  }
+
+  function onFullscreen(bFullscreen, target_item)
+  {
+    for (var i=0; i < repeater_imgholder_sliceview.count; i++)
+    {
+      var _item = repeater_imgholder_sliceview.itemAt(i)
+      var _topbar_item = _item.children[0]
+      var _vtkimg_item = _item.children[1]
+
+      if (bFullscreen){
+        _item.visible = false
+      }
+      else {
+        _item.visible = true
+        var y = parseInt((i / grid.columns))
+        var x = i % grid.columns
+        _vtkimg_item.Layout.column = _item.column
+        _vtkimg_item.Layout.columnSpan = _item.columnSpan
+        _vtkimg_item.Layout.row = _item.row
+        _vtkimg_item.Layout.rowSpan = _item.rowSpan
+        _vtkimg_item.Layout.preferredWidth  = grid.colMulti * _item.columnSpan - 0.5
+        _vtkimg_item.Layout.preferredHeight = grid.rowMulti * _item.rowSpan - 0.5
+      }
+    }
+
+    // should be called at last
+    if (bFullscreen){
+      var _item = target_item
+      var _topbar_item = _item.children[0]
+      var _vtkimg_item = _item.children[1]
+      _item.visible = true
+      _vtkimg_item.Layout.column = 0
+      _vtkimg_item.Layout.columnSpan = grid.columns
+      _vtkimg_item.Layout.row = 0
+      _vtkimg_item.Layout.rowSpan = grid.rows
+      _vtkimg_item.Layout.preferredWidth  = grid.width
+      _vtkimg_item.Layout.preferredHeight = grid.height
+    }
+
   }
 }

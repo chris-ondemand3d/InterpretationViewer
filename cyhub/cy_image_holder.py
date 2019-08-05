@@ -126,17 +126,26 @@ class ImageHolder(QQuickItem):
             self.vtk_obj.mouseReleaseEvent(e)
 
     def mouseDoubleClickEvent(self, e):
-        # self.fullsize_trigger_Changed.emit(self._fullsize_trigger)
-        pass
+        if e.button() == Qt.LeftButton:
+            self.mouseDoubleClicked.emit(e)
+            # TODO is it necessary?
+            # if self.vtk_obj:
+            #     self.vtk_obj.mouseDoubleClickEvent(e)
 
-    def get_fullsize_trigger(self):
+    # property getter
+    def GetFullscreenTrigger(self):
+        if not hasattr(self, '_fullsize_trigger'):
+            self._fullsize_trigger = False
         return self._fullsize_trigger
 
-    def set_fullsize_trigger(self, fullsize_trigger):
+    # property setter
+    def SetFullscreenTrigger(self, fullsize_trigger):
         self._fullsize_trigger = fullsize_trigger
+        self.fullscreenTriggerChanged.emit()
 
-    fullsize_trigger_Changed = pyqtSignal(QVariant)
-    fullsize_trigger = pyqtProperty(QVariant, get_fullsize_trigger, set_fullsize_trigger, notify=fullsize_trigger_Changed)
+    mouseDoubleClicked = pyqtSignal(QVariant)
+    fullscreenTriggerChanged = pyqtSignal()
+    fullscreenTrigger = pyqtProperty(QVariant, GetFullscreenTrigger, SetFullscreenTrigger, notify=fullscreenTriggerChanged)
 
     def hoverMoveEvent(self, e):
         if self.vtk_obj:

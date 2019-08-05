@@ -37,13 +37,16 @@ Component {
       id: menuModel
 
       ListElement {
-        menuType: "delete"
+        menuType: "view"
       }
       ListElement {
-        menuType: "something"
+        menuType: "append"
       }
       ListElement {
-        menuType: "something"
+        menuType: "..."
+      }
+      ListElement {
+        menuType: "..."
       }
     }
 
@@ -56,24 +59,21 @@ Component {
           property var indexes: []
           text: model.menuType
           onTriggered:{
-            if(project_list_treeview_itemselectionmodel.selectedIndexes.length > 1){
-              for(var i = 0; i < project_list_treeview_itemselectionmodel.selectedIndexes.length; i++){
-                indexes.push(project_list_treeview_itemselectionmodel.selectedIndexes[i])
+            if(study_treeview_itemselectionmodel.selectedIndexes.length > 1){
+              for(var i = 0; i < study_treeview_itemselectionmodel.selectedIndexes.length; i++){
+                indexes.push(study_treeview_itemselectionmodel.selectedIndexes[i])
               }
-              project_list_treeview.sig_menu_trigger(text, indexes)
-
-              project_list_treeview_itemselectionmodel.clearSelection()
-              project_list_treeview.__currentRow = -1
-//              project_list_treeview_itemselectionmodel.setCurrentIndex(project_list_treeview.prev_parent_index, ItemSelectionModel.ClearAndSelect)
+              study_treeview.sig_menu_trigger(text, indexes)
+              //project_list_treeview_itemselectionmodel.clearSelection()
+              //project_list_treeview.__currentRow = -1
 
               indexes = []
             }else{
-              indexes.push(project_list_treeview_itemselectionmodel.selectedIndexes[0])
-              project_list_treeview.sig_menu_trigger(text, indexes)
+              indexes.push(study_treeview_itemselectionmodel.selectedIndexes[0])
+              study_treeview.sig_menu_trigger(text, indexes)
 
-              project_list_treeview_itemselectionmodel.clearSelection()
-              project_list_treeview.__currentRow = -1
-//              project_list_treeview_itemselectionmodel.setCurrentIndex(project_list_treeview.prev_parent_index, ItemSelectionModel.ClearAndSelect)
+              //project_list_treeview_itemselectionmodel.clearSelection()
+              //project_list_treeview.__currentRow = -1
 
               indexes = []
             }

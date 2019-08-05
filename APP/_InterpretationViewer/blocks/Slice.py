@@ -19,6 +19,7 @@ IS_OSX = (platform.system() == 'Darwin')
 
 CY_VTK_STATE_LOCK = 9919
 CAM_SCALE_NORMAL = 0.50
+CAM_SCALE_NORMAL_X = 0.35
 
 
 """ MouseEvent Mode """
@@ -107,19 +108,24 @@ class Slice(I2G_IMG_HOLDER):
         o = self.vtk_img.GetOrigin()
         c = self.vtk_img.GetCenter()
 
-        # plane_pos = [c[0], c[1], ((d[2] - 1) * s[2]) + o[2]]
         plane_pos = [c[0], c[1], o[2]]
-        # plane_pos = [c[0], c[1], c[2]]
-        _params = [plane_pos, np.array([0, 0, -1]), np.array([0, -1, 0]), CAM_SCALE_NORMAL]
+        _scale, _axis = (CAM_SCALE_NORMAL_X, 'x') if d[0] / d[1] >= 1.3 else (CAM_SCALE_NORMAL, 'y')
+        _params = [plane_pos, np.array([0, 0, -1]), np.array([0, -1, 0]), _scale, _axis]
 
         # set plane and camera
         self.set_plane(_params[0], _params[1], _params[2], _camera_fit_type=1)
-        self.set_camera_scale(_params[3])
+        self.set_camera_scale(_params[3], _params[4])
 
-    def set_camera_scale(self, scale):
+    def set_camera_scale(self, scale, axis='y'):
+        axis = axis.upper()
+        if axis == 'X':
+            B = self.slice_img.get_actor().GetMaxXBound() - self.slice_img.get_actor().GetMinXBound()
+        elif axis == 'Y':
+            B = self.slice_img.get_actor().GetMaxYBound() - self.slice_img.get_actor().GetMinYBound()
+        else:
+            B = self.slice_img.get_actor().GetMaxYBound() - self.slice_img.get_actor().GetMinYBound()
         cam = self.ren.GetActiveCamera()
         cam.ParallelProjectionOn()
-        B = self.slice_img.get_actor().GetMaxXBound() - self.slice_img.get_actor().GetMinXBound()
         cameraResetParallelScale = B * scale
         cam.SetParallelScale(cameraResetParallelScale)
 
@@ -491,3 +497,6 @@ class Slice(I2G_IMG_HOLDER):
     #     info["Thickness"] = self.get_thickness()
     #     info["Filter"] = self.image_filter_type if hasattr(self, 'image_filter_type') else 'None'
     #     return info
+
+    def mouseDoubleClickEvent(self, e):
+        super().mouseDoubleClickEvent(e)

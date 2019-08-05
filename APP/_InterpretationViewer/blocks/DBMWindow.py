@@ -32,6 +32,7 @@ class DBMWindow(QObject):
         # connect signals
         study_treeview = self._win.rootObject().findChild(QObject, 'study_treeview')
         study_treeview.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+        study_treeview.sig_menu_trigger.connect(self.on_data_load)
 
     def reset(self):
         #TODO!!!
@@ -47,16 +48,52 @@ class DBMWindow(QObject):
     @pyqtSlot(QVariant)
     def on_childitem_dblclick(self, index):
         selected_model = index.internalPointer()
+        self.load_data_from_model(selected_model)
+
+        # if selected_model.parent() is None:
+        #     """
+        #     case of study
+        #     """
+        #     children = selected_model.children()
+        #     layout_idx = 0
+        #     for series in children[:]:
+        #         vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
+        #                                            series.itemData['SeriesInstanceUID'])
+        #         self._win.send_message.emit(['slice::init_vtk', (vtk_img, layout_idx)])
+        #         layout_idx += 1
+        # else:
+        #     """
+        #     case of series
+        #     """
+        #     vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
+        #                                        selected_model.itemData['SeriesInstanceUID'])
+        #     self._win.send_message.emit(['slice::init_vtk', (vtk_img, 0)])
+
+    @pyqtSlot(str, QVariant)
+    def on_data_load(self, cmd, indices):
+        indices = indices.toVariant()
+        for index in indices:
+            model = index.internalPointer()
+            if cmd == 'view':
+                self.load_data_from_model(model)
+
+    def load_data_from_model(self, selected_model):
         if selected_model.parent() is None:
             """
             case of study
             """
             children = selected_model.children()
+
+            # set layout
+            # layout = (1,1) if len(children) == 1 else (4,4)
+            # self._win.send_message.emit(['slice::set_layout', layout])
+
+            # init vtk
             layout_idx = 0
             for series in children[:]:
                 vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
                                                    series.itemData['SeriesInstanceUID'])
-                self._win.send_message.emit(['slice::init_vtk', (vtk_img, layout_idx)])
+                self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'append', layout_idx)])
                 layout_idx += 1
         else:
             """
@@ -64,4 +101,5 @@ class DBMWindow(QObject):
             """
             vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
                                                selected_model.itemData['SeriesInstanceUID'])
-            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 0)])
+            # self._win.send_message.emit(['slice::set_layout', (1,1)])
+            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'new', 0)])
