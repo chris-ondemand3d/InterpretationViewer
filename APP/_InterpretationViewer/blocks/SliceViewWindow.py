@@ -21,6 +21,7 @@ class SliceViewWindow(QObject):
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/slice_view/SliceView_layout.qml'))
         self._win.setSource(_win_source)
 
+        self.layout_item = self._win.rootObject().findChild(QObject, 'sliceview_mxn_layout')
         self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
         cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
 
@@ -33,8 +34,8 @@ class SliceViewWindow(QObject):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
             _w = QQmlProperty.read(item, 'width')
             _h = QQmlProperty.read(item, 'height')
-            item.setHeight(1000)
-            item.setWidth(1000)
+            item.setHeight(2000)
+            item.setWidth(2000)
             item.set_vtk(s)
             item.setHeight(_w)
             item.setWidth(_h)
@@ -84,3 +85,10 @@ class SliceViewWindow(QObject):
     def fullscreen(self, layout_idx, fullscreen_mode):
         item = self.repeater_imgholder.itemAt(layout_idx).childItems()[1]
         item.setProperty('fullscreenTrigger', fullscreen_mode)
+
+    def set_data_info_str(self, patient_info, layout_id):
+        _s = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = _s.findChild(QObject, 'col_sv_patient_info')
+        self.layout_item.setPatientInfo(_obj, patient_info['id'], patient_info['name'],
+                                        patient_info['age'], patient_info['sex'],
+                                        patient_info['date'], patient_info['series_id'])

@@ -66,11 +66,6 @@ class SliceViewManager(QObject):
         p.SetColorWindow(wwl[0])
         p.SetColorLevel(wwl[1])
         p.SetInterpolationTypeToLinear()
-        # set vtk_img
-
-        # # TODO
-        # if layout_idx >= 4:
-        #     layout_idx = layout_idx - 4
 
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
         self.SLICES[layout_idx].set_actor_property(p)

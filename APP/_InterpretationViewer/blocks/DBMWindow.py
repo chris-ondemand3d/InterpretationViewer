@@ -84,23 +84,37 @@ class DBMWindow(QObject):
             """
             children = selected_model.children()
 
-            # set layout
-            # layout = (1,1) if len(children) == 1 else (4,4)
-            # self._win.send_message.emit(['slice::set_layout', layout])
-
             # init vtk
             if len(children[:]) == 1:
                 self._win.send_message.emit(['slice::try_fullscreen_mode', True])
 
             for series in children[:]:
+                patient_info = {'id': selected_model.itemData['PatientID'],
+                                'name': selected_model.itemData['PatientName'],
+                                'sex': selected_model.itemData['PatientSex'],
+                                'age': selected_model.itemData['PatientAge'],
+                                'date': selected_model.itemData['DateTime'],
+
+                                # NOTE PatientID is equal to SeriesID when series item is referred
+                                'series_id': series.itemData['PatientID']
+                                }
                 vtk_img, wwl = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
                                                         series.itemData['SeriesInstanceUID'])
-                self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, 'append')])
+                self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, patient_info, 'append')])
         else:
             """
             case of series
             """
             self._win.send_message.emit(['slice::try_fullscreen_mode', True])
+            patient_info = {'id': selected_model.parent().itemData['PatientID'],
+                            'name': selected_model.parent().itemData['PatientName'],
+                            'sex': selected_model.parent().itemData['PatientSex'],
+                            'age': selected_model.parent().itemData['PatientAge'],
+                            'date': selected_model.parent().itemData['DateTime'],
+
+                            # NOTE PatientID is equal to SeriesID when series item is referred
+                            'series_id': selected_model.itemData['PatientID']
+                            }
             vtk_img, wwl = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
                                                     selected_model.itemData['SeriesInstanceUID'])
-            self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, 'new')])
+            self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, patient_info, 'new')])

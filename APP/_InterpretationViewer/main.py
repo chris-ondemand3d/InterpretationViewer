@@ -60,6 +60,16 @@ class slice_app(CyQQuickView):
             QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)
 
+    def get_next_layout_id(self):
+        return self.slice_win.get_next_layout_id()
+
+    def init_vtk(self, _vtk_img, _wwl, _patient_info, next_id):
+        self.slice_win.set_data_info_str(_patient_info, next_id)
+        self.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
+
+    def fullscreen(self, layout_idx, fullscreen_mode):
+        self.slice_win.fullscreen(layout_idx, fullscreen_mode)
+
 
 class mpr_app(CyQQuickView):
 
@@ -90,25 +100,25 @@ def onMsg(msg):
     _msg, _params = msg
 
     if _msg == 'slice::init_vtk':
-        _vtk_img, _wwl, _open_type = _params
-        next_id = app_slice.slice_win.get_next_layout_id()
+        _vtk_img, _wwl, _patient_info, _open_type = _params
+        next_id = app_slice.get_next_layout_id()
         if next_id >= 0:
-            app_slice.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
+            app_slice.init_vtk(_vtk_img, _wwl, _patient_info, next_id)
         else:
-            next_id = app_slice2.slice_win.get_next_layout_id()
+            next_id = app_slice2.get_next_layout_id()
             if next_id >= 0:
-                app_slice2.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
+                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, next_id)
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params
         if app_slice.slice_mgr.get_vtk_img_count() > 0:
             if app_slice2.slice_mgr.get_vtk_img_count() > 0:
                 return
             else:
-                next_id = app_slice2.slice_win.get_next_layout_id()
-                app_slice2.slice_win.fullscreen(next_id, _full_screen_mode)
+                next_id = app_slice2.get_next_layout_id()
+                app_slice2.fullscreen(next_id, _full_screen_mode)
         else:
-            next_id = app_slice.slice_win.get_next_layout_id()
-            app_slice.slice_win.fullscreen(next_id, _full_screen_mode)
+            next_id = app_slice.get_next_layout_id()
+            app_slice.fullscreen(next_id, _full_screen_mode)
 
     elif _msg == 'slice::refresh_all':
         app_slice.sig_refresh_all.emit()

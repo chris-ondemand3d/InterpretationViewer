@@ -9,8 +9,8 @@ import '../style'
 
 
 Item {
-  id: mpr_4x4_layout_item
-  objectName: "mpr_4x4_layout_item"
+  id: slice_view_layout_item
+  objectName: "slice_view_layout_item"
 
   width: 400
   height: 400
@@ -60,9 +60,9 @@ Item {
 
         Rectangle {
           width : vtk_img_holder.width
-          height : 30
+          height : 25
           implicitWidth: vtk_img_holder.width
-          implicitHeight: 30
+          implicitHeight: 25
           color: '#232323'
         }
 
@@ -79,6 +79,78 @@ Item {
           Layout.preferredHeight : grid.rowMulti * parent.rowSpan - 0.5
           fullscreenTrigger: false
 
+          // patient info (LT) - Patient ID, Name, Sex, BirthData
+          Column{
+            id: col_sv_patient_info
+            objectName: "col_sv_patient_info"
+            visible: true
+
+            anchors{
+              top: parent.top
+              topMargin: 10
+              left: parent.left
+              leftMargin: 10
+            }
+
+            // Patient ID
+            Text{
+              id: text_sv_patient_id
+              width: 100
+              height: 15
+              text: ""
+              color: "white"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              verticalAlignment: Text.AlignVCenter
+            }
+
+            // Patient Name & Age & Sex
+            Text{
+              id: text_sv_patient_name_age_sex
+              width: 100
+              height: 15
+              text: ""
+              color: "white"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              verticalAlignment: Text.AlignVCenter
+            }
+
+            // Patient Created Date
+            Text{
+              id: text_sv_patient_date
+              width: 100
+              height: 15
+              text: ""
+              color: "white"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              verticalAlignment: Text.AlignVCenter
+            }
+
+            // Patient Series ID
+            Text{
+              id: text_sv_patient_series_id
+              width: 100
+              height: 15
+              text: ""
+              color: "white"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              verticalAlignment: Text.AlignVCenter
+            }
+
+          }
+
+          // slice number (RT_U)
+
+
+          // filter (RT_M)
+
+
+          // thickness (RT_L)
+
+
+          // WWL (RB)
+
+
+          // fullscreen event
           onMouseDoubleClicked: {
             fullscreenTrigger = !fullscreenTrigger;
           }
@@ -87,6 +159,17 @@ Item {
             onFullscreen(fullscreenTrigger, img_holder_root)
           }
 
+          function clear(){
+            // patient info
+            text_sv_patient_id.text = ""
+            text_sv_patient_name_age_sex.text = ""
+            text_sv_patient_date.text = ""
+            text_sv_patient_series_id.text = ""
+            // slice number (RT_U)
+            // filter (RT_M)
+            // thickness (RT_L)
+            // WWL (RB)
+          }
         }
       }
     }
@@ -143,4 +226,35 @@ Item {
     }
 
   }
+
+  function setPatientInfo(target_item, id, name, age, sex, date, series_id)
+  {
+    // id
+    var txt_id = target_item.children[0];
+    txt_id.text = ('ID : %1').arg(id);
+
+    // name & age & sex
+    var txt_name = target_item.children[1];
+    txt_name.text = ('Name : %1 [%2%3]').arg(name).arg(String(age) === "undefined" ? "" : age).arg(sex);
+
+    // date
+    var txt_date = target_item.children[2];
+    txt_date.text = ('Date : %1').arg(date);
+
+    // series id
+    var txt_series = target_item.children[3];
+    txt_series.text = ('Series : %1').arg(series_id);
+  }
+
+  function clear()
+  {
+    for (var i=0; i < repeater_imgholder_sliceview.count; i++)
+    {
+      var _item = repeater_imgholder_sliceview.itemAt(i)
+      var _topbar_item = _item.children[0]
+      var _vtkimg_item = _item.children[1]
+      _vtkimg_item.clear();
+    }
+  }
+
 }
