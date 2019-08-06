@@ -57,17 +57,20 @@ class SliceViewManager(QObject):
             del s
         self.SLICES.clear()
 
-    def init_vtk(self, vtk_img, layout_idx):
+    def init_vtk(self, vtk_img, wwl, layout_idx):
+
+        if wwl is None:
+            wwl = [2000, 4000]
 
         p = vtk.vtkImageProperty()
-        p.SetColorWindow(3000)
-        p.SetColorLevel(1000)
+        p.SetColorWindow(wwl[0])
+        p.SetColorLevel(wwl[1])
         p.SetInterpolationTypeToLinear()
         # set vtk_img
 
-        # TODO
-        if layout_idx >= 4:
-            layout_idx = layout_idx - 4
+        # # TODO
+        # if layout_idx >= 4:
+        #     layout_idx = layout_idx - 4
 
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
         self.SLICES[layout_idx].set_actor_property(p)

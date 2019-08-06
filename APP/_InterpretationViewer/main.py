@@ -90,14 +90,14 @@ def onMsg(msg):
     _msg, _params = msg
 
     if _msg == 'slice::init_vtk':
-        _vtk_img, _open_type = _params
+        _vtk_img, _wwl, _open_type = _params
         next_id = app_slice.slice_win.get_next_layout_id()
         if next_id >= 0:
-            app_slice.slice_mgr.init_vtk(_vtk_img, next_id)
+            app_slice.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
         else:
             next_id = app_slice2.slice_win.get_next_layout_id()
             if next_id >= 0:
-                app_slice2.slice_mgr.init_vtk(_vtk_img, next_id)
+                app_slice2.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params
         if app_slice.slice_mgr.get_vtk_img_count() > 0:

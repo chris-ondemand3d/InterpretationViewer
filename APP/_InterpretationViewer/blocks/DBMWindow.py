@@ -93,14 +93,14 @@ class DBMWindow(QObject):
                 self._win.send_message.emit(['slice::try_fullscreen_mode', True])
 
             for series in children[:]:
-                vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
-                                                   series.itemData['SeriesInstanceUID'])
-                self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'append')])
+                vtk_img, wwl = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
+                                                        series.itemData['SeriesInstanceUID'])
+                self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, 'append')])
         else:
             """
             case of series
             """
-            vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
-                                               selected_model.itemData['SeriesInstanceUID'])
-            # self._win.send_message.emit(['slice::set_layout', (1,1)])
-            self._win.send_message.emit(['slice::init_vtk', (vtk_img, 'new')])
+            self._win.send_message.emit(['slice::try_fullscreen_mode', True])
+            vtk_img, wwl = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
+                                                    selected_model.itemData['SeriesInstanceUID'])
+            self._win.send_message.emit(['slice::init_vtk', (vtk_img, wwl, 'new')])

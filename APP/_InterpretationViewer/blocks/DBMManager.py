@@ -116,6 +116,7 @@ class DBMManager(QObject):
         dim = dicom_web.get_dimensions()
         o = dicom_web.get_origin()
         s = [*dicom_web.get_spacing(), dicom_web.get_thickness()]
+        wwl = dicom_web.get_wwl()
         vtk_img = vtk.vtkImageData()
         vtk_img.SetDimensions(dim)
         vtk_img.SetOrigin(o)
@@ -200,4 +201,4 @@ class DBMManager(QObject):
         _dicom_web = copy.deepcopy(self.DICOM_WEB[study_uid])
         WorkerThread.start_worker(*W0, _do, _dicom_web,
                                    _finished_func=lambda: _on_finished(W0))
-        return vtk_img
+        return vtk_img, wwl

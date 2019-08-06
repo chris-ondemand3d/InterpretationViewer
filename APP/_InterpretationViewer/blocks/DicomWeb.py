@@ -32,6 +32,8 @@ TAG_BodyPartExamined = '00180015'
 TAG_NumberofStudyRelatedInstances = '00201208'
 TAG_NumberofSeriesRelatedInstances = '00201209'
 TAG_BitsAllocated = '00280100'
+TAG_WindowCenter = '00281050'
+TAG_WindowWidth = '00281051'
 
 
 # HOST_URL = "http://dicomcloud.iptime.org:44301"
@@ -39,8 +41,7 @@ TAG_BitsAllocated = '00280100'
 # HOST_URL = "http://192.168.200.140:44301"
 # HOST_URL = "http://localhost:44301"
 
-# gasan url
-# HOST_URL = "http://221.118.26.3:44301"
+# sang-am url
 HOST_URL = "http://192.168.50.14:44301"
 
 QIDORS_PREFIX = 'qidors'
@@ -137,11 +138,18 @@ class cyDicomWeb(object):
         # self.thickness = self.metadata[0][TAG_SliceThickness]['Value'][0]
         self.thickness = abs(self.metadata[0][TAG_ImagePosition]['Value'][2] - self.metadata[1][TAG_ImagePosition]['Value'][2]) if len(self.metadata) > 1 else 1
         self.origin = self.metadata[0][TAG_ImagePosition]['Value'] if TAG_ImagePosition in self.metadata[0] else [0,0,0]
+        self.window_center = self.metadata[0][TAG_WindowCenter]['Value'][0]
+        self.window_width = self.metadata[0][TAG_WindowWidth]['Value'][0]
+
+        # debug check
         print("width, height :: ", self.width, self.height)
         print("slope, intercept:: ", self.rescale_slope, self.rescale_intercept)
         print("origin :: ", self.origin)
         print("spacing :: ", self.spacing)
         print("thickness :: ", self.thickness)
+        print("window center :: ", self.window_center)
+        print("window width :: ", self.window_width)
+
         return True
 
     def get_origin(self):
@@ -158,6 +166,9 @@ class cyDicomWeb(object):
 
     def get_rescale_params(self):
         return self.rescale_slope, self.rescale_intercept
+
+    def get_wwl(self):
+        return self.window_width, self.window_center
 
     def requests_studies(self):
         url = "%s/%s/studies/" % (self.host_url, self.qidors_prefix)
