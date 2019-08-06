@@ -3,7 +3,7 @@ import os, sys
 from cyhub.cy_image_holder import CyQQuickView
 
 from PyQt5.QtQuick import QQuickView
-from PyQt5.QtCore import QObject, QUrl, QTimer, Qt
+from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtQml import QQmlProperty
 
 
@@ -28,7 +28,9 @@ class SliceViewWindow(QObject):
         if not hasattr(self, '_mgr'):
             return
 
+        # initialize sig/slot
         self._mgr.init_slice(cnt)
+        self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
 
         for i, s in enumerate(self._mgr.SLICES):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
@@ -92,3 +94,8 @@ class SliceViewWindow(QObject):
         self.layout_item.setPatientInfo(_obj, patient_info['id'], patient_info['name'],
                                         patient_info['age'], patient_info['sex'],
                                         patient_info['date'], patient_info['series_id'])
+
+    @pyqtSlot(object, object)
+    def on_change_slice_num(self, slice_num, layout_id):
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self.layout_item.setSliceNumber(_obj, slice_num)

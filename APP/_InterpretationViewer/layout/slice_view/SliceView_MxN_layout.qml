@@ -79,7 +79,7 @@ Item {
           Layout.preferredHeight : grid.rowMulti * parent.rowSpan - 0.5
           fullscreenTrigger: false
 
-          // patient info (LT) - Patient ID, Name, Sex, BirthData
+          // patient info (LT) - Patient ID, Name, Age, Sex, Date, Series ID
           Column{
             id: col_sv_patient_info
             objectName: "col_sv_patient_info"
@@ -139,7 +139,29 @@ Item {
           }
 
           // slice number (RT_U)
+          Column{
+            id: col_sv_slice_number
+            objectName: "col_sv_slice_number"
+            visible: true
 
+            anchors{
+              top: parent.top
+              topMargin: 10
+              right: parent.right
+              rightMargin: 10
+            }
+
+            // Slice Number
+            Text{
+              id: text_sv_slice_number
+              width: 50
+              height: 15
+              text: ""
+              color: "yellow"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              horizontalAlignment: Text.AlignRight
+            }
+          }
 
           // filter (RT_M)
 
@@ -166,10 +188,16 @@ Item {
             text_sv_patient_date.text = ""
             text_sv_patient_series_id.text = ""
             // slice number (RT_U)
+            text_sv_slice_number.text = ""
             // filter (RT_M)
             // thickness (RT_L)
             // WWL (RB)
           }
+
+          function setSliceNumber(number){
+            text_sv_slice_number.text = ('# %1').arg(number);
+          }
+
         }
       }
     }
@@ -244,6 +272,11 @@ Item {
     // series id
     var txt_series = target_item.children[3];
     txt_series.text = ('Series : %1').arg(series_id);
+  }
+
+  function setSliceNumber(target_item, number)
+  {
+    target_item.setSliceNumber(number);
   }
 
   function clear()

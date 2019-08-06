@@ -39,6 +39,7 @@ DCM_INTERVAL = 1
 class SliceViewManager(QObject):
 
     sig_refresh_all = pyqtSignal()
+    sig_change_slice_num = pyqtSignal(object, object)
 
     def __init__(self, *args, **kdws):
         super().__init__()
@@ -79,6 +80,7 @@ class SliceViewManager(QObject):
         for i in range(num):
             slice = Slice()
             slice.sig_refresh_all.connect(self.on_refresh_all)
+            slice.sig_change_slice_num.connect(self.on_change_slice_num)
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 
@@ -114,3 +116,7 @@ class SliceViewManager(QObject):
     def on_refresh_all(self):
         for slice in self.SLICES:
             slice.refresh()
+
+    @pyqtSlot(object)
+    def on_change_slice_num(self, slice_num):
+        self.sig_change_slice_num.emit(slice_num, self.SLICES.index(self.sender()))

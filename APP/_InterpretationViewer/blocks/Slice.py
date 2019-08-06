@@ -30,6 +30,7 @@ CAM_SCALE_NORMAL_X = 0.35
 class Slice(I2G_IMG_HOLDER):
 
     sig_update_slabplane = pyqtSignal(object)
+    sig_change_slice_num = pyqtSignal(object)
     sig_refresh_all = pyqtSignal()
 
     def __init__(self, *args, **kwds):
@@ -330,17 +331,26 @@ class Slice(I2G_IMG_HOLDER):
         _shift = _rwi.GetInteractor().GetShiftKey()
         _alt = _rwi.GetInteractor().GetAltKey()
 
+        if self.vtk_img is None:
+            return
+
         _sign = 1 if _event == r'MouseWheelForwardEvent' else -1
         _sign *= -1 if IS_OSX else 1
         _interval = 5 if _ctrl else 1
-
-        if self.vtk_img is None:
-            return
 
         thickness = self.spacing[2] if hasattr(self, 'spacing') else 0.2
 
         o, n = self.get_plane()
         o = list(np.array(o) + np.array(n) * (thickness * _interval * _sign))
+
+        # TODO !!!!!!!!!!!!
+        src_d = np.array(self.vtk_img.GetDimensions())
+        src_s = np.array(self.vtk_img.GetSpacing())
+        src_o = np.array(self.vtk_img.GetOrigin())
+        slice_num = int(((o - src_o)[2] / src_s[2]))
+        if slice_num < 0 or slice_num >= src_d[2]: # TODO
+            return
+        self.sig_change_slice_num.emit(slice_num)
         self.set_plane(o, n)
 
     def refresh(self):
