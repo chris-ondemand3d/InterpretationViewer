@@ -81,7 +81,6 @@ class SliceViewManager(QObject):
         p.SetColorWindow(wwl[0])
         p.SetColorLevel(wwl[1])
         p.SetInterpolationTypeToLinear()
-
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
         self.SLICES[layout_idx].set_actor_property(p)
 
@@ -93,6 +92,7 @@ class SliceViewManager(QObject):
             self.sig_change_thickness.emit(th, layout_idx)
         intial_filter = None
         self.sig_change_filter.emit(intial_filter, layout_idx)
+        self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
 
     def clear_all_actors(self):
         for s in self.SLICES:
