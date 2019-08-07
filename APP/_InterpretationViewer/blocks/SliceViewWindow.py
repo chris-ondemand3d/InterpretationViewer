@@ -28,9 +28,10 @@ class SliceViewWindow(QObject):
         if not hasattr(self, '_mgr'):
             return
 
-        # initialize sig/slot
+        # initialize sig/slot of Python
         self._mgr.init_slice(cnt)
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
+        self._mgr.sig_change_thickness.connect(self.on_change_thickness)
 
         for i, s in enumerate(self._mgr.SLICES):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
@@ -41,7 +42,11 @@ class SliceViewWindow(QObject):
             item.set_vtk(s)
             item.setHeight(_w)
             item.setWidth(_h)
-            item.installEventFilter(self._win) # to grab mouse hover leave, add eventfilter
+            # item.installEventFilter(self._win) # to grab mouse hover leave, add eventfilter
+
+            # initialize sig/slot of QML
+            _obj_th = item.findChild(QObject, 'col_sv_thickness')
+            _obj_th.sigChanged.connect(self.on_changed_thickness)
 
     def reset(self):
         #TODO!!!
@@ -99,3 +104,13 @@ class SliceViewWindow(QObject):
     def on_change_slice_num(self, slice_num, layout_id):
         _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
         self.layout_item.setSliceNumber(_obj, slice_num)
+
+    @pyqtSlot(object, object)
+    def on_change_thickness(self, thickness, layout_id):
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self.layout_item.setThickness(_obj, thickness)
+
+    def on_changed_thickness(self, thickness, layout_id):
+        layout_id = int(layout_id)
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self._mgr.SLICES[layout_id].set_thickness(thickness)

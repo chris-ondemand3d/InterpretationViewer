@@ -54,11 +54,11 @@ class slice_app(CyQQuickView):
         self.slice_win = SliceViewWindow(_win=self, _mgr=self.slice_mgr)
         self.sig_refresh_all.connect(lambda: self.slice_mgr.on_refresh_all())
 
-    def eventFilter(self, obj, event):
-        # print("event filter (mpr_app):: ", obj, event)
-        if event.type() == QEvent.HoverLeave:
-            QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
-        return super().eventFilter(obj, event)
+    # def eventFilter(self, obj, event):
+    #     # print("event filter (mpr_app):: ", obj, event)
+    #     if event.type() == QEvent.HoverLeave:
+    #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+    #     return super().eventFilter(obj, event)
 
     def get_next_layout_id(self):
         return self.slice_win.get_next_layout_id()

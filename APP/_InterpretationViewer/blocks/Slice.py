@@ -425,6 +425,15 @@ class Slice(I2G_IMG_HOLDER):
     # def save_note(self, _str):
     #     self.Measure.save_note(_str)
 
+    def get_slice_num(self):
+        # TODO !!!!!!!!!!!!
+        o, n = self.get_plane()
+        src_d = np.array(self.vtk_img.GetDimensions())
+        src_s = np.array(self.vtk_img.GetSpacing())
+        src_o = np.array(self.vtk_img.GetOrigin())
+        slice_num = int(((o - src_o)[2] / src_s[2]))
+        return slice_num
+
     def set_thickness(self, _value):
         self.slice_img.set_thickness(_value)
 

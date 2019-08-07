@@ -163,10 +163,128 @@ Item {
             }
           }
 
-          // filter (RT_M)
+          // thickness (RT_M)
+          Column{
+            id: col_sv_thickness
+            objectName: "col_sv_thickness"
+            visible: false
 
+            signal sigChanged(real val, real idx)
 
-          // thickness (RT_L)
+            function reset(){
+              cb_sv_thickness.currentIndex = 0;
+            }
+
+            anchors{
+              top: col_sv_slice_number.bottom
+              topMargin: 0
+              right: col_sv_slice_number.right
+              rightMargin: 0
+            }
+
+            Rectangle{
+              id: rect_sv_thickness_title
+              width: 80
+              height: 15
+              color: "transparent"
+
+              Text{
+                id: text_sv_thickness
+                text: "Th: " + cb_sv_thickness.currentText + " [mm]"
+                color: cb_sv_thickness.visible ? "orange" : "white"
+                anchors.right: parent.right
+                horizontalAlignment: Text.AlignRight
+              }
+
+              MouseArea{
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                  if(!cb_sv_thickness.visible)
+                    cb_sv_thickness.visible = true
+                  else
+                    cb_sv_thickness.visible = false
+                }
+                onContainsMouseChanged: {
+                  if(containsMouse)
+                    cursorShape = Qt.PointingHandCursor
+                  else
+                    return
+                }
+              }
+            }
+
+            ListModel {
+              id: items_sv_thickness
+
+              property double maximumValue: 30.0
+              property double minimumValue: 0.0
+
+              ListElement { val: "0.0" }
+              ListElement { val: "0.5" }
+              ListElement { val: "1.0" }
+              ListElement { val: "2.0" }
+              ListElement { val: "3.0" }
+              ListElement { val: "4.0" }
+              ListElement { val: "5.0" }
+              ListElement { val: "10.0" }
+              ListElement { val: "15.0" }
+              ListElement { val: "20.0" }
+            }
+
+            ComboBox {
+              id: cb_sv_thickness
+              width: 80
+              editable: true
+              visible: false
+              focus: visible
+
+              //signal sigChanged(real val, real idx)
+
+              inputMethodHints: Qt.ImhFormattedNumbersOnly
+              validator: DoubleValidator {
+                bottom: items_sv_thickness.minimumValue
+                top: items_sv_thickness.maximumValue
+                notation: DoubleValidator.StandardNotation
+                decimals: 1
+              }
+              model: items_sv_thickness
+
+              onCurrentIndexChanged: {
+                if(currentText != ""){
+                  col_sv_thickness.sigChanged(parseFloat(currentText), parseInt(index));
+                  this.visible = false
+                }
+              }
+
+              onAccepted: {
+                col_sv_thickness.sigChanged(parseFloat(currentText), parseInt(index));
+                this.visible = false
+              }
+
+              onEditTextChanged: {
+                if(editText.length >= 2 && editText[0] == "0" && editText[1] != ".")
+                  editText = "0"
+                if(parseInt(editText) > items_sv_thickness.maximumValue)
+                  editText = "30"
+                if(editText[0] == "3" && editText[1] == "0" && editText[2] == ".")
+                  editText = "30"
+              }
+              // Temp Source!!!!!!! - by jhjeong  // why?
+              /*onVisibleChanged: {
+                  if(visible){
+                      cb_sv_2d_format.enabled = false
+                      col_sv_thickness.z = 1
+                  }
+                  else{
+                      cb_sv_2d_format.enabled = true
+                      col_sv_thickness.z = 0
+                  }
+              }*/
+            }
+          }
+
+          // filter (RT_L)
 
 
           // WWL (RB)
@@ -189,13 +307,20 @@ Item {
             text_sv_patient_series_id.text = ""
             // slice number (RT_U)
             text_sv_slice_number.text = ""
-            // filter (RT_M)
-            // thickness (RT_L)
+            // thickness (RT_M)
+            col_sv_thickness.reset()
+            col_sv_thickness.visible = false
+            // filter (RT_L)
             // WWL (RB)
           }
 
           function setSliceNumber(number){
             text_sv_slice_number.text = ('# %1').arg(number);
+          }
+
+          function setThickness(thickness){
+            col_sv_thickness.visible = true;
+            cb_sv_thickness.currentIndex = thickness;
           }
 
         }
@@ -277,6 +402,11 @@ Item {
   function setSliceNumber(target_item, number)
   {
     target_item.setSliceNumber(number);
+  }
+
+  function setThickness(target_item, thickness)
+  {
+    target_item.setThickness(thickness);
   }
 
   function clear()

@@ -40,6 +40,7 @@ class SliceViewManager(QObject):
 
     sig_refresh_all = pyqtSignal()
     sig_change_slice_num = pyqtSignal(object, object)
+    sig_change_thickness = pyqtSignal(object, object)
 
     def __init__(self, *args, **kdws):
         super().__init__()
@@ -58,6 +59,15 @@ class SliceViewManager(QObject):
             del s
         self.SLICES.clear()
 
+    def init_slice(self, num):
+        self.SLICES = []
+        for i in range(num):
+            slice = Slice()
+            slice.sig_refresh_all.connect(self.on_refresh_all)
+            slice.sig_change_slice_num.connect(self.on_change_slice_num)
+            self.SLICES.append(slice)
+        self.sig_refresh_all.connect(self.on_refresh_all)
+
     def init_vtk(self, vtk_img, wwl, layout_idx):
 
         if wwl is None:
@@ -71,18 +81,16 @@ class SliceViewManager(QObject):
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
         self.SLICES[layout_idx].set_actor_property(p)
 
+        # default
+        slice_num = self.SLICES[layout_idx].get_slice_num()
+        th = self.SLICES[layout_idx].get_thickness()
+        self.sig_change_slice_num.emit(slice_num, layout_idx)
+        if vtk_img.GetDimensions()[2] > 1:
+            self.sig_change_thickness.emit(th, layout_idx)
+
     def clear_all_actors(self):
         for s in self.SLICES:
             s.clear_all_actors()
-
-    def init_slice(self, num):
-        self.SLICES = []
-        for i in range(num):
-            slice = Slice()
-            slice.sig_refresh_all.connect(self.on_refresh_all)
-            slice.sig_change_slice_num.connect(self.on_change_slice_num)
-            self.SLICES.append(slice)
-        self.sig_refresh_all.connect(self.on_refresh_all)
 
     def get_next_layout_id(self):
         for i, s in enumerate(self.SLICES):
