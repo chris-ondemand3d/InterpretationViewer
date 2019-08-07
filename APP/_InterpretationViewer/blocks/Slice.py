@@ -510,6 +510,15 @@ class Slice(I2G_IMG_HOLDER):
             self.slice_img.cy_img_reslice_mapper.set_filter_highboost(False)
             self.refresh()
 
+        else:
+            self.slice_img.cy_img_reslice_mapper.set_filter_gaussian(False)
+            self.slice_img.cy_img_reslice_mapper.set_filter_sharpen(False)
+            self.slice_img.cy_img_reslice_mapper.set_filter_unsharpen(False)
+            self.slice_img.cy_img_reslice_mapper.set_filter_bilateral(False)
+            self.slice_img.cy_img_reslice_mapper.set_filter_anisotropic(False)
+            self.slice_img.cy_img_reslice_mapper.set_filter_highboost(False)
+            self.refresh()
+
     # def get_project_info(self):
     #     info = dict()
     #     info["Type"] = self.slice_type

@@ -32,6 +32,7 @@ class SliceViewWindow(QObject):
         self._mgr.init_slice(cnt)
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
         self._mgr.sig_change_thickness.connect(self.on_change_thickness)
+        self._mgr.sig_change_filter.connect(self.on_change_filter)
 
         for i, s in enumerate(self._mgr.SLICES):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
@@ -47,6 +48,8 @@ class SliceViewWindow(QObject):
             # initialize sig/slot of QML
             _obj_th = item.findChild(QObject, 'col_sv_thickness')
             _obj_th.sigChanged.connect(self.on_changed_thickness)
+            _obj_filter = item.findChild(QObject, 'col_sv_image_filter')
+            _obj_filter.sigChanged.connect(self.on_changed_filter)
 
     def reset(self):
         #TODO!!!
@@ -105,6 +108,10 @@ class SliceViewWindow(QObject):
         _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
         self.layout_item.setSliceNumber(_obj, slice_num)
 
+    def on_changed_slice_num(self, slice_num, layout_id):
+        # TODO
+        pass
+
     @pyqtSlot(object, object)
     def on_change_thickness(self, thickness, layout_id):
         _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
@@ -114,3 +121,13 @@ class SliceViewWindow(QObject):
         layout_id = int(layout_id)
         _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
         self._mgr.SLICES[layout_id].set_thickness(thickness)
+
+    @pyqtSlot(object, object)
+    def on_change_filter(self, img_filter, layout_id):
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self.layout_item.setFilter(_obj, img_filter)
+
+    def on_changed_filter(self, img_filter, layout_id):
+        layout_id = int(layout_id)
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self._mgr.SLICES[layout_id].set_image_filter_type(img_filter)

@@ -35,11 +35,8 @@ TAG_BitsAllocated = '00280100'
 TAG_WindowCenter = '00281050'
 TAG_WindowWidth = '00281051'
 
-
-# HOST_URL = "http://dicomcloud.iptime.org:44301"
-# HOST_URL = "http://192.168.0.17:44301"
+# home
 # HOST_URL = "http://192.168.200.140:44301"
-# HOST_URL = "http://localhost:44301"
 
 # sang-am url
 HOST_URL = "http://192.168.50.14:44301"

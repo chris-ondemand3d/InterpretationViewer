@@ -40,7 +40,9 @@ class SliceViewManager(QObject):
 
     sig_refresh_all = pyqtSignal()
     sig_change_slice_num = pyqtSignal(object, object)
+
     sig_change_thickness = pyqtSignal(object, object)
+    sig_change_filter = pyqtSignal(object, object)
 
     def __init__(self, *args, **kdws):
         super().__init__()
@@ -87,6 +89,8 @@ class SliceViewManager(QObject):
         self.sig_change_slice_num.emit(slice_num, layout_idx)
         if vtk_img.GetDimensions()[2] > 1:
             self.sig_change_thickness.emit(th, layout_idx)
+        intial_filter = None
+        self.sig_change_filter.emit(intial_filter, layout_idx)
 
     def clear_all_actors(self):
         for s in self.SLICES:

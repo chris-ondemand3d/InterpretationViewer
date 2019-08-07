@@ -204,12 +204,23 @@ if __name__ == '__main__':
         h = screen.availableGeometry().height() - titlebar_height
         dbm_sz = [int(w * 1 / 2), h]
         mpr_sz = [int(w * 1 / 2), h]
-        app_dbm.resize(*dbm_sz)
-        app_mpr.resize(*mpr_sz)
+
+        # mpr
+        # app_dbm.resize(*dbm_sz)
+        # app_mpr.resize(*mpr_sz)
+        # app_dbm.setPosition(0, titlebar_height)
+        # app_mpr.setPosition(dbm_sz[0], titlebar_height)
+        # app_dbm.show(isMaximize=False)
+        # app_mpr.show(isMaximize=False)
+
+        # slice view
+        app_dbm.resize(*mpr_sz)
         app_dbm.setPosition(0, titlebar_height)
-        app_mpr.setPosition(dbm_sz[0], titlebar_height)
+        app_slice.resize(*mpr_sz)
+        app_slice.setPosition(dbm_sz[0], titlebar_height)
         app_dbm.show(isMaximize=False)
-        app_mpr.show(isMaximize=False)
+        app_slice.show(isMaximize=False)
+
 
     # Start Qt event loop.
     _qapp.exec_(None, False)

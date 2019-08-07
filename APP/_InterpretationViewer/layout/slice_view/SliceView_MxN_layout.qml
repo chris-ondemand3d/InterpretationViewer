@@ -168,18 +168,17 @@ Item {
             id: col_sv_thickness
             objectName: "col_sv_thickness"
             visible: false
-
-            signal sigChanged(real val, real idx)
-
-            function reset(){
-              cb_sv_thickness.currentIndex = 0;
-            }
-
             anchors{
               top: col_sv_slice_number.bottom
               topMargin: 0
               right: col_sv_slice_number.right
               rightMargin: 0
+            }
+
+            signal sigChanged(real val, real idx)
+
+            function reset(){
+              cb_sv_thickness.currentIndex = 0;
             }
 
             Rectangle{
@@ -194,6 +193,7 @@ Item {
                 color: cb_sv_thickness.visible ? "orange" : "white"
                 anchors.right: parent.right
                 horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
               }
 
               MouseArea{
@@ -230,6 +230,25 @@ Item {
               ListElement { val: "10.0" }
               ListElement { val: "15.0" }
               ListElement { val: "20.0" }
+
+              function insert_value(value)
+              {
+                for(var i=0; i<count; i++)
+                {
+                  var _item_val = parseFloat(get(i).val).toFixed(1)
+
+                  if (parseFloat(_item_val) == parseFloat(value)){
+                    break;
+                  }
+
+                  if (parseFloat(_item_val) > parseFloat(value)){
+                    insert(i, {"val": String(value)});
+                    break;
+                  }
+                }
+
+                append({"val": String(value)});
+              }
             }
 
             ComboBox {
@@ -285,7 +304,68 @@ Item {
           }
 
           // filter (RT_L)
+          Column{
+            id: col_sv_image_filter
+            objectName: "col_sv_image_filter"
+            visible: false
+            anchors{
+              top: (col_sv_thickness.visible === true) ? col_sv_thickness.bottom : col_sv_slice_number.bottom
+              topMargin: 0
+              right: col_sv_thickness.right
+              rightMargin: -5 // optical illusion
+            }
 
+            signal sigChanged(string val, real idx)
+
+            function reset(){
+              cb_sv_image_filter.currentIndex = 0;
+            }
+
+            ListModel {
+              id: items_sv_image_filter
+              ListElement { val: "Filter Off" }
+              ListElement { val: "Gaussian" }
+              ListElement { val: "Sharpen" }
+              ListElement { val: "Unsharpen" }
+              ListElement { val: "Anisotropic" }
+              ListElement { val: "Highboost" }
+              ListElement { val: "Bilateral" }
+            }
+
+            ComboBox {
+              id: cb_sv_image_filter
+              objectName: "cb_sv_image_filter"
+              width: 80
+              height: 18  // optical illusion
+              editable: false
+              visible: true
+              focus: visible
+
+              model: items_sv_image_filter
+
+              style: ComboBoxStyle{
+                  background: Rectangle {
+                      anchors.fill: parent
+                      color : "transparent"
+                  }
+                  label: Text {
+                      anchors.fill: parent
+                      verticalAlignment: Text.AlignVCenter
+                      horizontalAlignment: Text.AlignRight
+                      text: control.currentText
+                      color: "white"
+                  }
+              }
+              onCurrentIndexChanged: {
+                if(currentText != ""){
+                  col_sv_image_filter.sigChanged(currentText, index);
+                }
+              }
+              onAccepted: {
+                col_sv_image_filter.sigChanged(currentText, index);
+              }
+            }
+          }
 
           // WWL (RB)
 
@@ -311,6 +391,8 @@ Item {
             col_sv_thickness.reset()
             col_sv_thickness.visible = false
             // filter (RT_L)
+            col_sv_image_filter.reset()
+            col_sv_image_filter.visible = false
             // WWL (RB)
           }
 
@@ -319,8 +401,26 @@ Item {
           }
 
           function setThickness(thickness){
+            thickness = parseFloat(thickness).toFixed(1);
             col_sv_thickness.visible = true;
-            cb_sv_thickness.currentIndex = thickness;
+            if (cb_sv_thickness.find(String(thickness)) === -1){
+              items_sv_thickness.insert_value(thickness);
+              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness))
+            }
+            else{
+              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness))
+            }
+            col_sv_thickness.sigChanged(thickness, parseInt(index))
+          }
+
+          function setFilter(filter){
+            col_sv_image_filter.visible = true;
+            var idx = cb_sv_image_filter.find(filter)
+
+            if (idx != -1){
+              cb_sv_image_filter.currentIndex = idx;
+              col_sv_image_filter.sigChanged(filter, parseInt(index));
+            }
           }
 
         }
@@ -407,6 +507,11 @@ Item {
   function setThickness(target_item, thickness)
   {
     target_item.setThickness(thickness);
+  }
+
+  function setFilter(target_item, filter)
+  {
+    target_item.setFilter(filter);
   }
 
   function clear()
