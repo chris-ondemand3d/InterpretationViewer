@@ -368,7 +368,29 @@ Item {
           }
 
           // WWL (RB)
+          Column{
+            id: col_sv_wwl
+            objectName: "col_sv_wwl"
+            visible: true
 
+            anchors{
+              bottom: parent.bottom
+              bottomMargin: 10
+              right: parent.right
+              rightMargin: 10
+            }
+
+            // WWL
+            Text{
+              id: text_sv_wwl
+              width: 50
+              height: 30
+              text: ""
+              color: "white"
+              font.pointSize: CyStyle.mainwindow._module_menu_title_font_pointSize
+              horizontalAlignment: Text.AlignRight
+            }
+          }
 
           // fullscreen event
           onMouseDoubleClicked: {
@@ -381,19 +403,20 @@ Item {
 
           function clear(){
             // patient info
-            text_sv_patient_id.text = ""
-            text_sv_patient_name_age_sex.text = ""
-            text_sv_patient_date.text = ""
-            text_sv_patient_series_id.text = ""
+            text_sv_patient_id.text = "";
+            text_sv_patient_name_age_sex.text = "";
+            text_sv_patient_date.text = "";
+            text_sv_patient_series_id.text = "";
             // slice number (RT_U)
-            text_sv_slice_number.text = ""
+            text_sv_slice_number.text = "";
             // thickness (RT_M)
-            col_sv_thickness.reset()
-            col_sv_thickness.visible = false
+            col_sv_thickness.reset();
+            col_sv_thickness.visible = false;
             // filter (RT_L)
-            col_sv_image_filter.reset()
-            col_sv_image_filter.visible = false
+            col_sv_image_filter.reset();
+            col_sv_image_filter.visible = false;
             // WWL (RB)
+            text_sv_wwl.text = "";
           }
 
           function setSliceNumber(number){
@@ -405,17 +428,17 @@ Item {
             col_sv_thickness.visible = true;
             if (cb_sv_thickness.find(String(thickness)) === -1){
               items_sv_thickness.insert_value(thickness);
-              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness))
+              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness));
             }
             else{
-              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness))
+              cb_sv_thickness.currentIndex = cb_sv_thickness.find(String(thickness));
             }
-            col_sv_thickness.sigChanged(thickness, parseInt(index))
+            col_sv_thickness.sigChanged(thickness, parseInt(index));
           }
 
           function setFilter(filter){
             col_sv_image_filter.visible = true;
-            var idx = cb_sv_image_filter.find(filter)
+            var idx = cb_sv_image_filter.find(filter);
 
             if (idx != -1){
               cb_sv_image_filter.currentIndex = idx;
@@ -423,6 +446,9 @@ Item {
             }
           }
 
+          function setWWL(ww, wl){
+            text_sv_wwl.text = ('WW : %1\nWL : %2').arg(parseInt(ww)).arg(parseInt(wl));
+          }
         }
       }
     }
@@ -523,6 +549,11 @@ Item {
       var _vtkimg_item = _item.children[1]
       _vtkimg_item.clear();
     }
+  }
+
+  function setWWL(target_item, ww, wl)
+  {
+    target_item.setWWL(ww, wl);
   }
 
 }

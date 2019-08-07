@@ -33,6 +33,7 @@ class SliceViewWindow(QObject):
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
         self._mgr.sig_change_thickness.connect(self.on_change_thickness)
         self._mgr.sig_change_filter.connect(self.on_change_filter)
+        self._mgr.sig_change_wwl.connect(self.on_change_wwl)
 
         for i, s in enumerate(self._mgr.SLICES):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
@@ -131,3 +132,12 @@ class SliceViewWindow(QObject):
         layout_id = int(layout_id)
         _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
         self._mgr.SLICES[layout_id].set_image_filter_type(img_filter)
+
+    @pyqtSlot(object, object, object)
+    def on_change_wwl(self, ww, wl, layout_id):
+        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        self.layout_item.setWWL(_obj, ww, wl)
+
+    def on_changed_wwl(self, ww, wl, layout_id):
+        # TODO
+        pass

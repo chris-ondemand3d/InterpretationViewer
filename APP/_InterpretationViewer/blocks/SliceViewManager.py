@@ -40,6 +40,7 @@ class SliceViewManager(QObject):
 
     sig_refresh_all = pyqtSignal()
     sig_change_slice_num = pyqtSignal(object, object)
+    sig_change_wwl = pyqtSignal(object, object, object)
 
     sig_change_thickness = pyqtSignal(object, object)
     sig_change_filter = pyqtSignal(object, object)
@@ -67,6 +68,7 @@ class SliceViewManager(QObject):
             slice = Slice()
             slice.sig_refresh_all.connect(self.on_refresh_all)
             slice.sig_change_slice_num.connect(self.on_change_slice_num)
+            slice.sig_change_wwl.connect(self.on_change_wwl)
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 
@@ -132,3 +134,7 @@ class SliceViewManager(QObject):
     @pyqtSlot(object)
     def on_change_slice_num(self, slice_num):
         self.sig_change_slice_num.emit(slice_num, self.SLICES.index(self.sender()))
+
+    @pyqtSlot(object, object)
+    def on_change_wwl(self, ww, wl):
+        self.sig_change_wwl.emit(ww, wl, self.SLICES.index(self.sender()))

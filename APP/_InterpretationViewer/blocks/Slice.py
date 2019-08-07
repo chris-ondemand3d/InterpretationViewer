@@ -31,6 +31,7 @@ class Slice(I2G_IMG_HOLDER):
 
     sig_update_slabplane = pyqtSignal(object)
     sig_change_slice_num = pyqtSignal(object)
+    sig_change_wwl = pyqtSignal(object, object)
     sig_refresh_all = pyqtSignal()
 
     def __init__(self, *args, **kwds):
@@ -295,6 +296,8 @@ class Slice(I2G_IMG_HOLDER):
 
         elif self.r_btn_pressed:
             if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
+                ww, wl = self.get_windowing()
+                self.sig_change_wwl.emit(ww, wl)
                 self.sig_refresh_all.emit()
         else:
             pass
