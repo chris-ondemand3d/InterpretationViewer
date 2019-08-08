@@ -14,6 +14,8 @@ Item {
   height: 30
 
   signal sigDrop(real picked_layout_id, string study_uid, string series_uid)
+  signal sigHighlight(string study_uid, string series_uid, bool on)
+  signal sigClose(string study_uid, string series_uid, bool on)
 
   ListModel {
     id: items_sv_thumbnail

@@ -5,6 +5,8 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 import cyhub 1.0
 
+import '../style'
+
 
 Item {
   id: thumbnail_item
@@ -18,13 +20,14 @@ Item {
 
   Rectangle{
     anchors.fill: parent
-    color: '#636363'
+    color: (selected == true) ? '#999999' : '#636363'
 
     Text {
       id: txt_thumbnail
       anchors.fill: parent
       text: ""
       clip: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
     }
 
     MouseArea {
@@ -39,9 +42,15 @@ Item {
       property var prev_x: 0
       property var prev_y: 0
 
+      /*onClicked: {
+        selected = !selected;
+      }*/
+
       onPressed: {
         prev_x = thumbnail_item.x;
         prev_y = thumbnail_item.y;
+        close_thumbnail.visible = false;
+        sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, true);
       }
 
       onReleased: {
@@ -56,12 +65,38 @@ Item {
         prev_x = 0;
         prev_y = 0;
 
+        close_thumbnail.visible = true;
+        sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+
         if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
           return;
         }
 
         var picked_layout_id = _obj.children[1].getIndex();
         sliceview_topbar_thumbnail.sigDrop(picked_layout_id, model.study_uid, model.series_uid);
+      }
+    }
+  }
+
+  Rectangle {
+    id: close_thumbnail
+    anchors{
+      top: parent.top
+      topMargin: 3
+      right: parent.right
+      rightMargin: 3
+    }
+    width: 15
+    height: 15
+    color: '#406084'
+
+    MouseArea {
+      id: mouse_close_thumbnail
+      anchors.fill: parent
+      acceptedButtons: Qt.LeftButton
+
+      onClicked: {
+        sliceview_topbar_thumbnail.sigClose(model.study_uid, model.series_uid, false);
       }
     }
   }

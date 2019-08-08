@@ -38,6 +38,8 @@ class SliceViewWindow(QObject):
 
         # initialize sig/slot of QML
         self.topbar_thumbnail_item.sigDrop.connect(self.on_dropped_thumbnail)
+        self.topbar_thumbnail_item.sigHighlight.connect(self.on_hightlight)
+        self.topbar_thumbnail_item.sigClose.connect(self.on_close_data)
 
         for i, s in enumerate(self._mgr.SLICES):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
@@ -158,6 +160,22 @@ class SliceViewWindow(QObject):
     def on_changed_wwl(self, ww, wl, layout_id):
         # TODO
         pass
+
+    def on_close_data(self, study_uid, series_uid, on):
+        # TODO!!!!!!!!!!!!!!!!!!!
+        pass
+
+    def on_hightlight(self, study_uid, series_uid, on):
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for i, s in enumerate(self._mgr.SLICES[0:layout_cnt]):
+            dcm_info = s.get_dcm_info()
+            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
+                _study_uid = dcm_info['study_uid']
+                _series_uid = dcm_info['series_uid']
+                if study_uid == _study_uid and series_uid == _series_uid:
+                    # get imgholder's titlebar and set highlight
+                    _item = self.repeater_imgholder.itemAt(i).childItems()[0]
+                    _item.setProperty('highlight', on)
 
     def on_dropped_thumbnail(self, picked_layout_id, study_uid, series_uid):
 
