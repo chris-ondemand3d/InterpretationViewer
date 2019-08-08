@@ -94,6 +94,18 @@ class Slice(I2G_IMG_HOLDER):
     def clear_all_actors(self):
         self.ren.RemoveAllViewProps()
 
+    def set_patient_info(self, patient_info):
+        self.patient_info = patient_info
+
+    def get_patient_info(self):
+        return self.patient_info if hasattr(self, 'patient_info') else None
+
+    def set_dcm_info(self, dcm_info):
+        self.dcm_info = dcm_info
+
+    def get_dcm_info(self):
+        return self.dcm_info if hasattr(self, 'dcm_info') else None
+
     def set_vtk_img(self, vtk_img):
         assert vtk_img, 'vtk_img is invalid!!!'
         self.vtk_img = vtk_img
@@ -117,6 +129,9 @@ class Slice(I2G_IMG_HOLDER):
         # set plane and camera
         self.set_plane(_params[0], _params[1], _params[2], _camera_fit_type=1)
         self.set_camera_scale(_params[3], _params[4])
+
+    def get_vtk_img(self):
+        return self.vtk_img if hasattr(self, 'vtk_img') else None
 
     def set_camera_scale(self, scale, axis='y'):
         axis = axis.upper()
@@ -521,6 +536,9 @@ class Slice(I2G_IMG_HOLDER):
             self.slice_img.cy_img_reslice_mapper.set_filter_anisotropic(False)
             self.slice_img.cy_img_reslice_mapper.set_filter_highboost(False)
             self.refresh()
+
+    def get_image_filter_type(self):
+        return self.image_filter_type if hasattr(self, 'image_filter_type') else 'Filter Off'
 
     # def get_project_info(self):
     #     info = dict()

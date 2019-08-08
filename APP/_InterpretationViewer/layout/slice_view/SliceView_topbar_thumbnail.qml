@@ -13,8 +13,65 @@ Item {
   width: 800
   height: 30
 
+  signal sigDrop(real picked_layout_id, string study_uid, string series_uid)
+
+  ListModel {
+    id: items_sv_thumbnail
+  }
+
   Rectangle{
     anchors.fill: parent
     color: '#303030'
   }
+
+  RowLayout {
+    id: layout_thumbnail
+    anchors.fill: parent
+    anchors.margins: 5
+    width: parent.width
+    height: parent.height
+    Layout.preferredWidth: width
+    Layout.preferredHeight: height
+    Layout.maximumHeight: height
+    Layout.maximumWidth: width
+    Layout.minimumHeight: height
+    Layout.minimumWidth: width
+
+    Repeater {
+      id: repeater_sv_thumbnail
+      objectName: 'repeater_sv_thumbnail'
+      model: 0
+
+      ThumbnailItem{
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+      }
+    }
+
+    // dummy
+    Item {
+      Layout.fillWidth: true
+    }
+
+  }
+
+  function appendThumbnail(_id, _name, _study_uid, _series_uid, _series_id, _date, _modality)
+  {
+    items_sv_thumbnail.append({patient_id: _id, patient_name: _name, study_uid: _study_uid,
+                               series_uid: _series_uid, series_id: _series_id,
+                               date: _date, modality: _modality});
+
+    // should call generateThumbnails()!
+    generateThumbnails();
+  }
+
+  function generateThumbnails()
+  {
+    repeater_sv_thumbnail.model = items_sv_thumbnail.count;
+    for (var i=0; i < repeater_sv_thumbnail.count; i++)
+    {
+      var _item = repeater_sv_thumbnail.itemAt(i)
+      _item.setModel(items_sv_thumbnail.get(i));
+    }
+  }
+
 }

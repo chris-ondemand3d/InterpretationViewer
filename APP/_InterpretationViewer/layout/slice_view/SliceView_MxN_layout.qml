@@ -22,7 +22,8 @@ Item {
   }
 
   GridLayout {
-    id: grid
+    id: grid_layout
+    objectName: 'grid_layout'
     width: parent.width
     height: parent.height
     Layout.preferredWidth: width
@@ -38,20 +39,21 @@ Item {
     rowSpacing: 1
     columnSpacing: 1
 
-    property double colMulti : grid.width / grid.columns
-    property double rowMulti : grid.height / grid.rows
+    property double colMulti : grid_layout.width / grid_layout.columns
+    property double rowMulti : grid_layout.height / grid_layout.rows
 
     Repeater {
       id: repeater_imgholder_sliceview
       objectName: 'repeater_imgholder_sliceview'
-      model: grid.rows * grid.columns
+      model: grid_layout.rows * grid_layout.columns
 
       ColumnLayout {
 
         id: img_holder_root
+        objectName: 'img_holder_root'
         spacing: 0
-        width: grid.colMulti * columnSpan - 0.5
-        height: grid.rowMulti * rowSpan - 0.5
+        width: grid_layout.colMulti * columnSpan - 0.5
+        height: grid_layout.rowMulti * rowSpan - 0.5
 
         property var column: 0
         property var columnSpan: 1
@@ -75,8 +77,8 @@ Item {
           Layout.columnSpan: parent.columnSpan
           Layout.row: parent.row
           Layout.rowSpan: parent.rowSpan
-          Layout.preferredWidth  : grid.colMulti * parent.columnSpan - 0.5
-          Layout.preferredHeight : grid.rowMulti * parent.rowSpan - 0.5
+          Layout.preferredWidth  : grid_layout.colMulti * parent.columnSpan - 0.5
+          Layout.preferredHeight : grid_layout.rowMulti * parent.rowSpan - 0.5
           fullscreenTrigger: false
 
           // patient info (LT) - Patient ID, Name, Age, Sex, Date, Series ID
@@ -392,6 +394,14 @@ Item {
             }
           }
 
+          function getIndex() {
+            return index;
+          }
+
+          onMouseReleased: {
+            // TODO
+          }
+
           // fullscreen event
           onMouseDoubleClicked: {
             fullscreenTrigger = !fullscreenTrigger;
@@ -425,6 +435,12 @@ Item {
 
           function setThickness(thickness){
             thickness = parseFloat(thickness).toFixed(1);
+
+            if (thickness == -1.0){
+              col_sv_thickness.visible = false;
+              return;
+            }
+
             col_sv_thickness.visible = true;
             if (cb_sv_thickness.find(String(thickness)) === -1){
               items_sv_thickness.insert_value(thickness);
@@ -452,13 +468,14 @@ Item {
         }
       }
     }
+
   }
 
   Component.onCompleted: {
     for (var i=0; i < repeater_imgholder_sliceview.count; i++)
     {
-        var y = parseInt((i / grid.columns))
-        var x = i % grid.columns
+        var y = parseInt((i / grid_layout.columns))
+        var x = i % grid_layout.columns
         var item = repeater_imgholder_sliceview.itemAt(i)
 
         item.column = x
@@ -479,14 +496,14 @@ Item {
       }
       else {
         _item.visible = true
-        var y = parseInt((i / grid.columns))
-        var x = i % grid.columns
+        var y = parseInt((i / grid_layout.columns))
+        var x = i % grid_layout.columns
         _vtkimg_item.Layout.column = _item.column
         _vtkimg_item.Layout.columnSpan = _item.columnSpan
         _vtkimg_item.Layout.row = _item.row
         _vtkimg_item.Layout.rowSpan = _item.rowSpan
-        _vtkimg_item.Layout.preferredWidth  = grid.colMulti * _item.columnSpan - 0.5
-        _vtkimg_item.Layout.preferredHeight = grid.rowMulti * _item.rowSpan - 0.5
+        _vtkimg_item.Layout.preferredWidth  = grid_layout.colMulti * _item.columnSpan - 0.5
+        _vtkimg_item.Layout.preferredHeight = grid_layout.rowMulti * _item.rowSpan - 0.5
       }
     }
 
@@ -497,11 +514,11 @@ Item {
       var _vtkimg_item = _item.children[1]
       _item.visible = true
       _vtkimg_item.Layout.column = 0
-      _vtkimg_item.Layout.columnSpan = grid.columns
+      _vtkimg_item.Layout.columnSpan = grid_layout.columns
       _vtkimg_item.Layout.row = 0
-      _vtkimg_item.Layout.rowSpan = grid.rows
-      _vtkimg_item.Layout.preferredWidth  = grid.width
-      _vtkimg_item.Layout.preferredHeight = grid.height
+      _vtkimg_item.Layout.rowSpan = grid_layout.rows
+      _vtkimg_item.Layout.preferredWidth  = grid_layout.width
+      _vtkimg_item.Layout.preferredHeight = grid_layout.height
     }
 
   }
@@ -554,6 +571,11 @@ Item {
   function setWWL(target_item, ww, wl)
   {
     target_item.setWWL(ww, wl);
+  }
+
+  function getGridLayoutItem()
+  {
+    return grid_layout;
   }
 
 }

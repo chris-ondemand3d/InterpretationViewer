@@ -54,18 +54,20 @@ class slice_app(CyQQuickView):
         self.slice_win = SliceViewWindow(_win=self, _mgr=self.slice_mgr)
         self.sig_refresh_all.connect(lambda: self.slice_mgr.on_refresh_all())
 
-    # def eventFilter(self, obj, event):
+    def eventFilter(self, obj, event):
     #     # print("event filter (mpr_app):: ", obj, event)
     #     if event.type() == QEvent.HoverLeave:
     #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
-    #     return super().eventFilter(obj, event)
+        return super().eventFilter(obj, event)
 
     def get_next_layout_id(self):
         return self.slice_win.get_next_layout_id()
 
-    def init_vtk(self, _vtk_img, _wwl, _patient_info, next_id):
+    def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
+        self.slice_win.appendThumbnail(_patient_info, study_uid, series_uid)
         self.slice_win.set_data_info_str(_patient_info, next_id)
-        self.slice_mgr.init_vtk(_vtk_img, _wwl, next_id)
+        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}   # TODO
+        self.slice_mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
 
     def fullscreen(self, layout_idx, fullscreen_mode):
         self.slice_win.fullscreen(layout_idx, fullscreen_mode)
@@ -88,8 +90,8 @@ class mpr_app(CyQQuickView):
 
     def eventFilter(self, obj, event):
         # print("event filter (mpr_app):: ", obj, event)
-        if event.type() == QEvent.HoverLeave:
-            QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+        # if event.type() == QEvent.HoverLeave:
+        #     QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)
 
 
@@ -100,14 +102,14 @@ def onMsg(msg):
     _msg, _params = msg
 
     if _msg == 'slice::init_vtk':
-        _vtk_img, _wwl, _patient_info, _open_type = _params
+        _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _open_type = _params
         next_id = app_slice.get_next_layout_id()
         if next_id >= 0:
-            app_slice.init_vtk(_vtk_img, _wwl, _patient_info, next_id)
+            app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
         else:
             next_id = app_slice2.get_next_layout_id()
             if next_id >= 0:
-                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, next_id)
+                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params
         if app_slice.slice_mgr.get_vtk_img_count() > 0:

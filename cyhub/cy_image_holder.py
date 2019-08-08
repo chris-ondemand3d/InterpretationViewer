@@ -31,6 +31,10 @@ class ImageHolder(QQuickItem):
 
     _update_request_event = QEvent(QEvent.UpdateRequest)
 
+    mouseDoubleClicked = pyqtSignal(QVariant)
+    mousePressed = pyqtSignal(QVariant)
+    mouseReleased = pyqtSignal(QVariant)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFlag(QQuickItem.ItemHasContents, True)
@@ -90,8 +94,11 @@ class ImageHolder(QQuickItem):
         # Set vtk _Widget_container or _Widget_replica
 
         if self.vtk_obj:
-            self.vtk_obj.resize(int(self.width()), int(self.height()))
-            return
+        #     self.vtk_obj.resize(int(self.width()), int(self.height()))
+        #     return
+            self.vtk_obj.sig_rendered.disconnect(self.set_image)
+            del self.vtk_obj
+            self.vtk_obj = None
 
         self.vtk_obj = vtk_obj
         self.vtk_obj.sig_rendered.connect(self.set_image)
@@ -118,10 +125,12 @@ class ImageHolder(QQuickItem):
             self.vtk_obj.mouseMoveEvent(e)
 
     def mousePressEvent(self, e):
+        self.mousePressed.emit(e)
         if self.vtk_obj:
             self.vtk_obj.mousePressEvent(e)
 
     def mouseReleaseEvent(self, e):
+        self.mouseReleased.emit(e)
         if self.vtk_obj:
             self.vtk_obj.mouseReleaseEvent(e)
 
@@ -143,7 +152,6 @@ class ImageHolder(QQuickItem):
         self._fullsize_trigger = fullsize_trigger
         self.fullscreenTriggerChanged.emit()
 
-    mouseDoubleClicked = pyqtSignal(QVariant)
     fullscreenTriggerChanged = pyqtSignal()
     fullscreenTrigger = pyqtProperty(QVariant, GetFullscreenTrigger, SetFullscreenTrigger, notify=fullscreenTriggerChanged)
 

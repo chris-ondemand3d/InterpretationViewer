@@ -49,6 +49,7 @@ class SliceViewManager(QObject):
         super().__init__()
 
         self.SLICES = []
+        self.dummy_slice = Slice()  # dummy to show empty vtk img
 
         self.reset()
         self.initialize()
@@ -72,7 +73,7 @@ class SliceViewManager(QObject):
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 
-    def init_vtk(self, vtk_img, wwl, layout_idx):
+    def init_vtk(self, vtk_img, wwl, dcm_info, layout_idx):
 
         if wwl is None:
             wwl = [2000, 4000]
@@ -82,6 +83,7 @@ class SliceViewManager(QObject):
         p.SetColorLevel(wwl[1])
         p.SetInterpolationTypeToLinear()
         self.SLICES[layout_idx].set_vtk_img(vtk_img)
+        self.SLICES[layout_idx].set_dcm_info(dcm_info)
         self.SLICES[layout_idx].set_actor_property(p)
 
         # default
@@ -98,8 +100,22 @@ class SliceViewManager(QObject):
         for s in self.SLICES:
             s.clear_all_actors()
 
-    def get_next_layout_id(self):
-        for i, s in enumerate(self.SLICES):
+    def refresh_text_items(self, layout_idx):
+        _slice = self.SLICES[layout_idx]
+        _vtk_img = _slice.get_vtk_img()
+        # if _vtk_img is None:
+        #     return
+        slice_num = _slice.get_slice_num()
+        self.sig_change_slice_num.emit(slice_num, layout_idx)
+        th = _slice.get_thickness() if _vtk_img.GetDimensions()[2] > 1 else -1
+        self.sig_change_thickness.emit(th, layout_idx)
+        intial_filter = _slice.get_image_filter_type()
+        self.sig_change_filter.emit(intial_filter, layout_idx)
+        wwl = _slice.get_windowing()
+        self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
+
+    def get_next_layout_id(self, limit=None):
+        for i, s in enumerate(self.SLICES[:limit] if limit else self.SLICES):
             if s.vtk_img is None:
                 return i
         return -1

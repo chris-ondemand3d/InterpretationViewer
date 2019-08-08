@@ -24,7 +24,7 @@ Item {
   SliceView_topbar_panel {
     id: sliceview_topbar_panel
     objectName: "sliceview_topbar_panel"
-    height: 70
+    height: 60
 
     anchors.left: sliceview_menu_panel.right
     anchors.top: parent.top
@@ -35,11 +35,12 @@ Item {
   SliceView_topbar_thumbnail {
     id: sliceview_topbar_thumbnail
     objectName: "sliceview_topbar_thumbnail"
-    height: 100
+    height: 120
 
     anchors.left: sliceview_menu_panel.right
     anchors.top: sliceview_topbar_panel.bottom
     anchors.right: parent.right
+    z:10
   }
 
   // Menu Panel
