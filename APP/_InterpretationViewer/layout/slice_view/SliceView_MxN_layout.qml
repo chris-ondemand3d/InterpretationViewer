@@ -61,6 +61,8 @@ Item {
         property var rowSpan: 1
 
         Rectangle {
+          id: vtk_img_topbar
+          objectName: "vtk_img_topbar"
           width : vtk_img_holder.width
           height : 25
           implicitWidth: vtk_img_holder.width
@@ -429,6 +431,8 @@ Item {
             col_sv_image_filter.visible = false;
             // WWL (RB)
             text_sv_wwl.text = "";
+
+            vtk_img_topbar.highlight = false;
           }
 
           function setSliceNumber(number){

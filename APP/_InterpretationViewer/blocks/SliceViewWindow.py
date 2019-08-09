@@ -1,4 +1,5 @@
 import os, sys
+import gc
 
 from cyhub.cy_image_holder import CyQQuickView
 
@@ -29,8 +30,10 @@ class SliceViewWindow(QObject):
         if not hasattr(self, '_mgr'):
             return
 
-        # initialize sig/slot of Python
+        # initialize slices
         self._mgr.init_slice(cnt)
+
+        # initialize sig/slot of Python
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
         self._mgr.sig_change_thickness.connect(self.on_change_thickness)
         self._mgr.sig_change_filter.connect(self.on_change_filter)
@@ -161,11 +164,15 @@ class SliceViewWindow(QObject):
         # TODO
         pass
 
-    def on_close_data(self, study_uid, series_uid, on):
-        # TODO!!!!!!!!!!!!!!!!!!!
-        pass
+    def on_close_data(self, study_uid, series_uid):
 
-    def on_hightlight(self, study_uid, series_uid, on):
+        new_slice = None
+
+        # 1. release thumbnail
+        _thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
+        _thumbnail_item.removeThumbnail(study_uid, series_uid)
+
+        # 2. release imageholder - qml part
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         for i, s in enumerate(self._mgr.SLICES[0:layout_cnt]):
             dcm_info = s.get_dcm_info()
@@ -173,9 +180,26 @@ class SliceViewWindow(QObject):
                 _study_uid = dcm_info['study_uid']
                 _series_uid = dcm_info['series_uid']
                 if study_uid == _study_uid and series_uid == _series_uid:
-                    # get imgholder's titlebar and set highlight
-                    _item = self.repeater_imgholder.itemAt(i).childItems()[0]
-                    _item.setProperty('highlight', on)
+                    _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                    new_slice = self._mgr.create_new_slice()
+                    _item.set_vtk(new_slice)
+                    _item.clear()
+                    break
+
+        # 3. release slice(vtk_img) - vtk part
+        for i, s in enumerate(self._mgr.SLICES[:]):
+            dcm_info = s.get_dcm_info()
+            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
+                _study_uid = dcm_info['study_uid']
+                _series_uid = dcm_info['series_uid']
+                if study_uid == _study_uid and series_uid == _series_uid:
+                    s.reset()
+                    del s
+                    self._mgr.SLICES[i] = new_slice
+                    break
+
+        # 4. force garbage collector!!!
+        gc.collect()
 
     def on_dropped_thumbnail(self, picked_layout_id, study_uid, series_uid):
 
@@ -204,13 +228,13 @@ class SliceViewWindow(QObject):
                     # switch slice object
                     _tmp_s = self._mgr.SLICES[picked_layout_id]
                     self._mgr.SLICES[picked_layout_id] = s
-                    self._mgr.SLICES[i] = self._mgr.dummy_slice
+                    self._mgr.SLICES[i] = self._mgr.create_new_slice()
                     self._mgr.SLICES.append(_tmp_s)
 
                     # set dummy slice and clear
                     if layout_cnt > i:
                         _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                        _item.set_vtk(self._mgr.dummy_slice)
+                        _item.set_vtk(self._mgr.SLICES[i])
                         _item.clear()
 
 
@@ -222,3 +246,15 @@ class SliceViewWindow(QObject):
                     return
 
             continue
+
+    def on_hightlight(self, study_uid, series_uid, on):
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for i, s in enumerate(self._mgr.SLICES[0:layout_cnt]):
+            dcm_info = s.get_dcm_info()
+            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
+                _study_uid = dcm_info['study_uid']
+                _series_uid = dcm_info['series_uid']
+                if study_uid == _study_uid and series_uid == _series_uid:
+                    # get imgholder's titlebar and set highlight
+                    _item = self.repeater_imgholder.itemAt(i).childItems()[0]
+                    _item.setProperty('highlight', on)

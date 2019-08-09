@@ -49,10 +49,12 @@ class SliceViewManager(QObject):
         super().__init__()
 
         self.SLICES = []
-        self.dummy_slice = Slice()  # dummy to show empty vtk img
 
         self.reset()
         self.initialize()
+
+    def __del__(self):
+        pass
 
     def initialize(self):
         pass
@@ -63,13 +65,18 @@ class SliceViewManager(QObject):
             del s
         self.SLICES.clear()
 
+    def create_new_slice(self):
+        _slice = Slice()
+        _slice.sig_refresh_all.connect(self.on_refresh_all)
+        _slice.sig_change_slice_num.connect(self.on_change_slice_num)
+        _slice.sig_change_wwl.connect(self.on_change_wwl)
+        _slice.resize(2000, 2000)
+        return _slice
+
     def init_slice(self, num):
         self.SLICES = []
         for i in range(num):
-            slice = Slice()
-            slice.sig_refresh_all.connect(self.on_refresh_all)
-            slice.sig_change_slice_num.connect(self.on_change_slice_num)
-            slice.sig_change_wwl.connect(self.on_change_wwl)
+            slice = self.create_new_slice()
             self.SLICES.append(slice)
         self.sig_refresh_all.connect(self.on_refresh_all)
 

@@ -77,11 +77,26 @@ class Slice(I2G_IMG_HOLDER):
                     del o
             X.clear()
 
+        if hasattr(self, 'vtk_img'):
+            del self.vtk_img
+
         if hasattr(self, 'slice_img'):
             del self.slice_img
 
         if hasattr(self, 'picker_vol'):
             del self.picker_vol
+
+        if hasattr(self, 'patient_info'):
+            del self.patient_info
+
+        if hasattr(self, 'dcm_info'):
+            del self.dcm_info
+
+        if hasattr(self, 'self.spacing'):
+            del self.rendering_type
+
+        if hasattr(self, 'image_filter_type'):
+            del self.image_filter_type
 
         self.l_btn_pressed = False
         self.r_btn_pressed = False

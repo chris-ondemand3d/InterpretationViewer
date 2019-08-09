@@ -15,7 +15,7 @@ Item {
 
   signal sigDrop(real picked_layout_id, string study_uid, string series_uid)
   signal sigHighlight(string study_uid, string series_uid, bool on)
-  signal sigClose(string study_uid, string series_uid, bool on)
+  signal sigClose(string study_uid, string series_uid)
 
   ListModel {
     id: items_sv_thumbnail
@@ -51,6 +51,8 @@ Item {
 
     // dummy
     Item {
+      id: dummy_thumbnail
+      objectName: "dummy_thumbnail"
       Layout.fillWidth: true
     }
 
@@ -64,6 +66,25 @@ Item {
 
     // should call generateThumbnails()!
     generateThumbnails();
+  }
+
+  function removeThumbnail(_study_uid, _series_uid)
+  {
+    for (var i=0; i < items_sv_thumbnail.count; i++)
+    {
+      var _model = items_sv_thumbnail.get(i);
+
+      if ((_model.study_uid == _study_uid) && (_model.series_uid == _series_uid))
+      {
+        // remove model(ListModel)
+        items_sv_thumbnail.remove(i);
+
+        // should be called after remove model!
+        generateThumbnails();
+
+        break;
+      }
+    }
   }
 
   function generateThumbnails()

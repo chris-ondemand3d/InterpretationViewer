@@ -21,6 +21,7 @@ Item {
   Rectangle{
     anchors.fill: parent
     color: (selected == true) ? '#999999' : '#636363'
+    radius: 10
 
     Text {
       id: txt_thumbnail
@@ -28,12 +29,14 @@ Item {
       text: ""
       clip: true
       font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      verticalAlignment: Text.AlignVCenter
     }
 
     MouseArea {
       id: mouse_thumbnail
       anchors.fill: parent
       acceptedButtons: Qt.AllButtons
+      hoverEnabled: true
 
       drag.target: thumbnail_item
       drag.axis: Drag.XAxis | Drag.YAxis
@@ -41,6 +44,10 @@ Item {
 
       property var prev_x: 0
       property var prev_y: 0
+
+      onContainsMouseChanged: {
+        sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, containsMouse);
+      }
 
       /*onClicked: {
         selected = !selected;
@@ -96,7 +103,7 @@ Item {
       acceptedButtons: Qt.LeftButton
 
       onClicked: {
-        sliceview_topbar_thumbnail.sigClose(model.study_uid, model.series_uid, false);
+        sliceview_topbar_thumbnail.sigClose(model.study_uid, model.series_uid);
       }
     }
   }
