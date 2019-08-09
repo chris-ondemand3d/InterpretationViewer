@@ -558,15 +558,28 @@ class Slice(I2G_IMG_HOLDER):
     def get_scout_img(self):
         _vtk_img = self.get_vtk_img()
         if _vtk_img is None:
-            return None, None
+            return None, None, None
         _scout_dims = _vtk_img.GetFieldData().GetArray('SCOUT_IMG_DIMS')
         _scout_arr = _vtk_img.GetFieldData().GetArray('SCOUT_IMG')
         if _scout_dims is None or _scout_arr is None:
-            return None, None
+            return self.get_thumbnail_img()
         _scout_dims = numpy_support.vtk_to_numpy(_scout_dims)
         _scout_arr = numpy_support.vtk_to_numpy(_scout_arr)
         _scout_arr = _scout_arr.reshape(_scout_dims[1], _scout_dims[0], _scout_dims[2])
-        return _scout_arr, _scout_dims
+        return _scout_arr, _scout_dims, 8
+
+    def get_thumbnail_img(self):
+        _vtk_img = self.get_vtk_img()
+        if _vtk_img is None:
+            return None, None, None
+        _thumbnail_dims = _vtk_img.GetFieldData().GetArray('THUMBNAIL_IMG_DIMS')
+        _thumbnail_arr = _vtk_img.GetFieldData().GetArray('THUMBNAIL_IMG')
+        if _thumbnail_dims is None or _thumbnail_arr is None:
+            return None, None, None
+        _thumbnail_dims = numpy_support.vtk_to_numpy(_thumbnail_dims)
+        _thumbnail_arr = numpy_support.vtk_to_numpy(_thumbnail_arr)
+        _thumbnail_arr = _thumbnail_arr.reshape(_thumbnail_dims[1], _thumbnail_dims[0])
+        return _thumbnail_arr, _thumbnail_dims, 16
 
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)

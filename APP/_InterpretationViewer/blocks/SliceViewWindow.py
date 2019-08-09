@@ -78,7 +78,13 @@ class SliceViewWindow(QObject):
         if hasattr(self, 'items'):
             _remove(self.items)
 
-    def get_next_layout_id(self):
+    def get_next_layout_id(self, force=False):
+
+        # if force is true, return slices's next id
+        if force:
+            self._mgr.SLICES.append(self._mgr.create_new_slice())
+            return len(self._mgr.SLICES) - 1
+
         # get layout count
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
 
@@ -124,8 +130,9 @@ class SliceViewWindow(QObject):
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
                 _series_uid = dcm_info['series_uid']
-                _scout_img, _scout_dims = s.get_scout_img()
-                if not _scout_img is None:
+                _thumbnail_img, _thumbnail_dims, _thumbnail_bits = s.get_scout_img()
+                _thumbnail_format = QImage.Format_RGB888 if _thumbnail_bits == 8 else QImage.Format_Grayscale8 if _thumbnail_bits == 16 else None
+                if not _thumbnail_img is None:
                     # find thumbnail item by study_uid and series_uid
                     for j in range(thumbnail_cnt):
                         _sub_item = _repeater_sv_thumbnail.itemAt(j)
@@ -136,7 +143,7 @@ class SliceViewWindow(QObject):
                             if not _source.isEmpty():
                                 continue
 
-                            _img = QImage(_scout_img.ravel(), _scout_dims[0], _scout_dims[1], QImage.Format_RGB888)
+                            _img = QImage(_thumbnail_img.data, _thumbnail_dims[0], _thumbnail_dims[1], _thumbnail_img.strides[0], _thumbnail_format)
                             _path = os.path.join(os.path.abspath("."), "../_tmp/")
                             if not os.path.exists(_path):
                                 os.mkdir(_path)
@@ -146,6 +153,8 @@ class SliceViewWindow(QObject):
                             _url = QUrl.fromLocalFile(_path)
                             _img_item.setProperty('source', _url)
 
+                            os.remove(_path)
+
                             break
 
     def appendThumbnail(self, patient_info, study_uid, series_uid):
@@ -154,20 +163,28 @@ class SliceViewWindow(QObject):
         _series_id = patient_info['series_id']
         _date = patient_info['date']
         _modality = patient_info['modality']
-        _thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
-        _thumbnail_item.appendThumbnail(_id, _name, study_uid, series_uid, _series_id, _date, _modality)
+        self.topbar_thumbnail_item.appendThumbnail(_id, _name, study_uid, series_uid, _series_id, _date, _modality)
+        self.refresh_thumbnail_img()
 
     def set_data_info_str(self, patient_info, layout_id):
+        if not len(self._mgr.SLICES) > layout_id:
+            return
         self._mgr.SLICES[layout_id].set_patient_info(patient_info)
-        _s = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
-        _obj = _s.findChild(QObject, 'col_sv_patient_info')
+
+        _s = self.repeater_imgholder.itemAt(layout_id)
+        if not _s:
+            return
+        _obj = _s.childItems()[1].findChild(QObject, 'col_sv_patient_info')
         self.layout_item.setPatientInfo(_obj, patient_info['id'], patient_info['name'],
                                         patient_info['age'], patient_info['sex'],
                                         patient_info['date'], patient_info['series_id'])
 
     @pyqtSlot(object, object)
     def on_change_slice_num(self, slice_num, layout_id):
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self.layout_item.setSliceNumber(_obj, slice_num)
 
     def on_changed_slice_num(self, slice_num, layout_id):
@@ -176,27 +193,42 @@ class SliceViewWindow(QObject):
 
     @pyqtSlot(object, object)
     def on_change_thickness(self, thickness, layout_id):
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self.layout_item.setThickness(_obj, thickness)
 
     def on_changed_thickness(self, thickness, layout_id):
         layout_id = int(layout_id)
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self._mgr.SLICES[layout_id].set_thickness(thickness)
 
     @pyqtSlot(object, object)
     def on_change_filter(self, img_filter, layout_id):
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self.layout_item.setFilter(_obj, img_filter)
 
     def on_changed_filter(self, img_filter, layout_id):
         layout_id = int(layout_id)
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self._mgr.SLICES[layout_id].set_image_filter_type(img_filter)
 
     @pyqtSlot(object, object, object)
     def on_change_wwl(self, ww, wl, layout_id):
-        _obj = self.repeater_imgholder.itemAt(layout_id).childItems()[1]
+        _obj = self.repeater_imgholder.itemAt(layout_id)
+        if not _obj:
+            return
+        _obj = _obj.childItems()[1]
         self.layout_item.setWWL(_obj, ww, wl)
 
     def on_changed_wwl(self, ww, wl, layout_id):
@@ -205,11 +237,10 @@ class SliceViewWindow(QObject):
 
     def on_close_data(self, study_uid, series_uid):
 
-        new_slice = None
+        new_slice = self._mgr.create_new_slice()
 
         # 1. release thumbnail
-        _thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
-        _thumbnail_item.removeThumbnail(study_uid, series_uid)
+        self.topbar_thumbnail_item.removeThumbnail(study_uid, series_uid)
 
         # 2. release imageholder - qml part
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
@@ -220,7 +251,6 @@ class SliceViewWindow(QObject):
                 _series_uid = dcm_info['series_uid']
                 if study_uid == _study_uid and series_uid == _series_uid:
                     _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                    new_slice = self._mgr.create_new_slice()
                     _item.set_vtk(new_slice)
                     _item.clear()
                     break
@@ -239,6 +269,9 @@ class SliceViewWindow(QObject):
 
         # 4. force garbage collector!!!
         gc.collect()
+
+        # 5. refresh thumbnails
+        self.refresh_thumbnail_img()
 
     def on_dropped_thumbnail(self, picked_layout_id, study_uid, series_uid):
 

@@ -17,17 +17,28 @@ Item {
 
   property var selected: false
   property var model: ""
+  property var highlight: false
 
   Rectangle{
+    id: outer_rect_thumbnail
     anchors.fill: parent
-    color: (selected == true) ? '#999999' : '#636363'
+    //color: (selected == true) ? '#999999' : '#636363'
+    color: (highlight === true) ? '#696975' : '#232323'
     radius: 7
+
+    Rectangle{
+      id: inner_rect_thumbnail
+      anchors.fill: parent
+      anchors.margins: 4
+      color: '#636363'
+      radius: 7
+    }
 
     Image {
       id: img_thumbnail
       objectName: "img_thumbnail"
       anchors.fill: parent
-      anchors.margins: 2
+      anchors.margins: 4
       fillMode: Image.PreserveAspectCrop
       smooth: true
       source: ""
@@ -53,7 +64,7 @@ Item {
 
     Text {
       id: txt_thumbnail
-      anchors.fill: parent
+      anchors.fill: inner_rect_thumbnail
       text: ""
       clip: true
       color: "white"
@@ -75,6 +86,7 @@ Item {
       property var prev_y: 0
 
       onContainsMouseChanged: {
+        thumbnail_item.highlight = containsMouse;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, containsMouse);
       }
 
@@ -104,6 +116,7 @@ Item {
 
         close_thumbnail.visible = true;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+        thumbnail_item.highlight = false;
         thumbnail_item.z = 1;
 
         if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {

@@ -68,8 +68,8 @@ class slice_app(CyQQuickView):
     #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)
 
-    def get_next_layout_id(self):
-        return self.slice_win.get_next_layout_id()
+    def get_next_layout_id(self, force=False):
+        return self.slice_win.get_next_layout_id(force)
 
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
 
@@ -123,6 +123,9 @@ def onMsg(msg):
             next_id = app_slice2.get_next_layout_id()
             if next_id >= 0:
                 app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+            else:
+                next_id = app_slice.get_next_layout_id(force=True)
+                app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
 
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params

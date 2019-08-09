@@ -165,18 +165,33 @@ class DBMManager(QObject):
                 vtk_img.Modified()
                 self._win.send_message.emit(['slice::refresh_all', None])
 
-            def _update_scout_img(_frame_info):
+            def _update_thumbnail_scout_img(_frame_info):
                 for _frame, _idx in _frame_info:
                     _w = _dicom_web.scout_img_data[dw.TAG_Columns]['Value'][0]
                     _h = _dicom_web.scout_img_data[dw.TAG_Rows]['Value'][0]
-                    _scout_img = _frame.reshape((_h, _w, 3), order='C').astype(np.int8).ravel()
-
+                    _scout_img = _frame.reshape((_h, _w, 3), order='C').astype(_frame.dtype).ravel()
                     _vtk_scout_dims = dsa.numpyTovtkDataArray(np.array([_w, _h, 3]))
                     _vtk_scout_dims.SetName('SCOUT_IMG_DIMS')
                     vtk_img.GetFieldData().AddArray(_vtk_scout_dims)
                     _vtk_scout_array = dsa.numpyTovtkDataArray(_scout_img)
                     _vtk_scout_array.SetName('SCOUT_IMG')
                     vtk_img.GetFieldData().AddArray(_vtk_scout_array)
+                    self._win.send_message.emit(['slice::update_thumbnail_img', None])
+
+            def _update_thumbnail_center_img(_frame_info):
+                for _frame, _idx in _frame_info:
+                    _w = _dicom_web.metadata[_idx][dw.TAG_Columns]['Value'][0]
+                    _h = _dicom_web.metadata[_idx][dw.TAG_Rows]['Value'][0]
+                    _frame[:] = _frame[:] / (np.max(_frame)) * 255
+                    _frame[_frame < 0] = 0
+                    _frame[_frame > 255] = 255
+                    _thumbnail_img = _frame.reshape((_h, _w), order='C').astype(np.uint8).ravel()
+                    _vtk_thumbnail_dims = dsa.numpyTovtkDataArray(np.array([_w, _h]))
+                    _vtk_thumbnail_dims.SetName('THUMBNAIL_IMG_DIMS')
+                    vtk_img.GetFieldData().AddArray(_vtk_thumbnail_dims)
+                    _vtk_thumbnail_array = dsa.numpyTovtkDataArray(_thumbnail_img)
+                    _vtk_thumbnail_array.SetName('THUMBNAIL_IMG')
+                    vtk_img.GetFieldData().AddArray(_vtk_thumbnail_array)
                     self._win.send_message.emit(['slice::update_thumbnail_img', None])
 
             processes_cnt = 4
@@ -187,13 +202,22 @@ class DBMManager(QObject):
             with multiprocessing.Pool(processes=processes_cnt) as pool:
                 pool.daemon = True
 
-                # scout image
                 if _dicom_web.scout_img_data:
+                    # scout image
                     _scout_uid = _dicom_web.scout_img_data[dw.TAG_SOPInstanceUID]['Value'][0]
                     _scout_bits = _dicom_web.scout_img_data[dw.TAG_BitsAllocated]['Value'][0]
                     _scout_param = [url + "instances/%s/frames/1" % _scout_uid, header, None, _scout_bits, None]
-                    _scout_pool = pool.map_async(dw.requests_buf, [_scout_param, ], callback=_update_scout_img)
+                    _scout_pool = pool.map_async(dw.requests_buf, [_scout_param, ], callback=_update_thumbnail_scout_img)
                     _scout_pool.wait()
+                else:
+                    # center img
+                    _idx_cen = len(uids) // 2
+                    _meta = _dicom_web.metadata[_idx_cen]
+                    _thumbnail_uid = _meta[dw.TAG_SOPInstanceUID]['Value'][0]
+                    _thumbnail_bits = _meta[dw.TAG_BitsAllocated]['Value'][0]
+                    _thumbnail_param = [url + "instances/%s/frames/1" % _thumbnail_uid, header, _idx_cen, _thumbnail_bits, rescale_params]
+                    _thumbnail_pool = pool.map_async(dw.requests_buf, [_thumbnail_param, ], callback=_update_thumbnail_center_img)
+                    _thumbnail_pool.wait()
 
                 for i in range(a):
                     _i = i * processes_cnt
