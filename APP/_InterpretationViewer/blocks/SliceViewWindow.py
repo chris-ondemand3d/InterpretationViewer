@@ -1,11 +1,14 @@
 import os, sys
 import gc
+from datetime import datetime
+import time
 
 from cyhub.cy_image_holder import CyQQuickView
 
 from PyQt5.QtQuick import QQuickView
-from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot, QByteArray
 from PyQt5.QtQml import QQmlProperty
+from PyQt5.QtGui import QImage
 
 
 class SliceViewWindow(QObject):
@@ -108,6 +111,42 @@ class SliceViewWindow(QObject):
     def fullscreen(self, layout_idx, fullscreen_mode):
         item = self.repeater_imgholder.itemAt(layout_idx).childItems()[1]
         item.setProperty('fullscreenTrigger', fullscreen_mode)
+
+    def refresh_thumbnail_img(self):
+
+        _repeater_sv_thumbnail = self._win.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
+        _thumbnail_item = self._win.rootObject().findChild(QObject, 'thumbnail_item')
+
+        thumbnail_cnt = QQmlProperty.read(_repeater_sv_thumbnail, 'count')
+
+        for i, s in enumerate(self._mgr.SLICES):
+            dcm_info = s.get_dcm_info()
+            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
+                _study_uid = dcm_info['study_uid']
+                _series_uid = dcm_info['series_uid']
+                _scout_img, _scout_dims = s.get_scout_img()
+                if not _scout_img is None:
+                    # find thumbnail item by study_uid and series_uid
+                    for j in range(thumbnail_cnt):
+                        _sub_item = _repeater_sv_thumbnail.itemAt(j)
+                        if _sub_item.isExist(_study_uid, _series_uid):
+                            _img_item = _sub_item.findChild(QObject, 'img_thumbnail')
+
+                            _source = QQmlProperty.read(_img_item, 'source')
+                            if not _source.isEmpty():
+                                continue
+
+                            _img = QImage(_scout_img.ravel(), _scout_dims[0], _scout_dims[1], QImage.Format_RGB888)
+                            _path = os.path.join(os.path.abspath("."), "../_tmp/")
+                            if not os.path.exists(_path):
+                                os.mkdir(_path)
+                            _path = os.path.join(_path, "%s%d.thumb"%
+                                                 (datetime.now().strftime("%m%d%Y"), int(round(time.time() * 1000))))
+                            _img.save(_path, 'JPG', 70)
+                            _url = QUrl.fromLocalFile(_path)
+                            _img_item.setProperty('source', _url)
+
+                            break
 
     def appendThumbnail(self, patient_info, study_uid, series_uid):
         _id = patient_info['id']

@@ -1,4 +1,5 @@
 import os, sys
+import shutil
 
 from cyhub.cy_image_holder import CyQQuickView
 
@@ -21,6 +22,13 @@ from APP._InterpretationViewer.blocks.MPRManager import MPRManager
 
 
 _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), './main.qml'))
+
+
+def clear_tmp_directory():
+    # clear tmp directory
+    _tmp_path = os.path.join(os.path.abspath("."), "../_tmp/")
+    if os.path.exists(_tmp_path):
+        shutil.rmtree(_tmp_path)
 
 
 class dbm_app(CyQQuickView):
@@ -64,13 +72,17 @@ class slice_app(CyQQuickView):
         return self.slice_win.get_next_layout_id()
 
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
+
+        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}   # TODO
         self.slice_win.appendThumbnail(_patient_info, study_uid, series_uid)
         self.slice_win.set_data_info_str(_patient_info, next_id)
-        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}   # TODO
         self.slice_mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
 
     def fullscreen(self, layout_idx, fullscreen_mode):
         self.slice_win.fullscreen(layout_idx, fullscreen_mode)
+
+    def refresh_thumbnail_img(self):
+        self.slice_win.refresh_thumbnail_img()
 
 
 class mpr_app(CyQQuickView):
@@ -96,6 +108,7 @@ class mpr_app(CyQQuickView):
 
 
 def onClose(event):
+    clear_tmp_directory()
     sys.exit()
 
 def onMsg(msg):
@@ -136,6 +149,10 @@ def onMsg(msg):
                 else:
                     return
 
+    elif _msg == 'slice::update_thumbnail_img':
+        app_slice.refresh_thumbnail_img()
+        app_slice2.refresh_thumbnail_img()
+
     elif _msg == 'slice::refresh_all':
         app_slice.sig_refresh_all.emit()
         app_slice2.sig_refresh_all.emit()
@@ -153,6 +170,9 @@ def onMsg(msg):
 
 
 if __name__ == '__main__':
+
+    # clear tmp directory
+    clear_tmp_directory()
 
     app_dbm = dbm_app()
     app_dbm.closing.connect(onClose)

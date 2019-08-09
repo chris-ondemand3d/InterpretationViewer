@@ -555,12 +555,18 @@ class Slice(I2G_IMG_HOLDER):
     def get_image_filter_type(self):
         return self.image_filter_type if hasattr(self, 'image_filter_type') else 'Filter Off'
 
-    # def get_project_info(self):
-    #     info = dict()
-    #     info["Type"] = self.slice_type
-    #     info["Thickness"] = self.get_thickness()
-    #     info["Filter"] = self.image_filter_type if hasattr(self, 'image_filter_type') else 'None'
-    #     return info
+    def get_scout_img(self):
+        _vtk_img = self.get_vtk_img()
+        if _vtk_img is None:
+            return None, None
+        _scout_dims = _vtk_img.GetFieldData().GetArray('SCOUT_IMG_DIMS')
+        _scout_arr = _vtk_img.GetFieldData().GetArray('SCOUT_IMG')
+        if _scout_dims is None or _scout_arr is None:
+            return None, None
+        _scout_dims = numpy_support.vtk_to_numpy(_scout_dims)
+        _scout_arr = numpy_support.vtk_to_numpy(_scout_arr)
+        _scout_arr = _scout_arr.reshape(_scout_dims[1], _scout_dims[0], _scout_dims[2])
+        return _scout_arr, _scout_dims
 
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)

@@ -165,6 +165,20 @@ class DBMManager(QObject):
                 vtk_img.Modified()
                 self._win.send_message.emit(['slice::refresh_all', None])
 
+            def _update_scout_img(_frame_info):
+                for _frame, _idx in _frame_info:
+                    _w = _dicom_web.scout_img_data[dw.TAG_Columns]['Value'][0]
+                    _h = _dicom_web.scout_img_data[dw.TAG_Rows]['Value'][0]
+                    _scout_img = _frame.reshape((_h, _w, 3), order='C').astype(np.int8).ravel()
+
+                    _vtk_scout_dims = dsa.numpyTovtkDataArray(np.array([_w, _h, 3]))
+                    _vtk_scout_dims.SetName('SCOUT_IMG_DIMS')
+                    vtk_img.GetFieldData().AddArray(_vtk_scout_dims)
+                    _vtk_scout_array = dsa.numpyTovtkDataArray(_scout_img)
+                    _vtk_scout_array.SetName('SCOUT_IMG')
+                    vtk_img.GetFieldData().AddArray(_vtk_scout_array)
+                    self._win.send_message.emit(['slice::update_thumbnail_img', None])
+
             processes_cnt = 4
             uid_infos = [[url + "instances/%s/frames/1" % uid, header, i, dicom_web.bits, rescale_params] for i, uid in enumerate(uids)]
             a = len(uid_infos) // processes_cnt
@@ -172,6 +186,15 @@ class DBMManager(QObject):
 
             with multiprocessing.Pool(processes=processes_cnt) as pool:
                 pool.daemon = True
+
+                # scout image
+                if _dicom_web.scout_img_data:
+                    _scout_uid = _dicom_web.scout_img_data[dw.TAG_SOPInstanceUID]['Value'][0]
+                    _scout_bits = _dicom_web.scout_img_data[dw.TAG_BitsAllocated]['Value'][0]
+                    _scout_param = [url + "instances/%s/frames/1" % _scout_uid, header, None, _scout_bits, None]
+                    _scout_pool = pool.map_async(dw.requests_buf, [_scout_param, ], callback=_update_scout_img)
+                    _scout_pool.wait()
+
                 for i in range(a):
                     _i = i * processes_cnt
                     _pool = pool.map_async(dw.requests_buf, uid_infos[_i:_i+processes_cnt], callback=_update)

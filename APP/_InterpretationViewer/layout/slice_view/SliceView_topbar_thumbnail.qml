@@ -19,6 +19,7 @@ Item {
 
   ListModel {
     id: items_sv_thumbnail
+    objectName: "items_sv_thumbnail"
   }
 
   Rectangle{
@@ -28,6 +29,7 @@ Item {
 
   RowLayout {
     id: layout_thumbnail
+    objectName: "layout_thumbnail"
     anchors.fill: parent
     anchors.margins: 5
     width: parent.width
@@ -45,6 +47,8 @@ Item {
       model: 0
 
       ThumbnailItem{
+        id: thumbnail_item
+        objectName: "thumbnail_item"
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
       }
     }

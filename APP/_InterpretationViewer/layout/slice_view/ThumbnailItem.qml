@@ -21,13 +21,42 @@ Item {
   Rectangle{
     anchors.fill: parent
     color: (selected == true) ? '#999999' : '#636363'
-    radius: 10
+    radius: 7
+
+    Image {
+      id: img_thumbnail
+      objectName: "img_thumbnail"
+      anchors.fill: parent
+      anchors.margins: 2
+      fillMode: Image.PreserveAspectCrop
+      smooth: true
+      source: ""
+
+      property bool rounded: true
+      property bool adapt: true
+
+      layer.enabled: rounded
+      layer.effect: OpacityMask {
+        maskSource: Item {
+          width: img_thumbnail.width
+          height: img_thumbnail.height
+          Rectangle {
+            anchors.centerIn: parent
+            width: img_thumbnail.adapt ? img_thumbnail.width : Math.min(img_thumbnail.width, img_thumbnail.height)
+            height: img_thumbnail.adapt ? img_thumbnail.height : width
+            radius: img_thumbnail.parent.radius
+          }
+        }
+      }
+
+    }
 
     Text {
       id: txt_thumbnail
       anchors.fill: parent
       text: ""
       clip: true
+      color: "white"
       font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
       verticalAlignment: Text.AlignVCenter
     }
@@ -58,6 +87,7 @@ Item {
         prev_y = thumbnail_item.y;
         close_thumbnail.visible = false;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, true);
+        thumbnail_item.z = 10;
       }
 
       onReleased: {
@@ -74,6 +104,7 @@ Item {
 
         close_thumbnail.visible = true;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+        thumbnail_item.z = 1;
 
         if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
           return;
@@ -89,9 +120,9 @@ Item {
     id: close_thumbnail
     anchors{
       top: parent.top
-      topMargin: 3
+      topMargin: 5
       right: parent.right
-      rightMargin: 3
+      rightMargin: 5
     }
     width: 15
     height: 15
@@ -122,5 +153,12 @@ Item {
                           .arg(_patient_id).arg(_patient_name).arg(_series_id).arg(_date).arg(_modality);
 
     model = _model;
+  }
+
+  function isExist(_study_uid, _series_uid)
+  {
+    if ((model.study_uid == _study_uid) && (model.series_uid == _series_uid))
+      return true;
+    return false;
   }
 }
