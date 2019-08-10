@@ -169,7 +169,7 @@ class DBMManager(QObject):
                 for _frame, _idx in _frame_info:
                     _w = _dicom_web.scout_img_data[dw.TAG_Columns]['Value'][0]
                     _h = _dicom_web.scout_img_data[dw.TAG_Rows]['Value'][0]
-                    _scout_img = _frame.reshape((_h, _w, 3), order='C').astype(_frame.dtype).ravel()
+                    _scout_img = _frame.reshape((_h, _w, 3), order='C').astype(np.uint8).ravel()
                     _vtk_scout_dims = dsa.numpyTovtkDataArray(np.array([_w, _h, 3]))
                     _vtk_scout_dims.SetName('SCOUT_IMG_DIMS')
                     vtk_img.GetFieldData().AddArray(_vtk_scout_dims)
