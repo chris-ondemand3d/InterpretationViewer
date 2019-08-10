@@ -78,4 +78,38 @@ Item {
     anchors.bottom: bottombar_panel.top
   }
 
+  // dummy image
+  Image {
+    id: img_sc_dummythumbnail
+    objectName: "img_sc_dummythumbnail"
+
+    width: 120
+    height: 100
+    x: 200
+    y: 200
+    z: 10
+    visible: false
+
+    fillMode: Image.PreserveAspectCrop
+    smooth: true
+    source: ""
+
+    property bool rounded: true
+    property bool adapt: true
+
+    layer.enabled: rounded
+    layer.effect: OpacityMask {
+      maskSource: Item {
+        width: img_sc_dummythumbnail.width
+        height: img_sc_dummythumbnail.height
+        Rectangle {
+          anchors.centerIn: parent
+          width: img_sc_dummythumbnail.adapt ? img_sc_dummythumbnail.width : Math.min(img_sc_dummythumbnail.width, img_sc_dummythumbnail.height)
+          height: img_sc_dummythumbnail.adapt ? img_sc_dummythumbnail.height : width
+          radius: 7
+        }
+      }
+    }
+  }
+
 }

@@ -29,10 +29,8 @@ CAM_SCALE_NORMAL_X = 0.35
 
 class Slice(I2G_IMG_HOLDER):
 
-    sig_update_slabplane = pyqtSignal(object)
     sig_change_slice_num = pyqtSignal(object)
     sig_change_wwl = pyqtSignal(object, object)
-    sig_refresh_all = pyqtSignal()
 
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
@@ -328,7 +326,6 @@ class Slice(I2G_IMG_HOLDER):
             if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
                 ww, wl = self.get_windowing()
                 self.sig_change_wwl.emit(ww, wl)
-                self.sig_refresh_all.emit()
         else:
             pass
 
@@ -347,17 +344,10 @@ class Slice(I2G_IMG_HOLDER):
         x, y = i.GetEventPosition()
 
         if _event == "LeftButtonReleaseEvent":
-
-            if hasattr(self, 'need_to_refresh_all') and self.need_to_refresh_all:
-                self.need_to_refresh_all = False
-
-                async def _do():
-                    await self.i2g_mgr.refresh_all()
-                create_task(_do())
+            pass
 
         elif _event == "RightButtonReleaseEvent":
-            if self.slice_type == "axial":
-                pass
+            pass
 
     def on_mouse_wheel_normal(self, _rwi, _event):
         _ctrl = _rwi.GetInteractor().GetControlKey()

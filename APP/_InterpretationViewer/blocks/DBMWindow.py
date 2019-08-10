@@ -50,25 +50,6 @@ class DBMWindow(QObject):
         selected_model = index.internalPointer()
         self.load_data_from_model(selected_model)
 
-        # if selected_model.parent() is None:
-        #     """
-        #     case of study
-        #     """
-        #     children = selected_model.children()
-        #     layout_idx = 0
-        #     for series in children[:]:
-        #         vtk_img = self._mgr.retrieve_dicom(selected_model.itemData['StudyInstanceUID'],
-        #                                            series.itemData['SeriesInstanceUID'])
-        #         self._win.send_message.emit(['slice::init_vtk', (vtk_img, layout_idx)])
-        #         layout_idx += 1
-        # else:
-        #     """
-        #     case of series
-        #     """
-        #     vtk_img = self._mgr.retrieve_dicom(selected_model.parent().itemData['StudyInstanceUID'],
-        #                                        selected_model.itemData['SeriesInstanceUID'])
-        #     self._win.send_message.emit(['slice::init_vtk', (vtk_img, 0)])
-
     @pyqtSlot(str, QVariant)
     def on_data_load(self, cmd, indices):
         indices = indices.toVariant()

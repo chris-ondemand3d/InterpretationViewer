@@ -49,6 +49,7 @@ class dbm_app(CyQQuickView):
 
 class slice_app(CyQQuickView):
 
+    send_message = pyqtSignal(object)
     sig_refresh_all = pyqtSignal()
 
     def __init__(self, *args, **kwds):
@@ -83,6 +84,29 @@ class slice_app(CyQQuickView):
 
     def refresh_thumbnail_img(self):
         self.slice_win.refresh_thumbnail_img()
+
+    def is_contained(self, global_mouse):
+        return self.slice_win.is_contained(global_mouse)
+
+    def set_dummy_thumbnail(self, global_pos, img_url):
+        self.slice_win.set_dummy_thumbnail(global_pos, img_url)
+
+    def release_dummy_thumbnail(self):
+        self.slice_win.release_dummy_thumbnail()
+
+    def insert_slice_obj(self, slice_obj):
+        next_id = self.slice_mgr.insert_slice_obj(slice_obj)
+        if not self.slice_win.insert_slice_obj(slice_obj, next_id):
+            return False
+        self.slice_mgr.refresh_text_items(next_id)
+        return True
+
+    def remove_slice_obj(self, slice_obj):
+        dcm_info = slice_obj.get_dcm_info()
+        if not dcm_info:
+            return False
+        self.slice_win.on_close_view(dcm_info['study_uid'], dcm_info['series_uid'])
+        return True
 
 
 class mpr_app(CyQQuickView):
@@ -159,6 +183,34 @@ def onMsg(msg):
     elif _msg == 'slice::refresh_all':
         app_slice.sig_refresh_all.emit()
         app_slice2.sig_refresh_all.emit()
+
+    elif _msg == 'slice::set_dummy_thumbnail':
+        _global_pos, _img_url = _params
+        if app_slice.is_contained(_global_pos):
+            app_slice.set_dummy_thumbnail(_global_pos, _img_url)
+        elif app_slice2.is_contained(_global_pos):
+            app_slice2.set_dummy_thumbnail(_global_pos, _img_url)
+
+    elif _msg == 'slice::release_dummy_thumbnail':
+        app_slice.release_dummy_thumbnail()
+        app_slice2.release_dummy_thumbnail()
+
+    elif _msg == 'slice::send_to_other_app':
+        _global_mouse, _study_uid, _series_uid = _params
+        if app_slice.is_contained(_global_mouse):
+            _slice_obj = app_slice2.slice_win.get_slice_obj(_study_uid, _series_uid)
+            if not _slice_obj:
+                return
+            if app_slice.insert_slice_obj(_slice_obj):
+                app_slice2.remove_slice_obj(_slice_obj)
+        elif app_slice2.is_contained(_global_mouse):
+            _slice_obj = app_slice.slice_win.get_slice_obj(_study_uid, _series_uid)
+            if not _slice_obj:
+                return
+            if app_slice2.insert_slice_obj(_slice_obj):
+                app_slice.remove_slice_obj(_slice_obj)
+
+    # MPR
     elif _msg == 'mpr::init_vtk':
         app_mpr.mpr_mgr.init_vtk(_params)
         # app_mpr2.mpr_mgr.init_vtk(_params)
@@ -170,6 +222,10 @@ def onMsg(msg):
     elif _msg == 'mpr::refresh_all':
         app_mpr.sig_refresh_all.emit()
         # app_mpr2.sig_refresh_all.emit()
+
+    # debug
+    elif _msg == 'test_msg':
+        print("This is test msg :: ", _params)
 
 
 if __name__ == '__main__':
@@ -184,8 +240,10 @@ if __name__ == '__main__':
     app_mpr.closing.connect(onClose)
     app_slice = slice_app()
     app_slice.closing.connect(onClose)
+    app_slice.send_message.connect(onMsg)
     app_slice2 = slice_app()
     app_slice2.closing.connect(onClose)
+    app_slice2.send_message.connect(onMsg)
 
     # multiple monitor
     screens = _qapp.qapp.screens()

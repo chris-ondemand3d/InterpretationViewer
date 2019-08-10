@@ -19,6 +19,8 @@ Item {
   property var model: ""
   property var highlight: false
 
+  property var grabbedImageUrl: null
+
   Rectangle{
     id: outer_rect_thumbnail
     anchors.fill: parent
@@ -62,7 +64,8 @@ Item {
 
     }
 
-    Text {
+    // debug
+    /*Text {
       id: txt_thumbnail
       anchors.fill: inner_rect_thumbnail
       text: ""
@@ -70,6 +73,62 @@ Item {
       color: "white"
       font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
       verticalAlignment: Text.AlignVCenter
+    }*/
+
+    Text {
+      id: txt_thumbnail_modality
+      anchors{
+        left: inner_rect_thumbnail.left
+        top: inner_rect_thumbnail.top
+        leftMargin: 5
+        topMargin: 5
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
+      id: txt_thumbnail_patient_name
+      anchors{
+        left: inner_rect_thumbnail.left
+        right: inner_rect_thumbnail.right
+        bottom: txt_thumbnail_date.top
+        leftMargin: 5
+        rightMargin: 5
+        topMargin: 0
+        bottomMargin: 0
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      verticalAlignment: Text.AlignVCenter
+      //horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+      id: txt_thumbnail_date
+      anchors{
+        left: inner_rect_thumbnail.left
+        right: inner_rect_thumbnail.right
+        bottom: inner_rect_thumbnail.bottom
+        leftMargin: 5
+        rightMargin: 5
+        topMargin: 0
+        bottomMargin: 0
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
     }
 
     MouseArea {
@@ -84,6 +143,15 @@ Item {
 
       property var prev_x: 0
       property var prev_y: 0
+      property var previousGlobalPosition: null
+
+      onPositionChanged: {
+        if (pressed)
+        {
+          mouse_thumbnail.previousGlobalPosition = thumbnail_item.mapToGlobal(mouse.x, mouse.y);
+          sliceview_topbar_thumbnail.sigPositionChanged_Global(mouse_thumbnail.previousGlobalPosition, thumbnail_item.grabbedImageUrl);
+        }
+      }
 
       onContainsMouseChanged: {
         thumbnail_item.highlight = containsMouse;
@@ -98,6 +166,8 @@ Item {
         prev_x = thumbnail_item.x;
         prev_y = thumbnail_item.y;
         close_thumbnail.visible = false;
+        thumbnail_item.highlight = true;
+        thumbnail_item.grabImage();
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, true);
         thumbnail_item.z = 10;
       }
@@ -116,10 +186,12 @@ Item {
 
         close_thumbnail.visible = true;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+        sliceview_topbar_thumbnail.sigReleaseDummyThumbnail();
         thumbnail_item.highlight = false;
         thumbnail_item.z = 1;
 
         if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
+          sliceview_topbar_thumbnail.sigDropToOtherApp(mouse_thumbnail.previousGlobalPosition, model.study_uid, model.series_uid);
           return;
         }
 
@@ -162,8 +234,11 @@ Item {
     var _date = _model.date;
     var _modality = _model.modality;
 
-    txt_thumbnail.text = ('ID : %1\nName : %2\nSeries : %3\nDate : %4\nModality : %5')
-                          .arg(_patient_id).arg(_patient_name).arg(_series_id).arg(_date).arg(_modality);
+    /*txt_thumbnail.text = ('ID : %1\nName : %2\nSeries : %3\nDate : %4\nModality : %5')
+                          .arg(_patient_id).arg(_patient_name).arg(_series_id).arg(_date).arg(_modality);*/
+    txt_thumbnail_modality.text = _modality;
+    txt_thumbnail_patient_name.text = _patient_name;
+    txt_thumbnail_date.text = _date;
 
     model = _model;
   }
@@ -174,4 +249,14 @@ Item {
       return true;
     return false;
   }
+
+  function grabImage()
+  {
+    thumbnail_item.grabToImage(function(result) {
+       //result.saveToFile("../_tmp/grabbedimg.png");
+       thumbnail_item.grabbedImageUrl = result.url;
+    });
+
+  }
+
 }

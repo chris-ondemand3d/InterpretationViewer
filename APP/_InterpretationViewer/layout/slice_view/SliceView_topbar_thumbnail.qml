@@ -15,7 +15,11 @@ Item {
 
   signal sigDrop(real picked_layout_id, string study_uid, string series_uid)
   signal sigHighlight(string study_uid, string series_uid, bool on)
+  signal sigReleaseDummyThumbnail()
   signal sigClose(string study_uid, string series_uid)
+
+  signal sigPositionChanged_Global(var global_mosue, var img_url)
+  signal sigDropToOtherApp(var global_mouse, string study_uid, string series_uid)
 
   ListModel {
     id: items_sv_thumbnail
