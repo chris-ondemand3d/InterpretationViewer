@@ -493,38 +493,38 @@ Item {
   {
     for (var i=0; i < repeater_imgholder_sliceview.count; i++)
     {
-      var _item = repeater_imgholder_sliceview.itemAt(i)
-      var _topbar_item = _item.children[0]
-      var _vtkimg_item = _item.children[1]
+      var _item = repeater_imgholder_sliceview.itemAt(i);
+      var _topbar_item = _item.children[0];
+      var _vtkimg_item = _item.children[1];
 
       if (bFullscreen){
-        _item.visible = false
+        _item.visible = false;
       }
       else {
-        _item.visible = true
-        var y = parseInt((i / grid_layout.columns))
-        var x = i % grid_layout.columns
-        _vtkimg_item.Layout.column = _item.column
-        _vtkimg_item.Layout.columnSpan = _item.columnSpan
-        _vtkimg_item.Layout.row = _item.row
-        _vtkimg_item.Layout.rowSpan = _item.rowSpan
-        _vtkimg_item.Layout.preferredWidth  = grid_layout.colMulti * _item.columnSpan - 0.5
-        _vtkimg_item.Layout.preferredHeight = grid_layout.rowMulti * _item.rowSpan - 0.5
+        _item.visible = true;
+        var y = parseInt((i / grid_layout.columns));
+        var x = i % grid_layout.columns;
+        _vtkimg_item.Layout.column = _item.column;
+        _vtkimg_item.Layout.columnSpan = _item.columnSpan;
+        _vtkimg_item.Layout.row = _item.row;
+        _vtkimg_item.Layout.rowSpan = _item.rowSpan;
+        _vtkimg_item.Layout.preferredWidth  = grid_layout.colMulti * _item.columnSpan - 0.5;
+        _vtkimg_item.Layout.preferredHeight = (grid_layout.rowMulti * _item.rowSpan - 0.5) - _topbar_item.height;
       }
     }
 
     // should be called at last
     if (bFullscreen){
-      var _item = target_item
-      var _topbar_item = _item.children[0]
-      var _vtkimg_item = _item.children[1]
-      _item.visible = true
-      _vtkimg_item.Layout.column = 0
-      _vtkimg_item.Layout.columnSpan = grid_layout.columns
-      _vtkimg_item.Layout.row = 0
-      _vtkimg_item.Layout.rowSpan = grid_layout.rows
-      _vtkimg_item.Layout.preferredWidth  = grid_layout.width
-      _vtkimg_item.Layout.preferredHeight = grid_layout.height
+      var _item = target_item;
+      var _topbar_item = _item.children[0];
+      var _vtkimg_item = _item.children[1];
+      _item.visible = true;
+      _vtkimg_item.Layout.column = 0;
+      _vtkimg_item.Layout.columnSpan = grid_layout.columns;
+      _vtkimg_item.Layout.row = 0;
+      _vtkimg_item.Layout.rowSpan = grid_layout.rows;
+      _vtkimg_item.Layout.preferredWidth  = grid_layout.width;
+      _vtkimg_item.Layout.preferredHeight = grid_layout.height;
     }
 
   }
