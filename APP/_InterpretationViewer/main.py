@@ -39,6 +39,13 @@ class dbm_app(CyQQuickView):
         super().__init__(*args, **kwds)
         self.setResizeMode(QQuickView.SizeRootObjectToView)
 
+        app_name = "PanDok.V1ewer"
+        win_name = "DBM(Database Manager)"
+        title = app_name + ' - ' + win_name
+        if 'app_index' in kwds:
+            title = title + kwds['app_index']
+        self.setTitle(title)
+
         self.dbm_mgr = DBMManager(_win=self, _dicom_web = dicom_web)
         self.dbm_win = DBMWindow(_win=self, _mgr=self.dbm_mgr)
 
@@ -53,11 +60,18 @@ class slice_app(CyQQuickView):
     sig_refresh_all = pyqtSignal()
 
     def __init__(self, *args, **kwds):
-        super().__init__(*args, **kwds)
+        super().__init__()
         self.setResizeMode(QQuickView.SizeRootObjectToView)
         self.setSource(_win_source)
         self.resize(1300, 650)
         # self.show(isMaximize=True)
+
+        app_name = "PanDok.V1ewer"
+        win_name = "Viewer"
+        title = app_name + ' - ' + win_name
+        if 'app_index' in kwds:
+            title = title + str(kwds['app_index'])
+        self.setTitle(title)
 
         self.slice_mgr = SliceViewManager()
         self.slice_win = SliceViewWindow(_win=self, _mgr=self.slice_mgr)
@@ -250,10 +264,10 @@ if __name__ == '__main__':
     app_dbm.send_message.connect(onMsg)
     app_mpr = mpr_app()
     app_mpr.closing.connect(onClose)
-    app_slice = slice_app()
+    app_slice = slice_app(app_index=1)
     app_slice.closing.connect(onClose)
     app_slice.send_message.connect(onMsg)
-    app_slice2 = slice_app()
+    app_slice2 = slice_app(app_index=2)
     app_slice2.closing.connect(onClose)
     app_slice2.send_message.connect(onMsg)
 
