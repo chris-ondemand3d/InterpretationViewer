@@ -161,6 +161,22 @@ class SliceViewWindow(QObject):
 
                             break
 
+    def busy_check(self):
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for i, s in enumerate(self._mgr.SLICES[:layout_cnt]):
+            _obj = self.repeater_imgholder.itemAt(i)
+            if _obj is None:
+                continue
+            _vtk_img = s.get_vtk_img()
+            if _vtk_img is None:
+                continue
+
+            _busy = _vtk_img.GetFieldData().GetArray('BUSY')
+            if _busy is None:
+                _obj.childItems()[1].setBusy(False)
+            else:
+                _obj.childItems()[1].setBusy(True)
+
     def appendThumbnail(self, patient_info, study_uid, series_uid):
         _id = patient_info['id']
         _name = patient_info['name']
@@ -229,6 +245,8 @@ class SliceViewWindow(QObject):
         self.appendThumbnail(patient_info, dcm_info['study_uid'], dcm_info['series_uid'])
         self.set_vtk_img_from_slice_obj(slice_obj, next_id)
         self.set_data_info_str(patient_info, next_id)
+        # busy check
+        self.busy_check()
         return True
 
     def get_slice_obj(self, study_uid, series_uid):
@@ -396,6 +414,9 @@ class SliceViewWindow(QObject):
                     self._mgr.refresh_text_items(picked_layout_id)
                     _patient_info = s.get_patient_info()
                     self.set_data_info_str(_patient_info, picked_layout_id)
+
+                    # busy check
+                    self.busy_check()
 
                     return
 

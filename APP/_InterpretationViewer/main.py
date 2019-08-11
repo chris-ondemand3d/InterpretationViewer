@@ -78,6 +78,10 @@ class slice_app(CyQQuickView):
         self.slice_win.appendThumbnail(_patient_info, study_uid, series_uid)
         self.slice_win.set_data_info_str(_patient_info, next_id)
         self.slice_mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
+        self.slice_win.busy_check()
+
+    def busy_check(self):
+        self.slice_win.busy_check()
 
     def fullscreen(self, layout_idx, fullscreen_mode):
         self.slice_win.fullscreen(layout_idx, fullscreen_mode)
@@ -154,6 +158,10 @@ def onMsg(msg):
             else:
                 next_id = app_slice.get_next_layout_id(force=True)
                 app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+
+    elif _msg == 'slice::busy_check':
+        app_slice.busy_check()
+        app_slice2.busy_check()
 
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params

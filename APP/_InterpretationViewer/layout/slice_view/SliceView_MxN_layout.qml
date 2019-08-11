@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.5
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
@@ -398,6 +398,21 @@ Item {
             }
           }
 
+          // Busy Indicator
+          BusyIndicator {
+            id: busy_indicator
+            objectName: "busy_indicator"
+            width: 25;
+            height: 25;
+            anchors {
+              left: parent.left
+              bottom: parent.bottom
+              leftMargin: 15
+              bottomMargin: 15
+            }
+            running: false
+          }
+
           function getIndex() {
             return index;
           }
@@ -433,6 +448,13 @@ Item {
             text_sv_wwl.text = "";
 
             vtk_img_topbar.highlight = false;
+
+            busy_indicator.running = false;
+          }
+
+          function setBusy(busy)
+          {
+            busy_indicator.running = busy;
           }
 
           function setSliceNumber(number){
@@ -487,6 +509,11 @@ Item {
         item.column = x
         item.row = y
     }
+  }
+
+  function setBusy(target_item, busy)
+  {
+    busy_indicator.setBusy(busy);
   }
 
   function onFullscreen(bFullscreen, target_item)

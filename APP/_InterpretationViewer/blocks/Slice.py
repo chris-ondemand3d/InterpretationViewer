@@ -19,7 +19,7 @@ IS_OSX = (platform.system() == 'Darwin')
 
 CY_VTK_STATE_LOCK = 9919
 CAM_SCALE_NORMAL = 0.50
-CAM_SCALE_NORMAL_X = 0.35
+CAM_SCALE_NORMAL_X = 0.4
 
 
 """ MouseEvent Mode """

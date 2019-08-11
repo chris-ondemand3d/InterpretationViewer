@@ -182,6 +182,11 @@ class DBMManager(QObject):
         vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
         vtk_img_narray = buf.reshape(dim, order='F')
 
+        # busy flag
+        _vtk_busy = dsa.numpyTovtkDataArray(np.array([]))
+        _vtk_busy.SetName('BUSY')
+        vtk_img.GetFieldData().AddArray(_vtk_busy)
+
         url = "%s/%s/studies/%s/series/%s/" % (dicom_web.host_url, dicom_web.wadors_prefix,
                                                dicom_web.study_uid, dicom_web.series_uid)
         header = dw.HEADERS2
@@ -292,6 +297,8 @@ class DBMManager(QObject):
                     continue
                 self.WORKERS.remove(_w)
                 del _w
+            vtk_img.GetFieldData().RemoveArray('BUSY')
+            self._win.send_message.emit(["slice::busy_check", None])
 
         # do
         if not hasattr(self, 'WORKERS'):

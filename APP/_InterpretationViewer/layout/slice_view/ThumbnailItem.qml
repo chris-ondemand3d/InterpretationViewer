@@ -238,12 +238,27 @@ Item {
     }
     width: 15
     height: 15
-    color: '#406084'
+    color: '#FF4343'
+    radius: 10
+
+    Text {
+      anchors.fill: parent
+      color: "black"
+      font.pointSize: 10
+      font.bold: true
+      font.weight: Font.ExtraBold
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+      text: "X"
+
+      visible: mouse_close_thumbnail.containsMouse
+    }
 
     MouseArea {
       id: mouse_close_thumbnail
       anchors.fill: parent
       acceptedButtons: Qt.LeftButton
+      hoverEnabled: true
 
       onClicked: {
         sliceview_topbar_thumbnail.sigClose(model.study_uid, model.series_uid);
