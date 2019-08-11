@@ -524,7 +524,7 @@ Item {
       _vtkimg_item.Layout.row = 0;
       _vtkimg_item.Layout.rowSpan = grid_layout.rows;
       _vtkimg_item.Layout.preferredWidth  = grid_layout.width;
-      _vtkimg_item.Layout.preferredHeight = grid_layout.height;
+      _vtkimg_item.Layout.preferredHeight = grid_layout.height - _topbar_item.height;
     }
 
   }
