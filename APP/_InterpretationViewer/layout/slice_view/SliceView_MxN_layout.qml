@@ -82,7 +82,7 @@ Item {
           Layout.row: parent.row
           Layout.rowSpan: parent.rowSpan
           Layout.preferredWidth  : grid_layout.colMulti * parent.columnSpan - 0.5
-          Layout.preferredHeight : grid_layout.rowMulti * parent.rowSpan - 0.5
+          Layout.preferredHeight : (grid_layout.rowMulti * parent.rowSpan - 0.5) - vtk_img_topbar.height;
           fullscreenTrigger: false
 
           // patient info (LT) - Patient ID, Name, Age, Sex, Date, Series ID
