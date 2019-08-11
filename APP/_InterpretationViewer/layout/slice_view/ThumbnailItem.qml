@@ -12,13 +12,8 @@ Item {
   id: thumbnail_item
   objectName: "thumbnail_item"
 
-  width: default_width
-  height: default_height
-
-  property var default_width: 120
-  property var default_height: 100
-  property var scaled_width: 240
-  property var scaled_height: 190
+  width: 120
+  height: 100
 
   property var selected: false
   property var model: ""
@@ -167,10 +162,6 @@ Item {
         thumbnail_item.highlight = containsMouse;
         sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, containsMouse);
       }
-
-      /*onClicked: {
-        selected = !selected;
-      }*/
 
       onPressed: {
         pressed_button = mouse.button;
