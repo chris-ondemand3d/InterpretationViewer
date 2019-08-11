@@ -24,7 +24,8 @@ Item {
   }
 
   TreeView{
-    id : related_study_treeview
+    id: related_study_treeview
+    objectName: "related_study_treeview"
     width: parent.width
     height: parent.height
     anchors.centerIn: parent
@@ -60,7 +61,7 @@ Item {
 
     signal sig_menu_trigger(string type, var index)
     signal sig_header_clicked_for_sort(var sortIndicatorColumn, var sortIndicatorOrder)
-    signal sig_childitem_dclick(var index, var index_info)
+    signal sig_childitem_dclick(var index)
     signal sig_changed_index(var index, bool trigger)
 
     function set_prev_index(parent_index, child_index){
@@ -171,26 +172,7 @@ Item {
     }
 
     onDoubleClicked: {
-      if(isExpanded(related_study_treeview_itemselectionmodel.currentIndex) === true){
-        collapse(related_study_treeview_itemselectionmodel.currentIndex)
-        if(related_study_treeview_itemselectionmodel.currentIndex.parent.row != -1){
-          if(related_study_treeview_itemselectionmodel.selectedIndexes.length === 1){
-            related_study_treeview.sig_childitem_dclick(related_study_treeview_itemselectionmodel.selectedIndexes[0], related_study_treeview_itemselectionmodel.currentIndex)
-          }
-        }
-      }else{
-        expand(related_study_treeview_itemselectionmodel.currentIndex)
-        if(related_study_treeview_itemselectionmodel.currentIndex.parent.row != -1){
-          if(related_study_treeview_itemselectionmodel.selectedIndexes.length === 1){
-
-            related_study_treeview.prev_child_index = related_study_treeview_itemselectionmodel.currentIndex
-
-            var prev_index_info = [related_study_treeview.prev_parent_index, related_study_treeview.prev_child_index]
-
-            related_study_treeview.sig_childitem_dclick(related_study_treeview_itemselectionmodel.selectedIndexes[0], prev_index_info)
-          }
-        }
-      }
+      related_study_treeview.sig_childitem_dclick(related_study_treeview_itemselectionmodel.selectedIndexes[0])
     }
   }
 

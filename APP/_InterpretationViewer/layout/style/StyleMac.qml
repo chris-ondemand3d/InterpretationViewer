@@ -27,10 +27,12 @@ QtObject{
     property color db_connect_title_bg_color: "#282A27"
     property color data_infomation_bg_color: "#1b1d1b"
     property color treeview_header_bg_color: "#171917"
-    property color treeview_bg_color: "#232523"
+    //property color treeview_bg_color: "#232523"
+    property color treeview_bg_color: "#303033"
     property color treeview_select_bg_color: "#1B1D1B"
 
-    property color common_font_color: "#656565"
+    //property color common_font_color: "#656565"
+    property color common_font_color: "#A7A7A7"
 //    NOTE tooltip test
     property string btn_import_tooltip_text: qsTr("button for import *.dcm file")
 

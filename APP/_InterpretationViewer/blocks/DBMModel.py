@@ -208,3 +208,6 @@ class StudyModel(QAbstractItemModel):
             self.items.append(_parent_item)
             for v2 in v1[1]['Series'].items():
                 self.items[v1[0]].add_child_item(v2[1])
+
+    def clearData(self):
+        self.items.clear()

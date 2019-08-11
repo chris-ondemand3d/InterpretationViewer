@@ -18,21 +18,25 @@ class DBMWindow(QObject):
 
     def initialize(self):
         self.study_model = self._mgr.get_study_model()
+        self.related_study_model = self._mgr.get_related_study_model()
         self._win.rootContext().setContextProperty('study_treeview_model', self.study_model)
+        self._win.rootContext().setContextProperty('related_study_treeview_model', self.related_study_model)
         # self.dbm.PT_sort_data(4, 0)
 
-        _data = self._mgr.query_studies_series()
-        self.study_model.beginResetModel()
-        self.study_model.addData(_data)
-        self.study_model.endResetModel()
+        # query studies & init treeview
+        self.refresh_study_model()
 
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/dbm/DBM_layout.qml'))
         self._win.setSource(_win_source)
 
         # connect signals
-        study_treeview = self._win.rootObject().findChild(QObject, 'study_treeview')
-        study_treeview.sig_childitem_dclick.connect(self.on_childitem_dblclick)
-        study_treeview.sig_menu_trigger.connect(self.on_data_load)
+        study_treeview_item = self._win.rootObject().findChild(QObject, 'study_treeview')
+        study_treeview_item.sig_changed_index.connect(self.on_index_changed)
+        study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+        study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
+        related_study_treeview_item = self._win.rootObject().findChild(QObject, 'related_study_treeview')
+        related_study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+        related_study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
 
     def reset(self):
         #TODO!!!
@@ -44,6 +48,37 @@ class DBMWindow(QObject):
                 for o in X:
                     del o
             X.clear()
+
+    def refresh_study_model(self):
+        return self._mgr.refresh_study_model()
+
+    def refresh_related_study_model(self, _model):
+
+        # 1. clear model
+        self._mgr.clear_related_study_model()
+
+        # 2. get patiend id
+        if _model.parent() is None:
+            """
+            case of study
+            """
+            _patiend_id = _model.itemData['PatientID']
+        else:
+            """
+            case of series
+            """
+            _patiend_id = _model.parent().itemData['PatientID']
+
+        if _patiend_id is None:
+            return False
+
+        # 3. filter by patiend id & set model
+        self._mgr.refresh_related_study_model(_patiend_id)
+
+    @pyqtSlot(QVariant, bool)
+    def on_index_changed(self, index, trigger):
+        selected_model = index.internalPointer()
+        self.refresh_related_study_model(selected_model)
 
     @pyqtSlot(QVariant)
     def on_childitem_dblclick(self, index):

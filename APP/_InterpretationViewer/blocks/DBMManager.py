@@ -35,6 +35,7 @@ class DBMManager(QObject):
 
     def initialize(self):
         self.study_model = StudyModel()
+        self.related_study_model = StudyModel()
         self.DICOM_WEB = collections.OrderedDict()
 
     def reset(self):
@@ -43,9 +44,61 @@ class DBMManager(QObject):
     def get_study_model(self):
         return self.study_model
 
-    def query_studies_series(self):
+    def get_related_study_model(self):
+        return self.related_study_model
+
+    def clear_study_model(self):
+        self.study_model.beginResetModel()
+        self.study_model.clearData()
+        self.study_model.endResetModel()
+
+    def clear_related_study_model(self):
+        self.related_study_model.beginResetModel()
+        self.related_study_model.clearData()
+        self.related_study_model.endResetModel()
+
+    def refresh_study_model(self):
+        _data = self.query_studies_series()
+        if _data:
+            self.study_model.beginResetModel()
+            self.study_model.addData(_data)
+            self.study_model.endResetModel()
+            return True
+        return False
+
+    def refresh_related_study_model(self, patiend_id):
+        # Thread function
+        def _do(args):
+            conditions = {"PatientID": patiend_id}
+            _data = self.query_studies_series(conditions)
+            if _data:
+                self.related_study_model.beginResetModel()
+                self.related_study_model.addData(_data)
+                self.related_study_model.endResetModel()
+                return True
+            return False
+
+        # finished fn
+        def _on_finished(_worker):
+            print("DICOM Files had been loaded!! :)")
+            for _w in self.WORKERS:
+                if _w[1].isRunning():
+                    continue
+                self.WORKERS.remove(_w)
+                del _w
+
+        # do
+        if not hasattr(self, 'WORKERS'):
+            self.WORKERS = []
+        W0 = WorkerThread.create_worker(0)
+        self.WORKERS.append(W0)
+        # NOTE
+        WorkerThread.start_worker(*W0, _do, None,
+                                  _finished_func=lambda: _on_finished(W0))
+
+    def query_studies_series(self, conditions=None):
         dicom_web = dw.cyDicomWeb()
-        studies = dicom_web.query_studies()
+        studies = dicom_web.query_studies(conditions)
         if not studies:
             return None
 
@@ -72,6 +125,7 @@ class DBMManager(QObject):
             _study['PatientName'] = _get(_x, dw.TAG_PatientName)
             _study['PatientSex'] = _get(_x, dw.TAG_PatientSex)
             _study['PatientAge'] = _get(_x, dw.TAG_PatientAge)
+            _study['AccessionNumber'] = _get(_x, dw.TAG_AccessionNumber)
             _study['BodyPartExamined'] = _get(_x, dw.TAG_BodyPartExamined)
             _study['StudyDateTime'] = _get(_x, dw.TAG_StudyDate)
             _study['StudyDescription'] = _get(_x, dw.TAG_StudyDescription)

@@ -19,6 +19,7 @@ TAG_SeriesNumber = '00200011'
 TAG_SeriesDate = '00080021'
 TAG_SeriesDescription = '0008103E'
 TAG_SOPInstanceUID = '00080018'
+TAG_AccessionNumber = '00080050'
 TAG_PixelSpacing = '00280030'
 TAG_ImagePosition = '00200032'
 TAG_SliceThickness ='00180050'
@@ -36,17 +37,17 @@ TAG_WindowCenter = '00281050'
 TAG_WindowWidth = '00281051'
 
 # home
-# HOST_URL = "http://192.168.200.140:44301"
+HOST_URL = "http://192.168.200.159:44301"
 
 # sang-am url
-HOST_URL = "http://192.168.50.14:44301"
+# HOST_URL = "http://192.168.50.14:44301"
 
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
 STOWRS_PREFIX = 'stowrs'
 HEADERS1 = {"Accept": "application/json"}
 HEADERS2 = {"Accept": "multipart/related; type=\"application/octet-stream\""}
-# HEADERS2 = {"Accept": "multipart/related; type=\"image/jpeg\""}
+HEADERS3 = {"Accept": "multipart/related; type=\"image/jpeg\""}
 
 
 # Data1
@@ -98,8 +99,8 @@ class cyDicomWeb(object):
         if hasattr(self, 'origin'):
             del self.origin
 
-    def query_studies(self):
-        return self.requests_studies()
+    def query_studies(self, conditions=None):
+        return self.requests_studies(conditions)
 
     def query_series(self, study_uid):
         return self.requests_series(study_uid)
@@ -167,8 +168,15 @@ class cyDicomWeb(object):
     def get_wwl(self):
         return self.window_width, self.window_center
 
-    def requests_studies(self):
-        url = "%s/%s/studies/" % (self.host_url, self.qidors_prefix)
+    def requests_studies(self, conditions=None):
+        search = ""
+        if conditions:
+            _cond = "?"
+            for k, v in conditions.items():
+                _cond += "%s=%s&"%(k, v)
+            search = _cond[:-1]
+
+        url = "%s/%s/studies%s" % (self.host_url, self.qidors_prefix, search)
         x = requests.get(url, headers=HEADERS1)
         if x.status_code != 200:
             return None
