@@ -211,6 +211,14 @@ class SliceViewWindow(QObject):
         _item.setProperty('y', 0)
         _item.setProperty('source', None)
 
+    def get_layout_id(self, global_mouse):
+        _item = self._win.rootObject().findChild(QObject, 'grid_layout')
+        _pos = _item.mapFromGlobal(global_mouse.toPoint())
+        _obj = _item.childAt(_pos.x(), _pos.y())
+        if _obj and _obj.objectName() == 'img_holder_root':
+            return _obj.children()[1].getIndex()
+        return -1
+
     def insert_slice_obj(self, slice_obj, next_id):
         patient_info = slice_obj.get_patient_info()
         if not patient_info:
@@ -409,6 +417,8 @@ class SliceViewWindow(QObject):
         self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
 
     def on_thumbnail_position_changed(self, global_mouse, img_url):
+        if not global_mouse:
+            return
         _contained = self.is_contained(global_mouse)
         if not _contained:
             self._win.send_message.emit(['slice::set_dummy_thumbnail', [global_mouse, img_url]])
@@ -416,6 +426,8 @@ class SliceViewWindow(QObject):
             self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
 
     def on_dropped_thumbnail_to_other_app(self, global_mouse, study_uid, series_uid):
+        if not global_mouse:
+            return
         _contained = self.is_contained(global_mouse)
         if not _contained:
             self._win.send_message.emit(['slice::send_to_other_app', [global_mouse, study_uid, series_uid]])

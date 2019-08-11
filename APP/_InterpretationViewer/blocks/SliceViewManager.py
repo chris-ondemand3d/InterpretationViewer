@@ -100,16 +100,26 @@ class SliceViewManager(QObject):
         self.sig_change_filter.emit(initial_filter, layout_idx)
         self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
 
-    def insert_slice_obj(self, slice_obj):
-        # append
-        _id = self.get_next_layout_id()
-        if _id == -1:
-            self.SLICES.append(slice_obj)
+    def insert_slice_obj(self, slice_obj, _target_id=None):
+        if not _target_id is None and _target_id != -1:
+            _tmp = self.SLICES[_target_id]
+            self.SLICES[_target_id] = slice_obj
+
+            if _tmp.get_vtk_img():
+                self.SLICES.append(_tmp)
+            else:
+                _tmp.reset()
+                del _tmp
         else:
-            _tmp = self.SLICES[_id]
-            self.SLICES[_id] = slice_obj
-            _tmp.reset()
-            del _tmp
+            # append
+            _id = self.get_next_layout_id()
+            if _id == -1:
+                self.SLICES.append(slice_obj)
+            else:
+                _tmp = self.SLICES[_id]
+                self.SLICES[_id] = slice_obj
+                _tmp.reset()
+                del _tmp
         # reconnect sig/slot
         """
         NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.

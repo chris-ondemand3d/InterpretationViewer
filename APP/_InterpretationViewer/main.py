@@ -94,8 +94,12 @@ class slice_app(CyQQuickView):
     def release_dummy_thumbnail(self):
         self.slice_win.release_dummy_thumbnail()
 
-    def insert_slice_obj(self, slice_obj):
-        next_id = self.slice_mgr.insert_slice_obj(slice_obj)
+    def insert_slice_obj(self, slice_obj, global_mouse=None):
+        _id = None
+        if global_mouse:
+            _id = self.slice_win.get_layout_id(global_mouse)
+        next_id = self.slice_mgr.insert_slice_obj(slice_obj, _id)
+
         if not self.slice_win.insert_slice_obj(slice_obj, next_id):
             return False
         self.slice_mgr.refresh_text_items(next_id)
@@ -201,13 +205,13 @@ def onMsg(msg):
             _slice_obj = app_slice2.slice_win.get_slice_obj(_study_uid, _series_uid)
             if not _slice_obj:
                 return
-            if app_slice.insert_slice_obj(_slice_obj):
+            if app_slice.insert_slice_obj(_slice_obj, _global_mouse):
                 app_slice2.remove_slice_obj(_slice_obj)
         elif app_slice2.is_contained(_global_mouse):
             _slice_obj = app_slice.slice_win.get_slice_obj(_study_uid, _series_uid)
             if not _slice_obj:
                 return
-            if app_slice2.insert_slice_obj(_slice_obj):
+            if app_slice2.insert_slice_obj(_slice_obj, _global_mouse):
                 app_slice.remove_slice_obj(_slice_obj)
 
     # MPR
@@ -299,8 +303,7 @@ if __name__ == '__main__':
         w = screen.size().width()
         # h = screen.size().height() - titlebar_height
         h = screen.availableGeometry().height() - titlebar_height
-        dbm_sz = [int(w * 1 / 2), h]
-        mpr_sz = [int(w * 1 / 2), h]
+        app_sz = [int(w * 1 / 3), h]
 
         # mpr
         # app_dbm.resize(*dbm_sz)
@@ -311,12 +314,16 @@ if __name__ == '__main__':
         # app_mpr.show(isMaximize=False)
 
         # slice view
-        app_dbm.resize(*mpr_sz)
+        # app_dbm.resize(app_sz[0], app_sz[1] * 2 / 3)
+        app_dbm.resize(*app_sz)
         app_dbm.setPosition(0, titlebar_height)
-        app_slice.resize(*mpr_sz)
-        app_slice.setPosition(dbm_sz[0], titlebar_height)
+        app_slice.resize(*app_sz)
+        app_slice.setPosition(app_sz[0], titlebar_height)
+        app_slice2.resize(*app_sz)
+        app_slice2.setPosition(app_sz[0]*2, titlebar_height)
         app_dbm.show(isMaximize=False)
         app_slice.show(isMaximize=False)
+        app_slice2.show(isMaximize=False)
 
 
     # Start Qt event loop.
