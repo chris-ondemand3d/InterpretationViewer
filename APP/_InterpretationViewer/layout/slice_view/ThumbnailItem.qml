@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.10
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
@@ -12,8 +12,13 @@ Item {
   id: thumbnail_item
   objectName: "thumbnail_item"
 
-  width: 120
-  height: 100
+  width: default_width
+  height: default_height
+
+  property var default_width: 120
+  property var default_height: 100
+  property var scaled_width: 240
+  property var scaled_height: 190
 
   property var selected: false
   property var model: ""
@@ -136,10 +141,7 @@ Item {
       anchors.fill: parent
       acceptedButtons: Qt.LeftButton | Qt.RightButton
       hoverEnabled: true
-
-      //drag.target: thumbnail_item
-      //drag.axis: Drag.XAxis | Drag.YAxis
-      //drag.threshold: 0
+      pressAndHoldInterval: 500
 
       property var pressed_button: 0
       property var previousGlobalPosition: null
@@ -152,6 +154,7 @@ Item {
 
           var mouse_root = win_root.mapFromGlobal(mouse_thumbnail.previousGlobalPosition.x,
                                                   mouse_thumbnail.previousGlobalPosition.y);
+          img_sc_dummythumbnail.set_default_mode();
           img_sc_dummythumbnail.visible = true;
           img_sc_dummythumbnail.x = mouse_root.x - (thumbnail_item.width / 2);
           img_sc_dummythumbnail.y = mouse_root.y - (thumbnail_item.height / 2);
@@ -181,7 +184,7 @@ Item {
       }
 
       onReleased: {
-        if (mouse.button == Qt.LeftButton)
+        if ((mouse_thumbnail.previousGlobalPosition != null) && (mouse.button == Qt.LeftButton))
         {
           var mouse_grid = sliceview_mxn_layout.mapFromGlobal(mouse_thumbnail.previousGlobalPosition.x,
                                                               mouse_thumbnail.previousGlobalPosition.y);
@@ -205,9 +208,31 @@ Item {
           var picked_layout_id = _obj.children[1].getIndex();
           sliceview_topbar_thumbnail.sigDrop(picked_layout_id, model.study_uid, model.series_uid);
         }
+        else
+        {
+          // should be called after search obj
+          close_thumbnail.visible = true;
+          sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+          sliceview_topbar_thumbnail.sigReleaseDummyThumbnail();
+          thumbnail_item.highlight = false;
+        }
 
         pressed_button = 0;
 
+      }
+
+      onPressAndHold: {
+        if (pressed_button == 1)
+        {
+          var _mouse_global = thumbnail_item.mapToGlobal(mouse.x, mouse.y);
+          var mouse_root = win_root.mapFromGlobal(_mouse_global.x, _mouse_global.y);
+          img_sc_dummythumbnail.set_preview_mode();
+          img_sc_dummythumbnail.visible = true;
+          img_sc_dummythumbnail.x = mouse_root.x;
+          img_sc_dummythumbnail.y = mouse_root.y;
+          if (grabbedImageUrl != null)
+            img_sc_dummythumbnail.source = img_thumbnail.source;
+        }
       }
     }
   }
