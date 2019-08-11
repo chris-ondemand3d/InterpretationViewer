@@ -134,22 +134,29 @@ Item {
     MouseArea {
       id: mouse_thumbnail
       anchors.fill: parent
-      acceptedButtons: Qt.AllButtons
+      acceptedButtons: Qt.LeftButton | Qt.RightButton
       hoverEnabled: true
 
-      drag.target: thumbnail_item
-      drag.axis: Drag.XAxis | Drag.YAxis
-      drag.threshold: 0
+      //drag.target: thumbnail_item
+      //drag.axis: Drag.XAxis | Drag.YAxis
+      //drag.threshold: 0
 
-      property var prev_x: 0
-      property var prev_y: 0
+      property var pressed_button: 0
       property var previousGlobalPosition: null
 
       onPositionChanged: {
-        if (pressed)
+        if (pressed && (pressed_button == Qt.LeftButton))
         {
           mouse_thumbnail.previousGlobalPosition = thumbnail_item.mapToGlobal(mouse.x, mouse.y);
           sliceview_topbar_thumbnail.sigPositionChanged_Global(mouse_thumbnail.previousGlobalPosition, thumbnail_item.grabbedImageUrl);
+
+          var mouse_root = win_root.mapFromGlobal(mouse_thumbnail.previousGlobalPosition.x,
+                                                  mouse_thumbnail.previousGlobalPosition.y);
+          img_sc_dummythumbnail.visible = true;
+          img_sc_dummythumbnail.x = mouse_root.x - (thumbnail_item.width / 2);
+          img_sc_dummythumbnail.y = mouse_root.y - (thumbnail_item.height / 2);
+          if (grabbedImageUrl != null)
+            img_sc_dummythumbnail.source = grabbedImageUrl;
         }
       }
 
@@ -163,40 +170,44 @@ Item {
       }*/
 
       onPressed: {
-        prev_x = thumbnail_item.x;
-        prev_y = thumbnail_item.y;
-        close_thumbnail.visible = false;
-        thumbnail_item.highlight = true;
-        thumbnail_item.grabImage();
-        sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, true);
-        thumbnail_item.z = 10;
+        pressed_button = mouse.button;
+        if (mouse.button == Qt.LeftButton)
+        {
+          close_thumbnail.visible = false;
+          thumbnail_item.highlight = true;
+          thumbnail_item.grabImage();
+          sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, true);
+        }
       }
 
       onReleased: {
-        var _x = thumbnail_item.x + (thumbnail_item.width / 2);
-        var _y = thumbnail_item.y - sliceview_topbar_thumbnail.height + (thumbnail_item.height / 2);
-        var src_obj = sliceview_mxn_layout.getGridLayoutItem();
-        var _obj = src_obj.childAt(_x, _y);
+        if (mouse.button == Qt.LeftButton)
+        {
+          var mouse_grid = sliceview_mxn_layout.mapFromGlobal(mouse_thumbnail.previousGlobalPosition.x,
+                                                              mouse_thumbnail.previousGlobalPosition.y);
+          var _x = mouse_grid.x;
+          var _y = mouse_grid.y;
+          var src_obj = sliceview_mxn_layout.getGridLayoutItem();
+          var _obj = src_obj.childAt(_x, _y);
 
-        // should be called after search obj
-        thumbnail_item.x = prev_x;
-        thumbnail_item.y = prev_y;
-        prev_x = 0;
-        prev_y = 0;
+          // should be called after search obj
+          close_thumbnail.visible = true;
+          sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
+          sliceview_topbar_thumbnail.sigReleaseDummyThumbnail();
+          thumbnail_item.highlight = false;
 
-        close_thumbnail.visible = true;
-        sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
-        sliceview_topbar_thumbnail.sigReleaseDummyThumbnail();
-        thumbnail_item.highlight = false;
-        thumbnail_item.z = 1;
+          if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
+            sliceview_topbar_thumbnail.sigDropToOtherApp(mouse_thumbnail.previousGlobalPosition, model.study_uid, model.series_uid);
+            pressed_button = 0;
+            return;
+          }
 
-        if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
-          sliceview_topbar_thumbnail.sigDropToOtherApp(mouse_thumbnail.previousGlobalPosition, model.study_uid, model.series_uid);
-          return;
+          var picked_layout_id = _obj.children[1].getIndex();
+          sliceview_topbar_thumbnail.sigDrop(picked_layout_id, model.study_uid, model.series_uid);
         }
 
-        var picked_layout_id = _obj.children[1].getIndex();
-        sliceview_topbar_thumbnail.sigDrop(picked_layout_id, model.study_uid, model.series_uid);
+        pressed_button = 0;
+
       }
     }
   }

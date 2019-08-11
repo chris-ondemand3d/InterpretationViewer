@@ -88,6 +88,7 @@ Item {
     x: 200
     y: 200
     z: 10
+    opacity: 0.7
     visible: false
 
     fillMode: Image.PreserveAspectCrop

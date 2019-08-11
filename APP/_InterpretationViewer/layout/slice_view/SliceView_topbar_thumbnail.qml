@@ -5,6 +5,8 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 import cyhub 1.0
 
+import "../style"
+
 
 Item {
   id: sliceview_topbar_thumbnail_item
@@ -31,39 +33,68 @@ Item {
     color: '#303030'
   }
 
-  RowLayout {
-    id: layout_thumbnail
-    objectName: "layout_thumbnail"
-    anchors.fill: parent
-    anchors.margins: 5
-    width: parent.width
-    height: parent.height
-    Layout.preferredWidth: width
-    Layout.preferredHeight: height
-    Layout.maximumHeight: height
-    Layout.maximumWidth: width
-    Layout.minimumHeight: height
-    Layout.minimumWidth: width
+  ScrollView {
+    id: scroll_sv_thumbnail
+    implicitWidth: parent.width
+    implicitHeight: parent.height
+    horizontalScrollBarPolicy: Qt.ScrollBarAsNeeded
+    anchors.fill: sliceview_topbar_thumbnail_item
+    anchors {
+      leftMargin: 5
+      rightMargin: 5
+      topMargin: 5
+      bottomMargin: 2
+    }
 
-    Repeater {
-      id: repeater_sv_thumbnail
-      objectName: 'repeater_sv_thumbnail'
-      model: 0
-
-      ThumbnailItem{
-        id: thumbnail_item
-        objectName: "thumbnail_item"
-        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+    // style
+    style: ScrollViewStyle{
+      handle: Rectangle {
+        implicitWidth: 8
+        implicitHeight: 8
+        radius: 7
+        color: "#474747"
+      }
+      scrollBarBackground: Rectangle {
+        implicitWidth: 8
+        implicitHeight: 8
+        color: "transparent"
+      }
+      decrementControl: Rectangle {
+        color: "transparent"
+      }
+      incrementControl: Rectangle {
+        color: "transparent"
+      }
+      corner: Rectangle {
+        color: "transparent"
       }
     }
 
-    // dummy
-    Item {
-      id: dummy_thumbnail
-      objectName: "dummy_thumbnail"
-      Layout.fillWidth: true
-    }
+    contentItem:
+      RowLayout {
+        id: layout_thumbnail
+        objectName: "layout_thumbnail"
 
+        Repeater {
+          id: repeater_sv_thumbnail
+          objectName: 'repeater_sv_thumbnail'
+          model: 0
+
+          ThumbnailItem{
+            id: thumbnail_item
+            objectName: "thumbnail_item"
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+          }
+        }
+
+        // dummy
+        Item {
+          id: dummy_thumbnail
+          objectName: "dummy_thumbnail"
+          Layout.fillWidth: true
+        }
+
+      }
   }
 
   function appendThumbnail(_id, _name, _study_uid, _series_uid, _series_id, _date, _modality)
