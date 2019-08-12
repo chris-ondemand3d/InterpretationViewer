@@ -15,6 +15,7 @@ Item {
   width: 800
   height: 30
 
+  signal sigSelected(int selected_index)
   signal sigClose(string study_uid)
 
   ListModel {
@@ -34,12 +35,12 @@ Item {
     anchors.left: parent.left
     anchors.top: parent.top
 
-    width: 25
+    width: 30
     height: parent.height
 
     Text {
       anchors.fill: parent
-      text: 'S\nT\nD'
+      text: 'S\nT'
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
       color: CyStyle.dbmwindow.common_font_color
@@ -112,6 +113,17 @@ Item {
         }
 
       }
+  }
+
+  // slots
+  onSigSelected: {
+    repeater_sv_study.model = items_sv_study.count;
+    for (var i=0; i < repeater_sv_study.count; i++)
+    {
+      var _item = repeater_sv_study.itemAt(i)
+      if (i != selected_index)
+        _item.select(false);
+    }
   }
 
   // functions

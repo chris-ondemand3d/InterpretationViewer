@@ -44,12 +44,12 @@ Item {
     anchors.left: parent.left
     anchors.top: parent.top
 
-    width: 25
+    width: 30
     height: parent.height
 
     Text {
       anchors.fill: parent
-      text: 'S\nR\nS'
+      text: 'S\nR'
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
       color: CyStyle.dbmwindow.common_font_color
@@ -177,6 +177,13 @@ Item {
       items_sv_thumbnail_dummy.clear();
     }
 
+    // should be called after remove model!
+    generateThumbnails();
+  }
+
+  function clearThumbnail()
+  {
+    items_sv_thumbnail.clear();
     // should be called after remove model!
     generateThumbnails();
   }

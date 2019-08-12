@@ -24,16 +24,14 @@ Item {
   Rectangle{
     id: outer_rect_study
     anchors.fill: parent
-    //color: (selected == true) ? '#999999' : '#636363'
-    //color: (highlight === true) ? '#696975' : '#232323'
-    color: '#636363'
+    color: (selected === true) ? '#303030' : '#636363'
     radius: 0
 
     Rectangle{
       id: inner_rect_study
       anchors.fill: parent
-      anchors.margins: 4
-      color: '#636363'
+      anchors.margins: 5
+      color: parent.color
       radius: 0
     }
 
@@ -41,11 +39,41 @@ Item {
     Text {
       id: txt_study
       anchors.fill: inner_rect_study
-      text: "Dcloud^Anymimous\n20190724"
+      text: ""
       clip: true
       color: "white"
       font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
       verticalAlignment: Text.AlignBottom
+    }
+
+    MouseArea {
+      id: mouse_study
+      anchors.fill: parent
+      acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+      property var pressed_button: 0
+      property var previousGlobalPosition: null
+
+      onClicked: {
+        select();
+      }
+
+      onPressed: {
+        pressed_button = mouse.button;
+        if (mouse.button == Qt.LeftButton)
+        {
+        }
+      }
+
+      onReleased: {
+      }
+
+      onPositionChanged: {
+        if (pressed && (pressed_button == Qt.LeftButton))
+        {
+        }
+      }
+
     }
 
   }
@@ -60,7 +88,7 @@ Item {
     }
     width: 15
     height: 15
-    color: (study_item === true) ? '#FF4343' : '#474747'
+    color: (selected === true) ? '#FF4343' : '#474747'
     radius: 10
 
     Text {
@@ -100,6 +128,18 @@ Item {
     //txt_thumbnail_date.text = _date;
 
     model = _model;
+  }
+
+  function select(bSelected)
+  {
+    selected = (bSelected === undefined) ? !selected : bSelected;
+    if (selected == true)
+      sliceview_topbar_panel.sigSelected(index);
+  }
+
+  function getStudyUID()
+  {
+    return model.study_uid;
   }
 
 }

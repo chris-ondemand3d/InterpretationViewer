@@ -47,7 +47,8 @@ class SliceViewManager(QObject):
     def __init__(self, *args, **kdws):
         super().__init__()
 
-        self.SLICES = []
+        self.SLICES = []                # selected slice list to visualize
+        self.ALL_SLICES = {}            # all slices
 
         self.reset()
         self.initialize()
@@ -63,6 +64,10 @@ class SliceViewManager(QObject):
             s.reset()
             del s
         self.SLICES.clear()
+        for uid, s in self.ALL_SLICES.items():
+            s.reset()
+            del s
+        self.ALL_SLICES.clear()
 
     def create_new_slice(self):
         _slice = Slice()
@@ -102,8 +107,8 @@ class SliceViewManager(QObject):
 
     def insert_slice_obj(self, slice_obj, _target_id=None):
         if not _target_id is None and _target_id != -1:
-            _tmp = self.SLICES[_target_id]
-            self.SLICES[_target_id] = slice_obj
+            _tmp = self.ALL_SLICES[_target_id]
+            self.ALL_SLICES[_target_id] = slice_obj
 
             if _tmp.get_vtk_img():
                 self.SLICES.append(_tmp)
@@ -114,10 +119,10 @@ class SliceViewManager(QObject):
             # append
             _id = self.get_next_layout_id()
             if _id == -1:
-                self.SLICES.append(slice_obj)
+                self.ALL_SLICES.append(slice_obj)
             else:
-                _tmp = self.SLICES[_id]
-                self.SLICES[_id] = slice_obj
+                _tmp = self.ALL_SLICES[_id]
+                self.ALL_SLICES[_id] = slice_obj
                 _tmp.reset()
                 del _tmp
         # reconnect sig/slot
@@ -129,10 +134,6 @@ class SliceViewManager(QObject):
         slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
         slice_obj.sig_change_wwl.connect(self.on_change_wwl)
         return self.SLICES.index(slice_obj)
-
-    def clear_all_actors(self):
-        for s in self.SLICES:
-            s.clear_all_actors()
 
     def refresh_text_items(self, layout_idx):
         _slice = self.SLICES[layout_idx]
@@ -158,7 +159,7 @@ class SliceViewManager(QObject):
         return len(list(filter(lambda x: x.vtk_img is not None, self.SLICES)))
 
     def get_slice_obj(self, study_uid, series_uid):
-        for i, s in enumerate(self.SLICES):
+        for i, s in enumerate(self.ALL_SLICES):
             _dcm_info = s.get_dcm_info()
             if s.get_vtk_img() is None:
                 continue
@@ -167,6 +168,23 @@ class SliceViewManager(QObject):
             if study_uid == _study_uid and series_uid == _series_uid:
                 return s
         return None
+
+    def select_study(self, study_uid):
+        # 1. delete blank slice
+        for s in self.SLICES:
+            if s.get_vtk_img() is None:
+                s.reset()
+                del s
+        self.SLICES.clear()
+
+        # 2. re-generate slices
+        _slices = [None for i in range(max(self.ALL_SLICES[study_uid].values())+1)]
+        for _s, _idx in self.ALL_SLICES[study_uid].items():
+            _slices[_idx] = _s
+        for _i, _s in enumerate(_slices):
+            if _s is None:
+                _slices[_i] = self.create_new_slice()
+        self.SLICES = _slices
 
     def read_dcm_test(self):
         # # DCM Read
