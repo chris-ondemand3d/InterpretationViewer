@@ -87,11 +87,7 @@ class slice_app(CyQQuickView):
         return self.slice_win.get_next_layout_id(force)
 
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
-
-        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}   # TODO
-        self.slice_win.appendThumbnail(_patient_info, study_uid, series_uid)
-        self.slice_win.set_data_info_str(_patient_info, next_id)
-        self.slice_mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
+        self.slice_win.init_vtk(_vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id)
         self.slice_win.busy_check()
 
     def busy_check(self):

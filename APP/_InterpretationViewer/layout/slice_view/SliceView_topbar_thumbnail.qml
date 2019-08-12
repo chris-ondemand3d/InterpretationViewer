@@ -28,6 +28,11 @@ Item {
     objectName: "items_sv_thumbnail"
   }
 
+  // for model copy
+  ListModel {
+    id: items_sv_thumbnail_dummy
+  }
+
   Rectangle{
     anchors.fill: parent
     color: '#303030'
@@ -135,21 +140,45 @@ Item {
 
   function removeThumbnail(_study_uid, _series_uid)
   {
+    items_sv_thumbnail_dummy.clear();
+
     for (var i=0; i < items_sv_thumbnail.count; i++)
     {
       var _model = items_sv_thumbnail.get(i);
 
-      if ((_model.study_uid == _study_uid) && (_model.series_uid == _series_uid))
+      if (_series_uid == null)
       {
-        // remove model(ListModel)
-        items_sv_thumbnail.remove(i);
-
-        // should be called after remove model!
-        generateThumbnails();
-
-        break;
+        // for all series with study uid
+        if (_model.study_uid != _study_uid)
+        {
+          items_sv_thumbnail_dummy.append(_model);
+        }
+      }
+      else
+      {
+        // for series with specified _study_uid & _series_uid
+        if (!((_model.study_uid == _study_uid) && (_model.series_uid == _series_uid)))
+        {
+          items_sv_thumbnail_dummy.append(_model);
+        }
       }
     }
+    items_sv_thumbnail.clear();
+
+    // switch list model
+    if (items_sv_thumbnail_dummy.count > 0)
+    {
+      for (var i=0; i < items_sv_thumbnail_dummy.count; i++)
+      {
+        var _model = items_sv_thumbnail_dummy.get(i);
+        items_sv_thumbnail.append(_model);
+      }
+
+      items_sv_thumbnail_dummy.clear();
+    }
+
+    // should be called after remove model!
+    generateThumbnails();
   }
 
   function generateThumbnails()
@@ -160,6 +189,19 @@ Item {
       var _item = repeater_sv_thumbnail.itemAt(i)
       _item.setModel(items_sv_thumbnail.get(i));
     }
+  }
+
+  function isExist(_study_uid)
+  {
+    for (var i=0; i < items_sv_thumbnail.count; i++)
+    {
+      var _model = items_sv_thumbnail.get(i);
+      if (_model.study_uid == _study_uid)
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
 }

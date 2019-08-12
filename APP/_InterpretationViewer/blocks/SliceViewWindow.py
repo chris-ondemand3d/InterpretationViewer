@@ -26,6 +26,7 @@ class SliceViewWindow(QObject):
         self._win.setSource(_win_source)
 
         self.root_itme = self._win.rootObject()
+        self.topbar_study_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_panel')
         self.topbar_thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
         self.layout_item = self._win.rootObject().findChild(QObject, 'sliceview_mxn_layout')
         self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
@@ -44,6 +45,9 @@ class SliceViewWindow(QObject):
         self._mgr.sig_change_wwl.connect(self.on_change_wwl)
 
         # initialize sig/slot of QML
+        # for study
+        self.topbar_study_item.sigClose.connect(self.on_close_data)
+        # for thumbnail(series)
         self.topbar_thumbnail_item.sigDrop.connect(self.on_dropped_thumbnail)
         self.topbar_thumbnail_item.sigHighlight.connect(self.on_hightlight)
         self.topbar_thumbnail_item.sigReleaseDummyThumbnail.connect(self.on_release_dummy_thumbnail)
@@ -81,6 +85,12 @@ class SliceViewWindow(QObject):
 
         if hasattr(self, 'items'):
             _remove(self.items)
+
+    def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
+        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}           # TODO
+        self.append_study_series_model(_patient_info, study_uid, series_uid)
+        self.set_data_info_str(_patient_info, next_id)
+        self._mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
 
     def get_next_layout_id(self, force=False):
 
@@ -177,7 +187,17 @@ class SliceViewWindow(QObject):
             else:
                 _obj.childItems()[1].setBusy(True)
 
-    def appendThumbnail(self, patient_info, study_uid, series_uid):
+    def append_study_series_model(self, patient_info, study_uid, series_uid):
+        self._appendStudy(patient_info, study_uid)
+        self._appendThumbnail(patient_info, study_uid, series_uid)
+
+    def _appendStudy(self, patient_info, study_uid):
+        _id = patient_info['id']
+        _name = patient_info['name']
+        _date = patient_info['date']
+        self.topbar_study_item.appendStudy(_id, _name, study_uid, _date)
+
+    def _appendThumbnail(self, patient_info, study_uid, series_uid):
         _id = patient_info['id']
         _name = patient_info['name']
         _series_id = patient_info['series_id']
@@ -242,7 +262,8 @@ class SliceViewWindow(QObject):
         dcm_info = slice_obj.get_dcm_info()
         if not dcm_info:
             return False
-        self.appendThumbnail(patient_info, dcm_info['study_uid'], dcm_info['series_uid'])
+        self._appendStudy(patient_info, dcm_info['study_uid'])
+        self._appendThumbnail(patient_info, dcm_info['study_uid'], dcm_info['series_uid'])
         self.set_vtk_img_from_slice_obj(slice_obj, next_id)
         self.set_data_info_str(patient_info, next_id)
         # busy check
@@ -309,68 +330,115 @@ class SliceViewWindow(QObject):
         pass
 
     def on_close_view(self, study_uid, series_uid):
+        """
+        NOTE emitted by sigDropToOtherApp thumbnail(series) or study(?)
+        """
 
-        new_slice = self._mgr.create_new_slice()
-
-        # 1. release thumbnail
+        # 1. release thumbnail(series)
         self.topbar_thumbnail_item.removeThumbnail(study_uid, series_uid)
+        # 2. check if there is any slice with study_uid.
+        exist = self.topbar_thumbnail_item.isExist(study_uid)
+        if exist is False:
+            # removeStudy
+            self.topbar_study_item.removeStudy(study_uid)
 
-        # 2. replace specified slice img with blank img & remove slice img from "SLICES" & clear qml items
+        # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         for i, s in enumerate(self._mgr.SLICES[:]):
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
                 _series_uid = dcm_info['series_uid']
-                if study_uid == _study_uid and series_uid == _series_uid:
-                    if layout_cnt > i:
-                        _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                        _item.set_vtk(new_slice)
-                        del s
-                        self._mgr.SLICES[i] = new_slice
-                        # NOTE item.clear() function should be called after remove the s(slice object)
-                        _item.clear()
-                    else:
-                        del s
-                        self._mgr.SLICES[i] = new_slice
-                    break
 
-        # 3. refresh thumbnails
-        self.refresh_thumbnail_img()
+                if study_uid == _study_uid:
+                    if series_uid == _series_uid:
+                        new_slice = self._mgr.create_new_slice()
+                        if layout_cnt > i:
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(new_slice)
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.clear()
+                        else:
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                        break
+                    elif series_uid is None:
+                        new_slice = self._mgr.create_new_slice()
+                        if layout_cnt > i:
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(new_slice)
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.clear()
+                        else:
+                            del s
+                            self._mgr.SLICES[i] = new_slice
 
-    def on_close_data(self, study_uid, series_uid):
-
-        new_slice = self._mgr.create_new_slice()
-
-        # 1. release thumbnail
-        self.topbar_thumbnail_item.removeThumbnail(study_uid, series_uid)
-
-        # 2. release imageholder & release slice(vtk_img) - vtk part & clear qml items
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for i, s in enumerate(self._mgr.SLICES[:]):
-            dcm_info = s.get_dcm_info()
-            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
-                _study_uid = dcm_info['study_uid']
-                _series_uid = dcm_info['series_uid']
-                if study_uid == _study_uid and series_uid == _series_uid:
-                    if layout_cnt > i:
-                        _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                        _item.set_vtk(new_slice)
-                        s.reset()
-                        del s
-                        self._mgr.SLICES[i] = new_slice
-                        # NOTE item.clear() function should be called after remove the s(slice object)
-                        _item.clear()
-                    else:
-                        s.reset()
-                        del s
-                        self._mgr.SLICES[i] = new_slice
-                    break
-
-        # 3. force garbage collector!!!
+        # 4. force garbage collector!!!
         gc.collect()
 
-        # 4. refresh thumbnails
+        # 5. refresh thumbnails
+        self.refresh_thumbnail_img()
+
+    def on_close_data(self, study_uid, series_uid=None):
+        """
+        NOTE emitted by sigClose of thumbnail(series) or study
+        """
+
+        # 1. release thumbnail(series)
+        self.topbar_thumbnail_item.removeThumbnail(study_uid, series_uid)
+        # 2. check if there is any slice with study_uid.
+        exist = self.topbar_thumbnail_item.isExist(study_uid)
+        if exist is False:
+            # removeStudy
+            self.topbar_study_item.removeStudy(study_uid)
+
+        # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for i, s in enumerate(self._mgr.SLICES[:]):
+            dcm_info = s.get_dcm_info()
+            if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
+                _study_uid = dcm_info['study_uid']
+                _series_uid = dcm_info['series_uid']
+
+                if study_uid == _study_uid:
+                    if series_uid == _series_uid:
+                        new_slice = self._mgr.create_new_slice()
+                        if layout_cnt > i:
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(new_slice)
+                            s.reset()
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.clear()
+                        else:
+                            s.reset()
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                        break
+                    elif series_uid is None:
+                        new_slice = self._mgr.create_new_slice()
+                        if layout_cnt > i:
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(new_slice)
+                            s.reset()
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.clear()
+                        else:
+                            s.reset()
+                            del s
+                            self._mgr.SLICES[i] = new_slice
+
+        # 4. force garbage collector!!!
+        gc.collect()
+
+        # 5. refresh thumbnails
         self.refresh_thumbnail_img()
 
     def on_dropped_thumbnail(self, picked_layout_id, study_uid, series_uid):
