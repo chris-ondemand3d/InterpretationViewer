@@ -5,6 +5,8 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 import cyhub 1.0
 
+import "../style"
+
 
 Item {
   id: sliceview_menu_panel_item
@@ -15,6 +17,6 @@ Item {
 
   Rectangle{
     anchors.fill: parent
-    color: '#303030'
+    color: '#252528'
   }
 }

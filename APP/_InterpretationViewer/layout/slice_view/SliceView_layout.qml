@@ -26,7 +26,7 @@ Item {
     objectName: "sliceview_topbar_panel"
     height: 60
 
-    anchors.left: sliceview_menu_panel.right
+    anchors.left: parent.left
     anchors.top: parent.top
     anchors.right: parent.right
   }
@@ -37,7 +37,7 @@ Item {
     objectName: "sliceview_topbar_thumbnail"
     height: 120
 
-    anchors.left: sliceview_menu_panel.right
+    anchors.left: parent.left
     anchors.top: sliceview_topbar_panel.bottom
     anchors.right: parent.right
     z:10
@@ -48,10 +48,10 @@ Item {
     id: sliceview_menu_panel
     objectName: "sliceview_menu_panel"
 
-    width: 0
+    width: 66
 
     anchors.left: parent.left
-    anchors.top: parent.top
+    anchors.top: sliceview_topbar_thumbnail.bottom
     anchors.bottom: bottombar_panel.top
   }
 

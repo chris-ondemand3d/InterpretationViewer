@@ -33,12 +33,38 @@ Item {
     color: '#303030'
   }
 
+  Rectangle {
+    id: title_sc_topbar_thumbnail
+    color: CyStyle.dbmwindow.data_infomation_bg_color
+    anchors.left: parent.left
+    anchors.top: parent.top
+
+    width: 25
+    height: parent.height
+
+    Text {
+      anchors.fill: parent
+      text: 'S\nR\nS'
+      horizontalAlignment: Text.AlignHCenter
+      verticalAlignment: Text.AlignVCenter
+      color: CyStyle.dbmwindow.common_font_color
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      font.bold: true
+    }
+  }
+
   ScrollView {
     id: scroll_sv_thumbnail
     implicitWidth: parent.width
     implicitHeight: parent.height
     horizontalScrollBarPolicy: Qt.ScrollBarAsNeeded
-    anchors.fill: sliceview_topbar_thumbnail_item
+    anchors {
+      left: title_sc_topbar_thumbnail.right
+      right: sliceview_topbar_thumbnail_item.right
+      top: sliceview_topbar_thumbnail_item.top
+      bottom: sliceview_topbar_thumbnail_item.bottom
+    }
+
     anchors {
       leftMargin: 5
       rightMargin: 5
