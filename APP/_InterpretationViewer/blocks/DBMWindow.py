@@ -6,6 +6,27 @@ from PyQt5.QtQuick import QQuickView
 from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSlot, QVariant
 from PyQt5.QtQml import QQmlProperty
 
+import locale
+import psutil
+
+
+def is_available_memory(notify_signal=None):
+    # Memory check!!!
+    mem_usage = psutil.virtual_memory()
+    mem_available = mem_usage[1]
+    mem_percent = mem_usage[2]
+    if mem_available <= 1 * (1024 ** 3):
+        if notify_signal:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+            _bytes = locale.format("%d", mem_available, grouping=True)
+            _title = "It's unable to load data."
+            _text = "%d%% of memory is in used.\n%s bytes left.\nPlease check your memory." % (mem_percent, _bytes)
+            notify_signal.emit(_title, _text)
+        print("*** Memory Warning!!! ***\nIt's unable to load data.\n%d%% of memory is in use.\n%s bytes left.\n"
+              % (mem_percent, mem_available))
+        return False
+    return True
+
 
 class DBMWindow(QObject):
     def __init__(self, _win, _mgr, *args, **kdws):
@@ -28,6 +49,8 @@ class DBMWindow(QObject):
 
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/dbm/DBM_layout.qml'))
         self._win.setSource(_win_source)
+
+        self.dbm_msg_box_item = self._win.rootObject().findChild(QObject, 'dbm_message_box')
 
         # connect signals
         study_treeview_item = self._win.rootObject().findChild(QObject, 'study_treeview')
@@ -94,17 +117,27 @@ class DBMWindow(QObject):
                 self.load_data_from_model(model)
 
     def load_data_from_model(self, selected_model):
+
         if selected_model.parent() is None:
             """
             case of study
             """
             children = selected_model.children()
 
+            # Memory check!!!
+            if not is_available_memory(self.dbm_msg_box_item.sigMsg):
+                return
+
             # init vtk
             if len(children[:]) == 1:
                 self._win.send_message.emit(['slice::try_fullscreen_mode', True])
 
             for series in children[:]:
+
+                # Memory check!!!
+                if not is_available_memory(self.dbm_msg_box_item.sigMsg):
+                    break
+
                 patient_info = {'id': selected_model.itemData['PatientID'],
                                 'name': selected_model.itemData['PatientName'],
                                 'sex': selected_model.itemData['PatientSex'],
@@ -124,6 +157,10 @@ class DBMWindow(QObject):
             """
             case of series
             """
+            # Memory check!!!
+            if not is_available_memory(self.dbm_msg_box_item.sigMsg):
+                return
+
             self._win.send_message.emit(['slice::try_fullscreen_mode', True])
             patient_info = {'id': selected_model.parent().itemData['PatientID'],
                             'name': selected_model.parent().itemData['PatientName'],

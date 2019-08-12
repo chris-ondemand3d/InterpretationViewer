@@ -162,4 +162,98 @@ Item {
     }
 
   }
+
+  Rectangle {
+    id: dbm_message_box
+    objectName: "dbm_message_box"
+    anchors {
+        right: parent.right
+        bottom: bottombar_panel.top
+        margins: 15
+    }
+    color: '#484848'
+    width: 360
+    height: 120
+    radius: 0
+    visible: false
+
+    signal sigMsg(string title, string text)
+
+    Timer {
+        id: timer_dbm_message_box
+        interval: 10000 // triggers every 5000 ms
+        onTriggered: dbm_message_box.clear()
+        running: false
+    }
+
+    Rectangle {
+        id: icon_dbm_message
+
+        anchors {
+            right: layout_dbm_messagebox.left
+            rightMargin: 15
+            top: layout_dbm_messagebox.top
+            topMargin: (txt_dbm_message1.height - height) / 2
+        }
+        width: 20
+        height: 20
+        //color: "skyblue"
+        color: '#FF4343'
+        radius: 100
+    }
+
+    ColumnLayout {
+
+        id: layout_dbm_messagebox
+        spacing: 10
+        anchors.centerIn: parent
+
+        Text
+        {
+          id: txt_dbm_message1
+          text: ""
+          color: "white"
+          horizontalAlignment: Text.AlignLeft
+          verticalAlignment: Text.AlignVCenter
+          font.pointSize: CyStyle.dbmwindow._db_title_font_pointSize
+          font.bold: true
+          font.weight: Font.ExtraBold
+          clip: true
+          Layout.maximumWidth: dbm_message_box.width * 0.7
+        }
+
+        Text
+        {
+          id: txt_dbm_message2
+          text: ""
+          color: "white"
+          horizontalAlignment: Text.AlignLeft
+          verticalAlignment: Text.AlignVCenter
+          font.pointSize: CyStyle.dbmwindow._db_title_font_pointSize - 3
+          clip: true
+          Layout.maximumWidth: dbm_message_box.width * 0.7
+        }
+    }
+
+    onSigMsg: {
+        setMsg(title, text);
+    }
+
+    function setMsg(title, text)
+    {
+        txt_dbm_message1.text = title;
+        txt_dbm_message2.text = text;
+        dbm_message_box.visible = true;
+        timer_dbm_message_box.restart();
+    }
+
+    function clear()
+    {
+        txt_dbm_message1.text = "";
+        txt_dbm_message2.text = "";
+        dbm_message_box.visible = false;
+    }
+
+  }
+
 }

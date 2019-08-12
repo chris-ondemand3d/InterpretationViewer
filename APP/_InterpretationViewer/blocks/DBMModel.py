@@ -210,4 +210,6 @@ class StudyModel(QAbstractItemModel):
                 self.items[v1[0]].add_child_item(v2[1])
 
     def clearData(self):
+        for i in self.items:
+            del i
         self.items.clear()
