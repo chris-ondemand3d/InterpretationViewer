@@ -47,7 +47,7 @@ class SliceViewManager(QObject):
     def __init__(self, *args, **kdws):
         super().__init__()
 
-        self.SLICES = []                # selected slice list to visualize
+        self.SELECTED_SLICES = {}       # selected slice list to visualize
         self.ALL_SLICES = {}            # all slices
 
         self.reset()
@@ -60,10 +60,10 @@ class SliceViewManager(QObject):
         pass
 
     def reset(self):
-        for s in self.SLICES:
+        for uid, s in self.SELECTED_SLICES.items():
             s.reset()
             del s
-        self.SLICES.clear()
+        self.SELECTED_SLICES.clear()
         for uid, s in self.ALL_SLICES.items():
             s.reset()
             del s
@@ -76,67 +76,79 @@ class SliceViewManager(QObject):
         _slice.resize(2000, 2000)
         return _slice
 
-    def init_slice(self, num):
-        self.SLICES = []
-        for i in range(num):
-            _slice = self.create_new_slice()
-            self.SLICES.append(_slice)
-
-    def init_vtk(self, vtk_img, wwl, dcm_info, layout_idx):
+    def init_vtk(self, vtk_img, wwl, layout_idx):
 
         if wwl is None:
             wwl = [2000, 4000]
 
-        p = vtk.vtkImageProperty()
-        p.SetColorWindow(wwl[0])
-        p.SetColorLevel(wwl[1])
-        p.SetInterpolationTypeToLinear()
-        self.SLICES[layout_idx].set_vtk_img(vtk_img)
-        self.SLICES[layout_idx].set_dcm_info(dcm_info)
-        self.SLICES[layout_idx].set_actor_property(p)
-
-        # default
-        slice_num = self.SLICES[layout_idx].get_slice_num()
-        th = self.SLICES[layout_idx].get_thickness()
-        self.sig_change_slice_num.emit(slice_num, layout_idx)
-        if vtk_img.GetDimensions()[2] > 1:
-            self.sig_change_thickness.emit(th, layout_idx)
-        initial_filter = None
-        self.sig_change_filter.emit(initial_filter, layout_idx)
-        self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
+        for _s, _i in self.SELECTED_SLICES.items():
+            if _i == layout_idx:
+                p = vtk.vtkImageProperty()
+                p.SetColorWindow(wwl[0])
+                p.SetColorLevel(wwl[1])
+                p.SetInterpolationTypeToLinear()
+                _s.set_vtk_img(vtk_img)
+                _s.set_actor_property(p)
+                # default
+                slice_num = _s.get_slice_num()
+                th = _s.get_thickness()
+                self.sig_change_slice_num.emit(slice_num, layout_idx)
+                if vtk_img.GetDimensions()[2] > 1:
+                    self.sig_change_thickness.emit(th, layout_idx)
+                initial_filter = None
+                self.sig_change_filter.emit(initial_filter, layout_idx)
+                self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
+                return True
+        return False
 
     def insert_slice_obj(self, slice_obj, _target_id=None):
-        if not _target_id is None and _target_id != -1:
-            _tmp = self.ALL_SLICES[_target_id]
-            self.ALL_SLICES[_target_id] = slice_obj
+        # if not _target_id is None and _target_id != -1:
+        #     _tmp = self.ALL_SLICES[_target_id]
+        #     self.ALL_SLICES[_target_id] = slice_obj
+        #
+        #     if _tmp.get_vtk_img():
+        #         self.SLICES.append(_tmp)
+        #     else:
+        #         _tmp.reset()
+        #         del _tmp
+        # else:
+        #     # append
+        #     _id = self.get_next_layout_id()
+        #     if _id == -1:
+        #         self.ALL_SLICES.append(slice_obj)
+        #     else:
+        #         _tmp = self.ALL_SLICES[_id]
+        #         self.ALL_SLICES[_id] = slice_obj
+        #         _tmp.reset()
+        #         del _tmp
 
-            if _tmp.get_vtk_img():
-                self.SLICES.append(_tmp)
-            else:
-                _tmp.reset()
-                del _tmp
-        else:
-            # append
-            _id = self.get_next_layout_id()
-            if _id == -1:
-                self.ALL_SLICES.append(slice_obj)
-            else:
-                _tmp = self.ALL_SLICES[_id]
-                self.ALL_SLICES[_id] = slice_obj
-                _tmp.reset()
-                del _tmp
-        # reconnect sig/slot
-        """
-        NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.
-        """
-        slice_obj.sig_change_slice_num.disconnect()
-        slice_obj.sig_change_wwl.disconnect()
-        slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
-        slice_obj.sig_change_wwl.connect(self.on_change_wwl)
-        return self.SLICES.index(slice_obj)
+        # # get study uid
+        # _dcm_info = slice_obj.get_dcm_info()
+        # if _dcm_info is None:
+        #     return -1
+        #
+        # _study_uid = _dcm_info['study_uid']
+        # _series_uid = _dcm_info['series_uid']
+        # _id = self.get_next_layout_id()
+        # if _id == -1:
 
-    def refresh_text_items(self, layout_idx):
-        _slice = self.SLICES[layout_idx]
+
+        # # reconnect sig/slot
+        # """
+        # NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.
+        # """
+        # slice_obj.sig_change_slice_num.disconnect()
+        # slice_obj.sig_change_wwl.disconnect()
+        # slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
+        # slice_obj.sig_change_wwl.connect(self.on_change_wwl)
+        # return self.SLICES.index(slice_obj)
+
+        return None
+
+    def refresh_status_item(self, layout_idx):
+        if not layout_idx in list(self.SELECTED_SLICES.values()):
+            return
+        _slice = list(self.SELECTED_SLICES.keys())[list(self.SELECTED_SLICES.values()).index(layout_idx)]
         _vtk_img = _slice.get_vtk_img()
         # if _vtk_img is None:
         #     return
@@ -149,19 +161,32 @@ class SliceViewManager(QObject):
         wwl = _slice.get_windowing()
         self.sig_change_wwl.emit(wwl[0], wwl[1], layout_idx)
 
+    # will be deprecated.
     def get_next_layout_id(self, limit=None):
         for i, s in enumerate(self.SLICES[:limit] if limit else self.SLICES):
             if s.vtk_img is None:
                 return i
         return -1
 
-    def get_vtk_img_count(self):
-        return len(list(filter(lambda x: x.vtk_img is not None, self.SLICES)))
+    def get_next_layout_id2(self, _study_uid):
+        if _study_uid in self.ALL_SLICES and len(self.ALL_SLICES[_study_uid]) > 0:
+            _slices = self.ALL_SLICES[_study_uid]
+            _sorted_keys = sorted(_slices, key=lambda x: _slices[x])
+            for _i in range(len(_sorted_keys)-1):
+                _idx0 = _slices[_sorted_keys[_i]]
+                _idx1 = _slices[_sorted_keys[_i+1]]
+                if _idx1 - _idx0 > 1:
+                    return _idx0 + 1
+            _new_idx = _slices[_sorted_keys[-1]] + 1
+            return _new_idx
+        else:
+            _new_idx = 0
+            return _new_idx
 
     def get_slice_obj(self, study_uid, series_uid):
-        for i, s in enumerate(self.ALL_SLICES):
-            _dcm_info = s.get_dcm_info()
-            if s.get_vtk_img() is None:
+        for _slice, _layout_id in enumerate(self.ALL_SLICES[study_uid]).items():
+            _dcm_info = _slice.get_dcm_info()
+            if _slice.get_vtk_img() is None:
                 continue
             _study_uid = _dcm_info['study_uid']
             _series_uid = _dcm_info['series_uid']
@@ -170,21 +195,10 @@ class SliceViewManager(QObject):
         return None
 
     def select_study(self, study_uid):
-        # 1. delete blank slice
-        for s in self.SLICES:
-            if s.get_vtk_img() is None:
-                s.reset()
-                del s
-        self.SLICES.clear()
-
-        # 2. re-generate slices
-        _slices = [None for i in range(max(self.ALL_SLICES[study_uid].values())+1)]
-        for _s, _idx in self.ALL_SLICES[study_uid].items():
-            _slices[_idx] = _s
-        for _i, _s in enumerate(_slices):
-            if _s is None:
-                _slices[_i] = self.create_new_slice()
-        self.SLICES = _slices
+        if study_uid in self.ALL_SLICES:
+            self.SELECTED_SLICES = self.ALL_SLICES[study_uid]
+            return True
+        return False
 
     def read_dcm_test(self):
         # # DCM Read
@@ -207,13 +221,15 @@ class SliceViewManager(QObject):
 
     @pyqtSlot()
     def on_refresh_all(self):
-        for s in self.SLICES:
+        for s in self.SELECTED_SLICES.keys():
             s.refresh()
 
     @pyqtSlot(object)
     def on_change_slice_num(self, slice_num):
-        self.sig_change_slice_num.emit(slice_num, self.SLICES.index(self.sender()))
+        if self.sender() in self.SELECTED_SLICES:
+            self.sig_change_slice_num.emit(slice_num, self.SELECTED_SLICES[self.sender()])
 
     @pyqtSlot(object, object)
     def on_change_wwl(self, ww, wl):
-        self.sig_change_wwl.emit(ww, wl, self.SLICES.index(self.sender()))
+        if self.sender() in self.SELECTED_SLICES:
+            self.sig_change_wwl.emit(ww, wl, self.SELECTED_SLICES[self.sender()])

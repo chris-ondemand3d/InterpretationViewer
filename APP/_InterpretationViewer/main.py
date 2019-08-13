@@ -86,6 +86,9 @@ class slice_app(CyQQuickView):
     def get_next_layout_id(self, force=False):
         return self.slice_win.get_next_layout_id(force)
 
+    def get_next_layout_id2(self, _study_uid):
+        return self.slice_win.get_next_layout_id2(_study_uid)
+
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
         self.slice_win.init_vtk(_vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id)
         self.slice_win.busy_check()
@@ -116,7 +119,7 @@ class slice_app(CyQQuickView):
 
         if not self.slice_win.insert_slice_obj(slice_obj, next_id):
             return False
-        self.slice_mgr.refresh_text_items(next_id)
+        self.slice_win.refresh_item(next_id)
         return True
 
     def remove_slice_obj(self, slice_obj):
@@ -158,16 +161,9 @@ def onMsg(msg):
 
     if _msg == 'slice::init_vtk':
         _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _open_type = _params
-        next_id = app_slice.get_next_layout_id()
+        next_id = app_slice.get_next_layout_id2(_study_uid)
         if next_id >= 0:
             app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
-        else:
-            next_id = app_slice2.get_next_layout_id()
-            if next_id >= 0:
-                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
-            else:
-                next_id = app_slice.get_next_layout_id(force=True)
-                app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
 
     elif _msg == 'slice::busy_check':
         app_slice.busy_check()
@@ -175,28 +171,28 @@ def onMsg(msg):
 
     elif _msg == 'slice::try_fullscreen_mode':
         _full_screen_mode = _params
-        next_id_1 = app_slice.get_next_layout_id()
-        img_cnt_1 = app_slice.slice_mgr.get_vtk_img_count()
-        next_id_2 = app_slice2.get_next_layout_id()
-        img_cnt_2 = app_slice2.slice_mgr.get_vtk_img_count()
-
-        # if app1 is available
-        if next_id_1 >= 0:
-            # if any vtk img isn't initialized in app1, do fullscreen mode of app1
-            if img_cnt_1 == 0:
-                app_slice.fullscreen(next_id_1, _full_screen_mode)
-            # else, do nothing
-            else:
-                return
-        else:
-            # if app2 is available
-            if next_id_2 >= 0:
-                # if any vtk img isn't initialized in app2, do fullscreen mode of app2
-                if img_cnt_2 == 0:
-                    app_slice2.fullscreen(next_id_2, _full_screen_mode)
-                # else, do nothing
-                else:
-                    return
+        # next_id_1 = app_slice.get_next_layout_id()
+        # img_cnt_1 = app_slice.slice_mgr.get_vtk_img_count()
+        # next_id_2 = app_slice2.get_next_layout_id()
+        # img_cnt_2 = app_slice2.slice_mgr.get_vtk_img_count()
+        #
+        # # if app1 is available
+        # if next_id_1 >= 0:
+        #     # if any vtk img isn't initialized in app1, do fullscreen mode of app1
+        #     if img_cnt_1 == 0:
+        #         app_slice.fullscreen(next_id_1, _full_screen_mode)
+        #     # else, do nothing
+        #     else:
+        #         return
+        # else:
+        #     # if app2 is available
+        #     if next_id_2 >= 0:
+        #         # if any vtk img isn't initialized in app2, do fullscreen mode of app2
+        #         if img_cnt_2 == 0:
+        #             app_slice2.fullscreen(next_id_2, _full_screen_mode)
+        #         # else, do nothing
+        #         else:
+        #             return
 
     elif _msg == 'slice::update_thumbnail_img':
         app_slice.refresh_thumbnail_img()

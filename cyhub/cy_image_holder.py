@@ -94,17 +94,22 @@ class ImageHolder(QQuickItem):
         # Set vtk _Widget_container or _Widget_replica
 
         if self.vtk_obj:
-        #     self.vtk_obj.resize(int(self.width()), int(self.height()))
-        #     return
+            # disconnect
             self.vtk_obj.sig_rendered.disconnect(self.set_image)
+            # delete
             del self.vtk_obj
             self.vtk_obj = None
+            # fill screen with black
+            self.img.fill(0)
+            self.update()
+            _qapp.qapp.sendEvent(self.window(), self._update_request_event)
 
         self.vtk_obj = vtk_obj
-        self.vtk_obj.sig_rendered.connect(self.set_image)
 
-        # Set init size
-        self.vtk_obj.resize(int(self.width()), int(self.height()))
+        if self.vtk_obj:
+            self.vtk_obj.sig_rendered.connect(self.set_image)
+            # Set init size
+            self.vtk_obj.resize(int(self.width()), int(self.height()))
 
     def geometryChanged(self, newGeom, oldGeom):
         if not self.isVisible():

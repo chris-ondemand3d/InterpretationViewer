@@ -31,13 +31,9 @@ class SliceViewWindow(QObject):
         self.repeater_study = self._win.rootObject().findChild(QObject, 'repeater_sv_study')
         self.topbar_thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
         self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
-        cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
 
         if not hasattr(self, '_mgr'):
             return
-
-        # initialize slices
-        self._mgr.init_slice(cnt)
 
         # initialize sig/slot of Python
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
@@ -57,13 +53,14 @@ class SliceViewWindow(QObject):
         self.topbar_thumbnail_item.sigPositionChanged_Global.connect(self.on_thumbnail_position_changed)
         self.topbar_thumbnail_item.sigDropToOtherApp.connect(self.on_dropped_thumbnail_to_other_app)
 
-        for i, s in enumerate(self._mgr.SLICES):
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for i in range(layout_cnt):
             item = self.repeater_imgholder.itemAt(i).childItems()[1]
             _w = QQmlProperty.read(item, 'width')
             _h = QQmlProperty.read(item, 'height')
             item.setHeight(2000)
             item.setWidth(2000)
-            item.set_vtk(s)
+            # item.set_vtk(None)
             item.setHeight(_w)
             item.setWidth(_h)
             # item.installEventFilter(self._win) # to grab mouse hover leave, add eventfilter
@@ -89,14 +86,23 @@ class SliceViewWindow(QObject):
             _remove(self.items)
 
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
-        dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}           # TODO
-        self.append_study_series_model(_patient_info, study_uid, series_uid)
-        self.set_data_info_str(_patient_info, next_id)
-        self._mgr.init_vtk(_vtk_img, _wwl, dcm_info, next_id)
-        if not study_uid in self._mgr.ALL_SLICES:
-            self._mgr.ALL_SLICES[study_uid] = {}
-        self._mgr.ALL_SLICES[study_uid][self._mgr.SLICES[next_id]] = next_id
+        _dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}           # TODO
 
+        # generate slices[...]
+        _new_slice = self._mgr.create_new_slice()
+        if study_uid in self._mgr.ALL_SLICES:
+            self._mgr.ALL_SLICES[study_uid][_new_slice] = next_id
+        else:
+            self._mgr.ALL_SLICES[study_uid] = {_new_slice: next_id}
+        self._mgr.SELECTED_SLICES = self._mgr.ALL_SLICES[study_uid]
+
+        # ...
+        self.append_study_series_model(_patient_info, study_uid, series_uid)
+        self.set_metadata(_patient_info, _dcm_info, next_id)
+        self._mgr.init_vtk(_vtk_img, _wwl, next_id)
+        self.select_study(study_uid)
+
+    # will be deprecated
     def get_next_layout_id(self, force=False):
 
         # if force is true, return slices's next id
@@ -133,6 +139,10 @@ class SliceViewWindow(QObject):
         # else, return next available id
         return next_id
 
+    def get_next_layout_id2(self, _study_uid):
+        # get next available id
+        return self._mgr.get_next_layout_id2(_study_uid)
+
     def fullscreen(self, layout_idx, fullscreen_mode):
         item = self.repeater_imgholder.itemAt(layout_idx).childItems()[1]
         item.setProperty('fullscreenTrigger', fullscreen_mode)
@@ -144,7 +154,7 @@ class SliceViewWindow(QObject):
 
         thumbnail_cnt = QQmlProperty.read(_repeater_sv_thumbnail, 'count')
 
-        for i, s in enumerate(self._mgr.SLICES):
+        for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
@@ -177,15 +187,13 @@ class SliceViewWindow(QObject):
                             break
 
     def busy_check(self):
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for i, s in enumerate(self._mgr.SLICES[:layout_cnt]):
+        for s, i in self._mgr.SELECTED_SLICES.items():
             _obj = self.repeater_imgholder.itemAt(i)
             if _obj is None:
                 continue
             _vtk_img = s.get_vtk_img()
             if _vtk_img is None:
                 continue
-
             _busy = _vtk_img.GetFieldData().GetArray('BUSY')
             if _busy is None:
                 _obj.childItems()[1].setBusy(False)
@@ -211,18 +219,32 @@ class SliceViewWindow(QObject):
         self.topbar_thumbnail_item.appendThumbnail(_id, _name, study_uid, series_uid, _series_id, _date, _modality)
         self.refresh_thumbnail_img()
 
-    def set_data_info_str(self, patient_info, layout_id):
-        if not len(self._mgr.SLICES) > layout_id:
-            return
-        self._mgr.SLICES[layout_id].set_patient_info(patient_info)
+    def set_metadata(self, patient_info, dcm_info, layout_id):
+        for _s, _i in self._mgr.SELECTED_SLICES.items():
+            if _i == layout_id:
+                _s.set_patient_info(patient_info)
+                _s.set_dcm_info(dcm_info)
+                return True
+        return False
 
-        _s = self.repeater_imgholder.itemAt(layout_id)
-        if not _s:
+    def refresh_item(self, layout_id):
+        self._refresh_status_item(layout_id)
+        self._refresh_patient_info_item(layout_id)
+
+    def _refresh_status_item(self, layout_id):
+        self._mgr.refresh_status_item(layout_id)
+
+    def _refresh_patient_info_item(self, layout_id):
+        if not layout_id in list(self._mgr.SELECTED_SLICES.values()):
             return
-        _obj = _s.childItems()[1].findChild(QObject, 'col_sv_patient_info')
-        self.layout_item.setPatientInfo(_obj, patient_info['id'], patient_info['name'],
-                                        patient_info['age'], patient_info['sex'],
-                                        patient_info['date'], patient_info['series_id'])
+        _slice = list(self._mgr.SELECTED_SLICES.keys())[list(self._mgr.SELECTED_SLICES.values()).index(layout_id)]
+        _patient_info = _slice.get_patient_info()
+        _s = self.repeater_imgholder.itemAt(layout_id)
+        if _s and _patient_info:
+            _obj = _s.childItems()[1].findChild(QObject, 'col_sv_patient_info')
+            self.layout_item.setPatientInfo(_obj, _patient_info['id'], _patient_info['name'],
+                                            _patient_info['age'], _patient_info['sex'],
+                                            _patient_info['date'], _patient_info['series_id'])
 
     def set_vtk_img_from_slice_obj(self, slice_obj, layout_id):
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
@@ -270,7 +292,7 @@ class SliceViewWindow(QObject):
         self._appendStudy(patient_info, dcm_info['study_uid'])
         self._appendThumbnail(patient_info, dcm_info['study_uid'], dcm_info['series_uid'])
         self.set_vtk_img_from_slice_obj(slice_obj, next_id)
-        self.set_data_info_str(patient_info, next_id)
+        self.set_patient_info(patient_info, next_id)
         # busy check
         self.busy_check()
         return True
@@ -304,7 +326,9 @@ class SliceViewWindow(QObject):
         if not _obj:
             return
         _obj = _obj.childItems()[1]
-        self._mgr.SLICES[layout_id].set_thickness(thickness)
+        if layout_id in list(self._mgr.SELECTED_SLICES.values()):
+            s = list(self._mgr.SELECTED_SLICES.keys())[list(self._mgr.SELECTED_SLICES.values()).index(layout_id)]
+            s.set_thickness(thickness)
 
     @pyqtSlot(object, object)
     def on_change_filter(self, img_filter, layout_id):
@@ -320,7 +344,9 @@ class SliceViewWindow(QObject):
         if not _obj:
             return
         _obj = _obj.childItems()[1]
-        self._mgr.SLICES[layout_id].set_image_filter_type(img_filter)
+        if layout_id in list(self._mgr.SELECTED_SLICES.values()):
+            s = list(self._mgr.SELECTED_SLICES.keys())[list(self._mgr.SELECTED_SLICES.values()).index(layout_id)]
+            s.set_image_filter_type(img_filter)
 
     @pyqtSlot(object, object, object)
     def on_change_wwl(self, ww, wl, layout_id):
@@ -348,8 +374,9 @@ class SliceViewWindow(QObject):
             self.topbar_study_item.removeStudy(study_uid)
 
         # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
+        waiting_list = []
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for i, s in enumerate(self._mgr.SLICES[:]):
+        for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
@@ -357,34 +384,26 @@ class SliceViewWindow(QObject):
 
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
-                        new_slice = self._mgr.create_new_slice()
                         if layout_cnt > i:
                             _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(new_slice)
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
-                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.set_vtk(None)
                             _item.clear()
+                            waiting_list.append(s)
                         else:
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
+                            waiting_list.append(s)
                         break
                     elif series_uid is None:
-                        new_slice = self._mgr.create_new_slice()
                         if layout_cnt > i:
                             _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(new_slice)
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
-                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item.set_vtk(None)
                             _item.clear()
+                            waiting_list.append(s)
                         else:
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
+                            waiting_list.append(s)
+        for s in waiting_list:
+            self._mgr.SELECTED_SLICES.pop(s)
+            del s
+        waiting_list.clear()
 
         # 4. force garbage collector!!!
         gc.collect()
@@ -407,7 +426,8 @@ class SliceViewWindow(QObject):
 
         # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for i, s in enumerate(self._mgr.SLICES[:]):
+        waiting_list = []
+        for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
@@ -415,38 +435,30 @@ class SliceViewWindow(QObject):
 
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
-                        new_slice = self._mgr.create_new_slice()
                         if layout_cnt > i:
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(new_slice)
                             s.reset()
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
-                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(None)
                             _item.clear()
+                            waiting_list.append(s)
                         else:
                             s.reset()
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
+                            waiting_list.append(s)
                         break
                     elif series_uid is None:
-                        new_slice = self._mgr.create_new_slice()
                         if layout_cnt > i:
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(new_slice)
                             s.reset()
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
-                            # NOTE item.clear() function should be called after remove the s(slice object)
+                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                            _item.set_vtk(None)
                             _item.clear()
+                            waiting_list.append(s)
                         else:
                             s.reset()
-                            self._mgr.SLICES[i] = new_slice
-                            self._mgr.ALL_SLICES[study_uid].pop(s)
-                            del s
+                            waiting_list.append(s)
+        for s in waiting_list:
+            self._mgr.SELECTED_SLICES.pop(s)
+            del s
+        waiting_list.clear()
 
         # 4. force garbage collector!!!
         gc.collect()
@@ -459,7 +471,7 @@ class SliceViewWindow(QObject):
         picked_layout_id = int(picked_layout_id)
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
 
-        for i, s in enumerate(self._mgr.SLICES):
+        for s, i in self._mgr.SELECTED_SLICES.items():
 
             dcm_info = s.get_dcm_info()
 
@@ -479,23 +491,22 @@ class SliceViewWindow(QObject):
                     _item.set_vtk(s)
 
                     # switch slice object
-                    _tmp_s = self._mgr.SLICES[picked_layout_id]
-                    self._mgr.SLICES[picked_layout_id] = s
-                    self._mgr.SLICES[i] = self._mgr.create_new_slice()
-                    self._mgr.SLICES.append(_tmp_s)
-                    self._mgr.ALL_SLICES[study_uid][s] = picked_layout_id
+                    _keys = list(self._mgr.SELECTED_SLICES.keys())
+                    _values = list(self._mgr.SELECTED_SLICES.values())
+                    if picked_layout_id in _values:
+                        _new_idx = max(_values) + 1
+                        _picked_s = _keys[_values.index(picked_layout_id)]
+                        self._mgr.SELECTED_SLICES[_picked_s] = _new_idx
+                    self._mgr.SELECTED_SLICES[s] = picked_layout_id
 
                     # set dummy slice and clear
                     if layout_cnt > i:
                         _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                        _item.set_vtk(self._mgr.SLICES[i])
+                        _item.set_vtk(None)
                         _item.clear()
 
-
                     # refresh qml text items (patient id, name, age, sex ...)
-                    self._mgr.refresh_text_items(picked_layout_id)
-                    _patient_info = s.get_patient_info()
-                    self.set_data_info_str(_patient_info, picked_layout_id)
+                    self.refresh_item(picked_layout_id)
 
                     # busy check
                     self.busy_check()
@@ -505,8 +516,7 @@ class SliceViewWindow(QObject):
             continue
 
     def on_hightlight(self, study_uid, series_uid, on):
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for i, s in enumerate(self._mgr.SLICES[0:layout_cnt]):
+        for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
                 _study_uid = dcm_info['study_uid']
@@ -514,7 +524,8 @@ class SliceViewWindow(QObject):
                 if study_uid == _study_uid and series_uid == _series_uid:
                     # get imgholder's titlebar and set highlight
                     _item = self.repeater_imgholder.itemAt(i).childItems()[0]
-                    _item.setProperty('highlight', on)
+                    if _item:
+                        _item.setProperty('highlight', on)
 
     def on_release_dummy_thumbnail(self):
         self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
@@ -536,34 +547,46 @@ class SliceViewWindow(QObject):
             self._win.send_message.emit(['slice::send_to_other_app', [global_mouse, study_uid, series_uid]])
 
     def on_selected_study(self, selected_index):
-
         if selected_index is None or selected_index == -1:
             return
+        _study_item = self.repeater_study.itemAt(selected_index)
+        _study_uid = _study_item.getStudyUID()
+        self.select_study(_study_uid)
+
+    def select_study(self, _study_uid):
 
         # 1. clear thumbnail items
         self.topbar_thumbnail_item.clearThumbnail()
-        # 2. get study uid of selected item
-        _study_uid = self.repeater_study.itemAt(selected_index).getStudyUID()
-        # 3. re-generate the slices by study uid
-        self._mgr.select_study(_study_uid)
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        if layout_cnt > len(self._mgr.SLICES):
-            _blank = [self._mgr.create_new_slice() for i in range((layout_cnt - len(self._mgr.SLICES)))]
-            self._mgr.SLICES.extend(_blank)
-        # 4. set vtk and info & set thumbnails
-        for i, s in enumerate(self._mgr.SLICES):
-            # get imgholder and set slice
-            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-            if _item:
-                _item.set_vtk(s)
-                _item.clear()
-            _patient_info = s.get_patient_info()
-            _dcm_info = s.get_dcm_info()
-            if _dcm_info is None:
-                continue
 
+        # 2. re-generate the selected slices by study uid
+        self._mgr.select_study(_study_uid)
+
+        # 3. set vtk and info & set thumbnails & refresh items
+        # clear image holder
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for _i in range(layout_cnt):
+            _item = self.repeater_imgholder.itemAt(_i)
+            if _item:
+                _item.childItems()[1].set_vtk(None)
+                _item.childItems()[1].clear()
+        # set
+        for _s, _i in self._mgr.SELECTED_SLICES.items():
+            # get imgholder and set slice
+            _item = self.repeater_imgholder.itemAt(_i)
+            if _item:
+                _item.childItems()[1].set_vtk(_s)
+            _patient_info = _s.get_patient_info()
+            _dcm_info = _s.get_dcm_info()
+            if _dcm_info is None or _patient_info is None:
+                continue
             # refresh qml text items (patient id, name, age, sex ...)
-            self._mgr.refresh_text_items(i)
-            self.set_data_info_str(_patient_info, i)
+            self.refresh_item(_i)
             self.append_study_series_model(_patient_info, _dcm_info['study_uid'], _dcm_info['series_uid'])
+
+        # get study item
+        _study_item = self.topbar_study_item.getItem(_study_uid)
+        if _study_item:
+            _study_item.setProperty('selected', True)
+        self.busy_check()
+
         gc.collect()

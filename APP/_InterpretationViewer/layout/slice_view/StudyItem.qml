@@ -55,6 +55,8 @@ Item {
       property var previousGlobalPosition: null
 
       onClicked: {
+        if (selected === true)
+          return;
         select();
       }
 
@@ -132,7 +134,13 @@ Item {
 
   function select(bSelected)
   {
-    selected = (bSelected === undefined) ? !selected : bSelected;
+    if (bSelected === undefined)
+      selected = !selected;
+    else if (bSelected != selected)
+      selected = bSelected;
+    else
+      return
+
     if (selected == true)
       sliceview_topbar_panel.sigSelected(index);
   }

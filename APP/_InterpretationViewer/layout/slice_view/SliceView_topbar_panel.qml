@@ -178,4 +178,19 @@ Item {
     }
   }
 
+  function getItem(_study_uid)
+  {
+    repeater_sv_study.model = items_sv_study.count;
+    for (var i=0; i < repeater_sv_study.count; i++)
+    {
+      var _model = items_sv_study.get(i);
+      if (_model.study_uid == _study_uid)
+      {
+        var _item = repeater_sv_study.itemAt(i);
+        return _item;
+      }
+    }
+    return null;
+  }
+
 }
