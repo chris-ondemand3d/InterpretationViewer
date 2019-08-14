@@ -99,6 +99,8 @@ Item {
     property var default_height: 100
     property var scaled_width: 240
     property var scaled_height: 190
+    property var study_preview_width: 130
+    property var study_preview_height: 60
 
     property bool rounded: true
     property bool adapt: true
@@ -124,11 +126,18 @@ Item {
       img_sc_dummythumbnail.opacity = 0.7;
     }
 
-    function set_preview_mode()
+    function set_series_preview_mode()
     {
       img_sc_dummythumbnail.width = scaled_width;
       img_sc_dummythumbnail.height = scaled_height;
       img_sc_dummythumbnail.opacity = 1.0;
+    }
+
+    function set_study_preview_mode()
+    {
+      img_sc_dummythumbnail.width = study_preview_width;
+      img_sc_dummythumbnail.height = study_preview_height;
+      img_sc_dummythumbnail.opacity = 0.7;
     }
   }
 

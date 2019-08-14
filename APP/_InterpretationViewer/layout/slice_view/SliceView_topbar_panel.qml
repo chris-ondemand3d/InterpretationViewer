@@ -16,7 +16,11 @@ Item {
   height: 30
 
   signal sigSelected(int selected_index)
+  signal sigReleaseDummyThumbnail()
   signal sigClose(string study_uid)
+
+  signal sigPositionChanged_Global(var global_mosue, var img_url, var mode)
+  signal sigDropToOtherApp(var global_mouse, string study_uid)
 
   ListModel {
     id: items_sv_study
@@ -117,12 +121,19 @@ Item {
 
   // slots
   onSigSelected: {
+    refreshToggleStatus(selected_index);
+  }
+
+  function refreshToggleStatus(selected_index)
+  {
     repeater_sv_study.model = items_sv_study.count;
     for (var i=0; i < repeater_sv_study.count; i++)
     {
       var _item = repeater_sv_study.itemAt(i)
       if (i != selected_index)
         _item.select(false);
+      else
+        _item.selected = true;
     }
   }
 
@@ -191,6 +202,20 @@ Item {
       }
     }
     return null;
+  }
+
+  function getIndex(_study_uid)
+  {
+    repeater_sv_study.model = items_sv_study.count;
+    for (var i=0; i < repeater_sv_study.count; i++)
+    {
+      var _model = items_sv_study.get(i);
+      if (_model.study_uid == _study_uid)
+      {
+        return i;
+      }
+    }
+    return -1;
   }
 
 }

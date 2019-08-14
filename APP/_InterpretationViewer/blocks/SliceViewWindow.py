@@ -6,7 +6,7 @@ import time
 from cyhub.cy_image_holder import CyQQuickView
 
 from PyQt5.QtQuick import QQuickView
-from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot, QByteArray, QVariant
+from PyQt5.QtCore import QObject, QUrl, QTimer, Qt, pyqtSignal, pyqtSlot, QByteArray, QVariant, QEvent
 from PyQt5.QtQml import QQmlProperty
 from PyQt5.QtGui import QImage
 
@@ -27,9 +27,13 @@ class SliceViewWindow(QObject):
 
         self.root_itme = self._win.rootObject()
         self.layout_item = self._win.rootObject().findChild(QObject, 'sliceview_mxn_layout')
+
         self.topbar_study_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_panel')
         self.repeater_study = self._win.rootObject().findChild(QObject, 'repeater_sv_study')
+
         self.topbar_thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
+        self.repeater_series = self._win.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
+
         self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
 
         if not hasattr(self, '_mgr'):
@@ -44,7 +48,10 @@ class SliceViewWindow(QObject):
         # initialize sig/slot of QML
         # for study
         self.topbar_study_item.sigSelected.connect(self.on_selected_study)
+        self.topbar_study_item.sigReleaseDummyThumbnail.connect(self.on_release_dummy_thumbnail)
         self.topbar_study_item.sigClose.connect(self.on_close_data)
+        self.topbar_study_item.sigPositionChanged_Global.connect(self.on_thumbnail_position_changed)
+        self.topbar_study_item.sigDropToOtherApp.connect(self.on_dropped_thumbnail_to_other_app)
         # for thumbnail(series)
         self.topbar_thumbnail_item.sigDrop.connect(self.on_dropped_thumbnail)
         self.topbar_thumbnail_item.sigHighlight.connect(self.on_hightlight)
@@ -257,9 +264,17 @@ class SliceViewWindow(QObject):
         _pos = self._win.mapFromGlobal(global_mouse.toPoint())
         return self.root_itme.contains(_pos)
 
-    def set_dummy_thumbnail(self, global_pos, img_url):
+    def set_dummy_thumbnail(self, global_pos, img_url, mode):
         _pos = self._win.mapFromGlobal(global_pos.toPoint())
         _item = self._win.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
+        if mode == 'study_thumbnail':
+            _item.set_study_preview_mode()
+        elif mode == 'series_thumbnail':
+            _item.set_default_mode()
+        elif mode == 'series_preview':
+            _item.set_series_preview_mode()
+        else:
+            _item.set_default_mode()
         _w = QQmlProperty.read(_item, 'width')
         _h = QQmlProperty.read(_item, 'height')
         _item.setProperty('visible', True)
@@ -269,6 +284,7 @@ class SliceViewWindow(QObject):
 
     def release_dummy_thumbnail(self):
         _item = self._win.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
+        _item.set_default_mode()
         _item.setProperty('visible', False)
         _item.setProperty('x', 0)
         _item.setProperty('y', 0)
@@ -302,11 +318,16 @@ class SliceViewWindow(QObject):
 
         # select slices from study_uid
         self.select_study(dcm_info['study_uid'])
+        _idx = self.topbar_study_item.getIndex(dcm_info['study_uid'])
+        self.topbar_study_item.refreshToggleStatus(_idx)
 
         return True
 
     def get_slice_obj(self, study_uid, series_uid):
         return self._mgr.get_slice_obj(study_uid, series_uid)
+
+    def get_slice_objs(self, study_uid):
+        return self._mgr.get_slice_objs(study_uid)
 
     @pyqtSlot(object, object)
     def on_change_slice_num(self, slice_num, layout_id):
@@ -383,7 +404,6 @@ class SliceViewWindow(QObject):
 
         # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
         waiting_list = []
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
             if dcm_info and 'study_uid' in dcm_info and 'series_uid' in dcm_info:
@@ -527,16 +547,16 @@ class SliceViewWindow(QObject):
     def on_release_dummy_thumbnail(self):
         self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
 
-    def on_thumbnail_position_changed(self, global_mouse, img_url):
+    def on_thumbnail_position_changed(self, global_mouse, img_url, mode):
         if not global_mouse:
             return
         _contained = self.is_contained(global_mouse)
         if not _contained:
-            self._win.send_message.emit(['slice::set_dummy_thumbnail', [global_mouse, img_url]])
+            self._win.send_message.emit(['slice::set_dummy_thumbnail', [global_mouse, img_url, mode]])
         else:
             self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
 
-    def on_dropped_thumbnail_to_other_app(self, global_mouse, study_uid, series_uid):
+    def on_dropped_thumbnail_to_other_app(self, global_mouse, study_uid, series_uid=None):
         if not global_mouse:
             return
         _contained = self.is_contained(global_mouse)
@@ -568,6 +588,8 @@ class SliceViewWindow(QObject):
             _item = self.repeater_imgholder.itemAt(_i)
             if _item:
                 _item.childItems()[1].set_vtk(_s)
+                _item.childItems()[1].update()
+
             _patient_info = _s.get_patient_info()
             _dcm_info = _s.get_dcm_info()
             if _dcm_info is None or _patient_info is None:
@@ -585,11 +607,13 @@ class SliceViewWindow(QObject):
                 _item.childItems()[1].set_vtk(None)
                 _item.childItems()[1].clear()
         waiting_list.clear()
-
-        # get study item
+        # set variable 'selected' to true
         _study_item = self.topbar_study_item.getItem(_study_uid)
         if _study_item:
             _study_item.setProperty('selected', True)
+
+        # busy check
         self.busy_check()
 
+        # garbage collect
         gc.collect()

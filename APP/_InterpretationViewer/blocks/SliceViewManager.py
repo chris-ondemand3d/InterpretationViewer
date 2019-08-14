@@ -187,6 +187,17 @@ class SliceViewManager(QObject):
                 return _slice
         return None
 
+    def get_slice_objs(self, study_uid):
+        _slices = []
+        _indicces = []
+        for _slice, _layout_id in self.ALL_SLICES[study_uid].items():
+            _dcm_info = _slice.get_dcm_info()
+            if _slice.get_vtk_img() is None:
+                continue
+            _slices.append(_slice)
+            _indicces.append(_layout_id)
+        return _slices, _indicces
+
     def select_study(self, study_uid):
         if study_uid in self.ALL_SLICES:
             self.SELECTED_SLICES = self.ALL_SLICES[study_uid]

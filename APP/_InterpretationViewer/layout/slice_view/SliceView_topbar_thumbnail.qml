@@ -20,7 +20,7 @@ Item {
   signal sigReleaseDummyThumbnail()
   signal sigClose(string study_uid, string series_uid)
 
-  signal sigPositionChanged_Global(var global_mosue, var img_url)
+  signal sigPositionChanged_Global(var global_mosue, var img_url, var mode)
   signal sigDropToOtherApp(var global_mouse, string study_uid, string series_uid)
 
   ListModel {

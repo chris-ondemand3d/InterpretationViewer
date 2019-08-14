@@ -64,15 +64,57 @@ Item {
         pressed_button = mouse.button;
         if (mouse.button == Qt.LeftButton)
         {
+          close_study.visible = false;
+          study_item.grabImage();
         }
       }
 
       onReleased: {
+        if ((mouse_study.previousGlobalPosition != null) && (mouse.button == Qt.LeftButton))
+        {
+          var mouse_grid = sliceview_mxn_layout.mapFromGlobal(mouse_study.previousGlobalPosition.x,
+                                                              mouse_study.previousGlobalPosition.y);
+          var _x = mouse_grid.x;
+          var _y = mouse_grid.y;
+
+          // should be called after search obj
+          close_study.visible = true;
+          sliceview_topbar_panel.sigReleaseDummyThumbnail();
+          img_sc_dummythumbnail.set_default_mode();
+
+          var _obj = win_root.childAt(_x, _y);
+
+          if ((_obj == null)) {
+            sliceview_topbar_panel.sigDropToOtherApp(mouse_study.previousGlobalPosition, model.study_uid);
+            pressed_button = 0;
+            return;
+          }
+        }
+        else
+        {
+          // should be called after search obj
+          close_study.visible = true;
+          sliceview_topbar_panel.sigReleaseDummyThumbnail();
+        }
+
+        pressed_button = 0;
+
       }
 
       onPositionChanged: {
         if (pressed && (pressed_button == Qt.LeftButton))
         {
+          mouse_study.previousGlobalPosition = study_item.mapToGlobal(mouse.x, mouse.y);
+          sliceview_topbar_panel.sigPositionChanged_Global(mouse_study.previousGlobalPosition, study_item.grabbedImageUrl, 'study_thumbnail');
+
+          var mouse_root = win_root.mapFromGlobal(mouse_study.previousGlobalPosition.x,
+                                                  mouse_study.previousGlobalPosition.y);
+          img_sc_dummythumbnail.set_study_preview_mode();
+          img_sc_dummythumbnail.visible = true;
+          img_sc_dummythumbnail.x = mouse_root.x - (study_item.width / 2);
+          img_sc_dummythumbnail.y = mouse_root.y - (study_item.height / 2);
+          if (grabbedImageUrl != null)
+            img_sc_dummythumbnail.source = grabbedImageUrl;
         }
       }
 
@@ -148,6 +190,15 @@ Item {
   function getStudyUID()
   {
     return model.study_uid;
+  }
+
+  function grabImage()
+  {
+    study_item.grabToImage(function(result) {
+       //result.saveToFile("../_tmp/grabbedimg.png");
+       study_item.grabbedImageUrl = result.url;
+    });
+
   }
 
 }

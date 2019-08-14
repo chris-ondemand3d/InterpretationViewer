@@ -145,7 +145,7 @@ Item {
         if (pressed && (pressed_button == Qt.LeftButton))
         {
           mouse_thumbnail.previousGlobalPosition = thumbnail_item.mapToGlobal(mouse.x, mouse.y);
-          sliceview_topbar_thumbnail.sigPositionChanged_Global(mouse_thumbnail.previousGlobalPosition, thumbnail_item.grabbedImageUrl);
+          sliceview_topbar_thumbnail.sigPositionChanged_Global(mouse_thumbnail.previousGlobalPosition, thumbnail_item.grabbedImageUrl, 'series_thumbnail');
 
           var mouse_root = win_root.mapFromGlobal(mouse_thumbnail.previousGlobalPosition.x,
                                                   mouse_thumbnail.previousGlobalPosition.y);
@@ -218,7 +218,7 @@ Item {
         {
           var _mouse_global = thumbnail_item.mapToGlobal(mouse.x, mouse.y);
           var mouse_root = win_root.mapFromGlobal(_mouse_global.x, _mouse_global.y);
-          img_sc_dummythumbnail.set_preview_mode();
+          img_sc_dummythumbnail.set_series_preview_mode();
           img_sc_dummythumbnail.visible = true;
           img_sc_dummythumbnail.x = mouse_root.x;
           img_sc_dummythumbnail.y = mouse_root.y;
@@ -291,6 +291,16 @@ Item {
     if ((model.study_uid == _study_uid) && (model.series_uid == _series_uid))
       return true;
     return false;
+  }
+
+  function getStudyUID()
+  {
+    return model.study_uid;
+  }
+
+  function getSeriesUID()
+  {
+    return model.series_uid;
   }
 
   function grabImage()

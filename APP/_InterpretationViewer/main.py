@@ -108,26 +108,61 @@ class slice_app(CyQQuickView):
     def is_contained(self, global_mouse):
         return self.slice_win.is_contained(global_mouse)
 
-    def set_dummy_thumbnail(self, global_pos, img_url):
-        self.slice_win.set_dummy_thumbnail(global_pos, img_url)
+    def set_dummy_thumbnail(self, global_pos, img_url, mode):
+        self.slice_win.set_dummy_thumbnail(global_pos, img_url, mode)
 
     def release_dummy_thumbnail(self):
         self.slice_win.release_dummy_thumbnail()
 
-    def insert_slice_obj(self, slice_obj, global_mouse=None):
-        _id = None
-        if global_mouse:
-            _id = self.slice_win.get_layout_id(global_mouse)
-        if not self.slice_win.insert_slice_obj(slice_obj, _id):
+    def insert_slice_obj(self, slice_obj, layout_id):
+
+        # TODO
+        # _id = None
+        # if global_mouse:
+        #     _id = self.slice_win.get_layout_id(global_mouse)
+
+        if not self.slice_win.insert_slice_obj(slice_obj, layout_id):
             return False
-        self.slice_win.refresh_item(_id)
+        self.slice_win.refresh_item(layout_id)
+
+        # NOTE Sometimes, inserted slice isn't shown. So, tried to fix it with the callback function.
+        QTimer.singleShot(100, lambda: self.sig_refresh_all.emit())
+
         return True
 
-    def remove_slice_obj(self, slice_obj):
-        dcm_info = slice_obj.get_dcm_info()
-        if not dcm_info:
-            return False
-        self.slice_win.on_close_view(dcm_info['study_uid'], dcm_info['series_uid'])
+    def remove_slice_obj(self, _study_uid, _series_uid):
+
+        # TODO!!!!!!!!!! need to clean up source...
+
+        # 1 close view
+        self.slice_win.on_close_view(_study_uid, _series_uid)
+
+        # 2 remove (without reset())
+        if _study_uid in self.slice_mgr.ALL_SLICES:
+            waiting_list = []
+            _slices = self.slice_mgr.ALL_SLICES[_study_uid]
+            if _series_uid is None:
+                for _s in _slices.keys():
+                    waiting_list.append(_s)
+            else:
+                for _s in _slices.keys():
+                    _dcm_info = _s.get_dcm_info()
+                    if _series_uid == _dcm_info['series_uid']:
+                        waiting_list.append(_s)
+                        break
+            for _s in waiting_list:
+                self.slice_mgr.ALL_SLICES[_study_uid].pop(_s)
+            if len(self.slice_mgr.ALL_SLICES[_study_uid]) == 0:
+                self.slice_mgr.ALL_SLICES.pop(_study_uid)
+            waiting_list.clear()
+
+        # refresh study thumbnail
+        _series_item = self.slice_win.repeater_series.itemAt(0)
+        if _series_item:
+            _study_uid = _series_item.getStudyUID()
+            _idx = int(self.slice_win.topbar_study_item.getIndex(_study_uid))
+            self.slice_win.topbar_study_item.refreshToggleStatus(_idx)
+
         return True
 
 
@@ -208,11 +243,11 @@ def onMsg(msg):
         app_slice2.sig_refresh_all.emit()
 
     elif _msg == 'slice::set_dummy_thumbnail':
-        _global_pos, _img_url = _params
+        _global_pos, _img_url, _mode = _params
         if app_slice.is_contained(_global_pos):
-            app_slice.set_dummy_thumbnail(_global_pos, _img_url)
+            app_slice.set_dummy_thumbnail(_global_pos, _img_url, _mode)
         elif app_slice2.is_contained(_global_pos):
-            app_slice2.set_dummy_thumbnail(_global_pos, _img_url)
+            app_slice2.set_dummy_thumbnail(_global_pos, _img_url, _mode)
 
     elif _msg == 'slice::release_dummy_thumbnail':
         app_slice.release_dummy_thumbnail()
@@ -221,17 +256,27 @@ def onMsg(msg):
     elif _msg == 'slice::send_to_other_app':
         _global_mouse, _study_uid, _series_uid = _params
         if app_slice.is_contained(_global_mouse):
-            _slice_obj = app_slice2.slice_win.get_slice_obj(_study_uid, _series_uid)
-            if not _slice_obj:
-                return
-            if app_slice.insert_slice_obj(_slice_obj, _global_mouse):
-                app_slice2.remove_slice_obj(_slice_obj)
+            _slices = []
+            _indices = []
+            if _series_uid is None:
+                _slices, _indices = app_slice2.slice_win.get_slice_objs(_study_uid)
+            else:
+                _slices = [app_slice2.slice_win.get_slice_obj(_study_uid, _series_uid)]
+                _indices = [None]
+            for _s, _i in zip(_slices, _indices):
+                if app_slice.insert_slice_obj(_s, _i):
+                    app_slice2.remove_slice_obj(_study_uid, _series_uid)
         elif app_slice2.is_contained(_global_mouse):
-            _slice_obj = app_slice.slice_win.get_slice_obj(_study_uid, _series_uid)
-            if not _slice_obj:
-                return
-            if app_slice2.insert_slice_obj(_slice_obj, _global_mouse):
-                app_slice.remove_slice_obj(_slice_obj)
+            _slices = []
+            _indices = []
+            if _series_uid is None:
+                _slices, _indices = app_slice.slice_win.get_slice_objs(_study_uid)
+            else:
+                _slices = [app_slice.slice_win.get_slice_obj(_study_uid, _series_uid)]
+                _indices = [None]
+            for _s, _i in zip(_slices, _indices):
+                if app_slice2.insert_slice_obj(_s, _i):
+                    app_slice.remove_slice_obj(_study_uid, _series_uid)
 
     # MPR
     elif _msg == 'mpr::init_vtk':
