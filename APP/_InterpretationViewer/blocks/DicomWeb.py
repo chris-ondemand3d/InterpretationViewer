@@ -40,7 +40,8 @@ TAG_WindowWidth = '00281051'
 # HOST_URL = "http://192.168.200.159:44301"
 
 # sang-am url
-HOST_URL = "http://192.168.50.14:44301"
+# HOST_URL = "http://192.168.50.14:44301"
+HOST_URL = "http://182.214.51.130:44301"
 
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'

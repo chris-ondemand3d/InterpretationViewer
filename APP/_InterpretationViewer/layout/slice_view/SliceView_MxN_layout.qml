@@ -52,8 +52,8 @@ Item {
         id: img_holder_root
         objectName: 'img_holder_root'
         spacing: 0
-        width: grid_layout.colMulti * columnSpan - 0.5
-        height: grid_layout.rowMulti * rowSpan - 0.5
+        width: prefWidth(this)
+        height: prefHeight(this)
 
         property var column: 0
         property var columnSpan: 1
@@ -65,7 +65,7 @@ Item {
           objectName: "vtk_img_topbar"
           width : vtk_img_holder.width
           height : 25
-          implicitWidth: vtk_img_holder.width
+          implicitWidth: prefWidth(parent)
           implicitHeight: 25
           color: (highlight === true) ? '#696975' : '#232323'
 
@@ -81,8 +81,8 @@ Item {
           Layout.columnSpan: parent.columnSpan
           Layout.row: parent.row
           Layout.rowSpan: parent.rowSpan
-          Layout.preferredWidth  : grid_layout.colMulti * parent.columnSpan - 0.5
-          Layout.preferredHeight : (grid_layout.rowMulti * parent.rowSpan - 0.5) - vtk_img_topbar.height;
+          Layout.preferredWidth: prefWidth(parent)
+          Layout.preferredHeight: prefHeight(parent) - vtk_img_topbar.height;
           fullscreenTrigger: false
 
           // patient info (LT) - Patient ID, Name, Age, Sex, Date, Series ID
@@ -516,6 +516,16 @@ Item {
     busy_indicator.setBusy(busy);
   }
 
+  function prefWidth(item)
+  {
+    return (grid_layout.colMulti * item.columnSpan) - 0.5;
+  }
+
+  function prefHeight(item)
+  {
+    return (grid_layout.rowMulti * item.rowSpan) - 0.5;
+  }
+
   function onFullscreen(bFullscreen, target_item)
   {
     for (var i=0; i < repeater_imgholder_sliceview.count; i++)
@@ -531,12 +541,10 @@ Item {
         _item.visible = true;
         var y = parseInt((i / grid_layout.columns));
         var x = i % grid_layout.columns;
-        _vtkimg_item.Layout.column = _item.column;
-        _vtkimg_item.Layout.columnSpan = _item.columnSpan;
-        _vtkimg_item.Layout.row = _item.row;
-        _vtkimg_item.Layout.rowSpan = _item.rowSpan;
-        _vtkimg_item.Layout.preferredWidth  = grid_layout.colMulti * _item.columnSpan - 0.5;
-        _vtkimg_item.Layout.preferredHeight = (grid_layout.rowMulti * _item.rowSpan - 0.5) - _topbar_item.height;
+        _item.column = x;
+        _item.row = y;
+        _item.columnSpan = 1;
+        _item.rowSpan = 1;
       }
     }
 
@@ -546,12 +554,10 @@ Item {
       var _topbar_item = _item.children[0];
       var _vtkimg_item = _item.children[1];
       _item.visible = true;
-      _vtkimg_item.Layout.column = 0;
-      _vtkimg_item.Layout.columnSpan = grid_layout.columns;
-      _vtkimg_item.Layout.row = 0;
-      _vtkimg_item.Layout.rowSpan = grid_layout.rows;
-      _vtkimg_item.Layout.preferredWidth  = grid_layout.width;
-      _vtkimg_item.Layout.preferredHeight = grid_layout.height - _topbar_item.height;
+      _item.column = 0;
+      _item.row = 0;
+      _item.columnSpan = grid_layout.columns;
+      _item.rowSpan = grid_layout.rows;
     }
 
   }

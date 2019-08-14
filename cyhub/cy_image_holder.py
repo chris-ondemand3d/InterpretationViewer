@@ -2,7 +2,7 @@ import platform
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 from PyQt5.QtCore import Qt, QTimer, QEvent, QPoint, QPointF, QLineF, QVariant, QUrl, QRectF, QSize
-from PyQt5.QtGui import QImage, QScreen, QMouseEvent, QWheelEvent, QHoverEvent, qAlpha
+from PyQt5.QtGui import QImage, QScreen, QMouseEvent, QWheelEvent, QHoverEvent, qAlpha, QColor
 from PyQt5.QtQuick import QQuickView, QQuickItem, QSGSimpleTextureNode
 from PyQt5 import QtQml
 
@@ -100,9 +100,11 @@ class ImageHolder(QQuickItem):
             del self.vtk_obj
             self.vtk_obj = None
             # fill screen with black
-            self.img.fill(0)
+            del self.img
+            self.img = QImage()
+            self.img.fill(QColor(0, 0, 0))
             self.update()
-            _qapp.qapp.sendEvent(self.window(), self._update_request_event)
+            # _qapp.qapp.sendEvent(self.window(), self._update_request_event)
 
         self.vtk_obj = vtk_obj
 
