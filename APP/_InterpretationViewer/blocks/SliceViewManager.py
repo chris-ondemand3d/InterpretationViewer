@@ -102,48 +102,41 @@ class SliceViewManager(QObject):
         return False
 
     def insert_slice_obj(self, slice_obj, _target_id=None):
-        # if not _target_id is None and _target_id != -1:
-        #     _tmp = self.ALL_SLICES[_target_id]
-        #     self.ALL_SLICES[_target_id] = slice_obj
-        #
-        #     if _tmp.get_vtk_img():
-        #         self.SLICES.append(_tmp)
-        #     else:
-        #         _tmp.reset()
-        #         del _tmp
-        # else:
-        #     # append
-        #     _id = self.get_next_layout_id()
-        #     if _id == -1:
-        #         self.ALL_SLICES.append(slice_obj)
-        #     else:
-        #         _tmp = self.ALL_SLICES[_id]
-        #         self.ALL_SLICES[_id] = slice_obj
-        #         _tmp.reset()
-        #         del _tmp
+        # must insert to self.ALL_SLICES
+        _dcm_info = slice_obj.get_dcm_info()
+        if _dcm_info is None:
+            return -1
+        _study_uid = _dcm_info['study_uid']
+        _series_uid = _dcm_info['series_uid']
+        if _study_uid in self.ALL_SLICES:
+            self.SELECTED_SLICES = self.ALL_SLICES[_study_uid]
+        else:
+            self.ALL_SLICES[_study_uid] = {}
+            self.SELECTED_SLICES = self.ALL_SLICES[_study_uid]
 
-        # # get study uid
-        # _dcm_info = slice_obj.get_dcm_info()
-        # if _dcm_info is None:
-        #     return -1
-        #
-        # _study_uid = _dcm_info['study_uid']
-        # _series_uid = _dcm_info['series_uid']
-        # _id = self.get_next_layout_id()
-        # if _id == -1:
+        _keys = list(self.SELECTED_SLICES.keys())
+        _values = list(self.SELECTED_SLICES.values())
+        if not _target_id is None and _target_id != -1:
+            _target_obj = None
+            if _target_id in _values:
+                _target_obj = _keys[_values.index(_target_id)]
+            self.SELECTED_SLICES[slice_obj] = _target_id
+            if not _target_obj is None and _target_obj.get_vtk_img():
+                self.SELECTED_SLICES[_target_obj] = max(_values) + 1
+        else:
+            _values = list(self.SELECTED_SLICES.values())
+            _target_id = 0 if len(_values) == 0 else max(_values) + 1
+            self.SELECTED_SLICES[slice_obj] = _target_id
 
-
-        # # reconnect sig/slot
-        # """
-        # NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.
-        # """
-        # slice_obj.sig_change_slice_num.disconnect()
-        # slice_obj.sig_change_wwl.disconnect()
-        # slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
-        # slice_obj.sig_change_wwl.connect(self.on_change_wwl)
-        # return self.SLICES.index(slice_obj)
-
-        return None
+        # reconnect sig/slot
+        """
+        NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.
+        """
+        slice_obj.sig_change_slice_num.disconnect()
+        slice_obj.sig_change_wwl.disconnect()
+        slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
+        slice_obj.sig_change_wwl.connect(self.on_change_wwl)
+        return _target_id
 
     def refresh_status_item(self, layout_idx):
         if not layout_idx in list(self.SELECTED_SLICES.values()):
@@ -184,14 +177,14 @@ class SliceViewManager(QObject):
             return _new_idx
 
     def get_slice_obj(self, study_uid, series_uid):
-        for _slice, _layout_id in enumerate(self.ALL_SLICES[study_uid]).items():
+        for _slice, _layout_id in self.ALL_SLICES[study_uid].items():
             _dcm_info = _slice.get_dcm_info()
             if _slice.get_vtk_img() is None:
                 continue
             _study_uid = _dcm_info['study_uid']
             _series_uid = _dcm_info['series_uid']
             if study_uid == _study_uid and series_uid == _series_uid:
-                return s
+                return _slice
         return None
 
     def select_study(self, study_uid):

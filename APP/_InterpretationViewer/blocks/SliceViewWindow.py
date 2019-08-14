@@ -283,18 +283,26 @@ class SliceViewWindow(QObject):
         return -1
 
     def insert_slice_obj(self, slice_obj, next_id):
+        # get metadata
         patient_info = slice_obj.get_patient_info()
         if not patient_info:
             return False
         dcm_info = slice_obj.get_dcm_info()
         if not dcm_info:
             return False
-        self._appendStudy(patient_info, dcm_info['study_uid'])
-        self._appendThumbnail(patient_info, dcm_info['study_uid'], dcm_info['series_uid'])
-        self.set_vtk_img_from_slice_obj(slice_obj, next_id)
-        self.set_patient_info(patient_info, next_id)
-        # busy check
-        self.busy_check()
+
+        # insert slice obj to mgr's slices dict
+        layout_id = self._mgr.insert_slice_obj(slice_obj, next_id)
+        if layout_id == -1:
+            return False
+
+        # set vtk & set metadata
+        self.set_vtk_img_from_slice_obj(slice_obj, layout_id)
+        self.set_metadata(patient_info, dcm_info, layout_id)
+
+        # select slices from study_uid
+        self.select_study(dcm_info['study_uid'])
+
         return True
 
     def get_slice_obj(self, study_uid, series_uid):
@@ -384,25 +392,20 @@ class SliceViewWindow(QObject):
 
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
-                        if layout_cnt > i:
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(None)
-                            _item.clear()
-                            waiting_list.append(s)
-                        else:
-                            waiting_list.append(s)
+                        _item = self.repeater_imgholder.itemAt(i)
+                        _item = _item.childItems()[1] if _item else None
+                        waiting_list.append([s, _item])
                         break
                     elif series_uid is None:
-                        if layout_cnt > i:
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(None)
-                            _item.clear()
-                            waiting_list.append(s)
-                        else:
-                            waiting_list.append(s)
-        for s in waiting_list:
-            self._mgr.SELECTED_SLICES.pop(s)
-            del s
+                        _item = self.repeater_imgholder.itemAt(i)
+                        _item = _item.childItems()[1] if _item else None
+                        waiting_list.append([s, _item])
+        for _slice, _item in waiting_list:
+            self._mgr.SELECTED_SLICES.pop(_slice)
+            del _slice
+            if _item:
+                _item.set_vtk(None)
+                _item.clear()
         waiting_list.clear()
 
         # 4. force garbage collector!!!
@@ -425,7 +428,6 @@ class SliceViewWindow(QObject):
             self.topbar_study_item.removeStudy(study_uid)
 
         # 3. release imageholder & release slice(vtk_img) - vtk part & clear qml items
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         waiting_list = []
         for s, i in self._mgr.SELECTED_SLICES.items():
             dcm_info = s.get_dcm_info()
@@ -438,29 +440,21 @@ class SliceViewWindow(QObject):
 
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
-                        if layout_cnt > i:
-                            s.reset()
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(None)
-                            _item.clear()
-                            waiting_list.append(s)
-                        else:
-                            s.reset()
-                            waiting_list.append(s)
+                        _item = self.repeater_imgholder.itemAt(i)
+                        _item = _item.childItems()[1] if _item else None
+                        waiting_list.append([s, _item])
                         break
                     elif series_uid is None:
-                        if layout_cnt > i:
-                            s.reset()
-                            _item = self.repeater_imgholder.itemAt(i).childItems()[1]
-                            _item.set_vtk(None)
-                            _item.clear()
-                            waiting_list.append(s)
-                        else:
-                            s.reset()
-                            waiting_list.append(s)
-        for s in waiting_list:
-            self._mgr.SELECTED_SLICES.pop(s)
-            del s
+                        _item = self.repeater_imgholder.itemAt(i)
+                        _item = _item.childItems()[1] if _item else None
+                        waiting_list.append([s, _item])
+        for _slice, _item in waiting_list:
+            self._mgr.SELECTED_SLICES.pop(_slice)
+            _slice.reset()
+            del _slice
+            if _item:
+                _item.set_vtk(None)
+                _item.clear()
         waiting_list.clear()
 
         # 4. force garbage collector!!!
@@ -565,15 +559,11 @@ class SliceViewWindow(QObject):
         self._mgr.select_study(_study_uid)
 
         # 3. set vtk and info & set thumbnails & refresh items
-        # clear image holder
-        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
-        for _i in range(layout_cnt):
-            _item = self.repeater_imgholder.itemAt(_i)
-            if _item:
-                _item.childItems()[1].set_vtk(None)
-                _item.childItems()[1].clear()
         # set
+        waiting_list = []
         for _s, _i in self._mgr.SELECTED_SLICES.items():
+            # append layout_idx
+            waiting_list.append(_i)
             # get imgholder and set slice
             _item = self.repeater_imgholder.itemAt(_i)
             if _item:
@@ -585,6 +575,16 @@ class SliceViewWindow(QObject):
             # refresh qml text items (patient id, name, age, sex ...)
             self.refresh_item(_i)
             self.append_study_series_model(_patient_info, _dcm_info['study_uid'], _dcm_info['series_uid'])
+        # clear image holder
+        layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+        for _i in range(layout_cnt):
+            if _i in waiting_list:
+                continue
+            _item = self.repeater_imgholder.itemAt(_i)
+            if _item:
+                _item.childItems()[1].set_vtk(None)
+                _item.childItems()[1].clear()
+        waiting_list.clear()
 
         # get study item
         _study_item = self.topbar_study_item.getItem(_study_uid)

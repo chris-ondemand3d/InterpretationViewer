@@ -189,6 +189,7 @@ Item {
           sliceview_topbar_thumbnail.sigHighlight(model.study_uid, model.series_uid, false);
           sliceview_topbar_thumbnail.sigReleaseDummyThumbnail();
           thumbnail_item.highlight = false;
+          img_sc_dummythumbnail.set_default_mode();
 
           if ((_obj == null) || (_obj.objectName != 'img_holder_root')) {
             sliceview_topbar_thumbnail.sigDropToOtherApp(mouse_thumbnail.previousGlobalPosition, model.study_uid, model.series_uid);

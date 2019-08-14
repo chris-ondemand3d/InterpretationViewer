@@ -118,11 +118,9 @@ class slice_app(CyQQuickView):
         _id = None
         if global_mouse:
             _id = self.slice_win.get_layout_id(global_mouse)
-        next_id = self.slice_mgr.insert_slice_obj(slice_obj, _id)
-
-        if not self.slice_win.insert_slice_obj(slice_obj, next_id):
+        if not self.slice_win.insert_slice_obj(slice_obj, _id):
             return False
-        self.slice_win.refresh_item(next_id)
+        self.slice_win.refresh_item(_id)
         return True
 
     def remove_slice_obj(self, slice_obj):
