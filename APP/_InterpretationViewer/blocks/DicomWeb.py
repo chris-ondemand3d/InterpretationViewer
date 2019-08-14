@@ -2,7 +2,7 @@ import requests
 import json
 import numpy as np
 
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 
 
 TAG_InstanceNumber = '00200013'
@@ -37,10 +37,10 @@ TAG_WindowCenter = '00281050'
 TAG_WindowWidth = '00281051'
 
 # home
-HOST_URL = "http://192.168.200.159:44301"
+# HOST_URL = "http://192.168.200.159:44301"
 
 # sang-am url
-# HOST_URL = "http://192.168.50.14:44301"
+HOST_URL = "http://192.168.50.14:44301"
 
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
@@ -70,6 +70,8 @@ class cyDicomWeb(object):
         self.wadors_prefix = wadors_prefix
 
     def reset(self):
+        if hasattr(self, '_stop'):
+            del self._stop
         if hasattr(self, 'study_uid'):
             del self.study_uid
         if hasattr(self, 'series_uid'):
@@ -98,6 +100,16 @@ class cyDicomWeb(object):
             del self.thickness
         if hasattr(self, 'origin'):
             del self.origin
+
+    @pyqtProperty(bool)
+    def stop(self):
+        if hasattr(self, '_stop'):
+            return self._stop
+        return False
+
+    @stop.setter
+    def stop(self, stop):
+        self._stop = stop
 
     def query_studies(self, conditions=None):
         return self.requests_studies(conditions)

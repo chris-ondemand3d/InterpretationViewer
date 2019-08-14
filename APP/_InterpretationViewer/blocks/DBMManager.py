@@ -152,10 +152,12 @@ class DBMManager(QObject):
 
     def retrieve_dicom(self, study_uid, series_uid):
 
-        if not study_uid in self.DICOM_WEB:
-            dicom_web = self.DICOM_WEB[study_uid] = dw.cyDicomWeb()
+        # TODO
+        dicom_web = dw.cyDicomWeb()
+        if study_uid in self.DICOM_WEB:
+            self.DICOM_WEB[study_uid][series_uid] = dicom_web
         else:
-            dicom_web = self.DICOM_WEB[study_uid]
+            self.DICOM_WEB[study_uid] = {series_uid: dicom_web}
 
         # if hasattr(self, 'vtk_img_narray'):
         #     del self.vtk_img_narray
@@ -164,7 +166,6 @@ class DBMManager(QObject):
         #     self.vtk_img.ReleaseData()
         #     del self.vtk_img
         #     gc.collect()
-
 
         dicom_web.query_metadata(study_uid, series_uid)
         dim = dicom_web.get_dimensions()
@@ -255,8 +256,9 @@ class DBMManager(QObject):
 
             processes_cnt = 4
             uid_infos = [[url + "instances/%s/frames/1" % uid, header, i, dicom_web.bits, rescale_params] for i, uid in enumerate(uids)]
-            a = len(uid_infos) // processes_cnt
-            b = len(uid_infos) % processes_cnt
+            total_cnt = len(uid_infos)
+            a = total_cnt // processes_cnt
+            b = total_cnt % processes_cnt
 
             with multiprocessing.Pool(processes=processes_cnt) as pool:
                 pool.daemon = True
@@ -282,15 +284,23 @@ class DBMManager(QObject):
                     _i = i * processes_cnt
                     _pool = pool.map_async(dw.requests_buf, uid_infos[_i:_i+processes_cnt], callback=_update)
                     _pool.wait()
+                    print("*** Downloading.....................!!! [%d/%d]***"%(_i+processes_cnt, total_cnt))
+                    if _dicom_web.stop:
+                        pool.close()
+                        pool.join()
+                        gc.collect()
+                        print("*** Forced Termination!!! ***")
+                        return
                 _i = a * processes_cnt
                 _pool = pool.map_async(dw.requests_buf, uid_infos[_i:_i+b], callback=_update)
                 _pool.wait()
+                print("*** Downloading.....................!!! [%d/%d]***" % (_i+b, total_cnt))
                 pool.close()
                 pool.join()
                 gc.collect()
 
         # finished fn
-        def _on_finished(_worker):
+        def _on_finished(_worker, _study_uid, _series_uid):
             print("DICOM Files had been loaded!! :)")
             for _w in self.WORKERS:
                 if _w[1].isRunning():
@@ -299,14 +309,22 @@ class DBMManager(QObject):
                 del _w
             vtk_img.GetFieldData().RemoveArray('BUSY')
             self._win.send_message.emit(["slice::busy_check", None])
+            # delete dicom_web
+            _w = self.DICOM_WEB[_study_uid].pop(_series_uid)
+            _w.reset()
+            del _w
+            if len(self.DICOM_WEB[_study_uid]) == 0:
+                self.DICOM_WEB.pop(_study_uid)
 
         # do
         if not hasattr(self, 'WORKERS'):
             self.WORKERS = []
         W0 = WorkerThread.create_worker(0)
         self.WORKERS.append(W0)
-        # NOTE
-        _dicom_web = copy.deepcopy(self.DICOM_WEB[study_uid])
-        WorkerThread.start_worker(*W0, _do, _dicom_web,
-                                   _finished_func=lambda: _on_finished(W0))
+        WorkerThread.start_worker(*W0, _do, dicom_web,
+                                   _finished_func=lambda: _on_finished(W0, study_uid, series_uid))
         return vtk_img, wwl
+
+    def release_dicom_web(self, study_uid, series_uid):
+        if study_uid in self.DICOM_WEB and series_uid in self.DICOM_WEB[study_uid]:
+            self.DICOM_WEB[study_uid][series_uid].stop = True

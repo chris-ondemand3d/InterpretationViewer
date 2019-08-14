@@ -53,6 +53,9 @@ class dbm_app(CyQQuickView):
         print("event filter (dbm_app):: ", obj, event)
         return super().eventFilter(obj, event)
 
+    def release_downloader(self, study_uid, series_uid):
+        self.dbm_mgr.release_dicom_web(study_uid, series_uid)
+
 
 class slice_app(CyQQuickView):
 
@@ -158,6 +161,10 @@ def onClose(event):
 
 def onMsg(msg):
     _msg, _params = msg
+
+    if _msg == 'dbm::stop':
+        _study_uid, _series_uid = _params
+        app_dbm.release_downloader(_study_uid, _series_uid)
 
     if _msg == 'slice::init_vtk':
         _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _open_type = _params

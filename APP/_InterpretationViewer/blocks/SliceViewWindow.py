@@ -433,6 +433,9 @@ class SliceViewWindow(QObject):
                 _study_uid = dcm_info['study_uid']
                 _series_uid = dcm_info['series_uid']
 
+                # stop dicom web
+                self._win.send_message.emit(['dbm::stop', [_study_uid, _series_uid]])
+
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
                         if layout_cnt > i:
@@ -523,9 +526,9 @@ class SliceViewWindow(QObject):
                 _series_uid = dcm_info['series_uid']
                 if study_uid == _study_uid and series_uid == _series_uid:
                     # get imgholder's titlebar and set highlight
-                    _item = self.repeater_imgholder.itemAt(i).childItems()[0]
+                    _item = self.repeater_imgholder.itemAt(i)
                     if _item:
-                        _item.setProperty('highlight', on)
+                        _item.childItems()[0].setProperty('highlight', on)
 
     def on_release_dummy_thumbnail(self):
         self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
