@@ -143,7 +143,7 @@ Item {
       visible: true
     }
     TableViewColumn{
-      width : 130
+      width : 170
       role: "DateTime"
       title: "DateTime"
       movable: false

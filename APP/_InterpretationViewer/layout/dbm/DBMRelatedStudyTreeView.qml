@@ -15,7 +15,7 @@ Item {
   id : related_study_treeview_item
 
   // Custom ItemDelegate
-  DBMTreeViewItemDelegate{
+  DBMTreeViewItemDelegate2{
     id: my_treeview_itemdelegate
   }
   // Custom HeaderDelegate
@@ -122,7 +122,7 @@ Item {
       visible: true
     }
     TableViewColumn{
-      width : 130
+      width : 170
       role: "DateTime"
       title: "DateTime"
       movable: false

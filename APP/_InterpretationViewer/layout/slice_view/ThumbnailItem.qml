@@ -87,7 +87,7 @@ Item {
       clip: true
       color: "white"
       font.bold: true
-      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 1
       verticalAlignment: Text.AlignVCenter
     }
 
@@ -106,9 +106,9 @@ Item {
       clip: true
       color: "white"
       font.bold: true
-      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 3
       verticalAlignment: Text.AlignVCenter
-      //horizontalAlignment: Text.AlignHCenter
+      horizontalAlignment: Text.AlignHCenter
     }
 
     Text {
@@ -126,7 +126,7 @@ Item {
       clip: true
       color: "white"
       font.bold: true
-      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 3
       verticalAlignment: Text.AlignVCenter
       horizontalAlignment: Text.AlignHCenter
     }

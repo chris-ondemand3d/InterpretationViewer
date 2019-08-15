@@ -167,7 +167,7 @@ Item {
     var _study_uid = _model.study_uid;
     var _date = _model.date;
 
-    txt_study.text = ('N : %1\nD : %2').arg(_patient_name).arg(_date);
+    txt_study.text = ('%1\n%2').arg(_patient_name).arg(_date);
     //txt_thumbnail_patient_name.text = _patient_name;
     //txt_thumbnail_date.text = _date;
 

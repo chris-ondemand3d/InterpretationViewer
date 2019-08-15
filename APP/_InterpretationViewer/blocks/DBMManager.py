@@ -3,6 +3,8 @@ import os, sys
 import copy
 import collections
 
+from datetime import datetime
+
 import numpy as np
 import vtk
 from vtk.util import numpy_support
@@ -127,7 +129,15 @@ class DBMManager(QObject):
             _study['PatientAge'] = _get(_x, dw.TAG_PatientAge)
             _study['AccessionNumber'] = _get(_x, dw.TAG_AccessionNumber)
             _study['BodyPartExamined'] = _get(_x, dw.TAG_BodyPartExamined)
-            _study['StudyDateTime'] = _get(_x, dw.TAG_StudyDate)
+            _date = _get(_x, dw.TAG_StudyDate)
+            _time = _get(_x, dw.TAG_StudyTime)
+            _datetime = "%s%s" % (_date if _date else "", _time if _time else "")
+            try:
+                _datetime = datetime.strptime(_datetime, "%Y%m%d%H%M%S").timetuple()
+                _study['StudyDateTime'] = "%d-%d-%d %d:%d:%d"%(_datetime.tm_year, _datetime.tm_mon, _datetime.tm_mday,
+                                                               _datetime.tm_hour, _datetime.tm_min, _datetime.tm_sec)
+            except ValueError:
+                _study['StudyDateTime'] = _datetime
             _study['StudyDescription'] = _get(_x, dw.TAG_StudyDescription)
             _study['Comments'] = ''
             _studies[_i] = _study
@@ -141,7 +151,15 @@ class DBMManager(QObject):
                 _series['SeriesInstanceUID'] = _get(_y, dw.TAG_SeriesInstanceUID)
                 _series['Series_Key'] = "1004" # TODO
                 _series['SeriesNumber'] = _get(_y, dw.TAG_SeriesNumber)
-                _series['SeriesDateTime'] = _get(_y, dw.TAG_SeriesDate)
+                _date = _get(_y, dw.TAG_SeriesDate)
+                _time = _get(_y, dw.TAG_SeriesTime)
+                _datetime = "%s%s" % (_date if _date else "", _time if _time else "")
+                try:
+                    _datetime = datetime.strptime(_datetime, "%Y%m%d%H%M%S").timetuple()
+                    _series['SeriesDateTime'] = "%d-%d-%d %d:%d:%d"%(_datetime.tm_year, _datetime.tm_mon, _datetime.tm_mday,
+                                                                     _datetime.tm_hour, _datetime.tm_min, _datetime.tm_sec)
+                except ValueError:
+                    _series['SeriesDateTime'] = _datetime
                 _series['SeriesDescription'] = _get(_y, dw.TAG_SeriesDescription)
                 _series['NumberOfImages'] = _get(_y, dw.TAG_NumberofSeriesRelatedInstances)
                 _series['Modality'] = _get(_y, dw.TAG_Modality)
