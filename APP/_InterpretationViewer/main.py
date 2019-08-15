@@ -200,10 +200,15 @@ def onMsg(msg):
         app_dbm.release_downloader(_study_uid, _series_uid)
 
     if _msg == 'slice::init_vtk':
-        _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _open_type = _params
-        next_id = app_slice.get_next_layout_id2(_study_uid)
-        if next_id >= 0:
-            app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+        _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _target_app_id = _params
+        if _target_app_id == 0:
+            next_id = app_slice.get_next_layout_id2(_study_uid)
+            if next_id >= 0:
+                app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+        elif _target_app_id == 1:
+            next_id = app_slice2.get_next_layout_id2(_study_uid)
+            if next_id >= 0:
+                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
 
     elif _msg == 'slice::busy_check':
         app_slice.busy_check()

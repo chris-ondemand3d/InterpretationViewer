@@ -31,7 +31,21 @@ Item {
     anchors.fill: parent
     color: '#404040'
     //color: '#252528'
+
+    Text {
+      width: parent.width
+      height: parent.height
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+      text: "S    T    U    D    Y"
+      color: 'lightgray'
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize + 10
+      font.bold: true
+      opacity: 0.1
+    }
+
   }
+
 
   Rectangle {
     id: title_sc_topbar_panel
@@ -39,8 +53,10 @@ Item {
     anchors.left: parent.left
     anchors.top: parent.top
 
-    width: 30
+    width: 35
     height: parent.height
+
+    visible: false
 
     Text {
       anchors.fill: parent

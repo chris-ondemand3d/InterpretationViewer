@@ -113,10 +113,12 @@ class DBMWindow(QObject):
         indices = indices.toVariant()
         for index in indices:
             model = index.internalPointer()
-            if cmd == 'view':
-                self.load_data_from_model(model)
+            if cmd == 'view(1)':
+                self.load_data_from_model(model, 0)
+            if cmd == 'view(2)':
+                self.load_data_from_model(model, 1)
 
-    def load_data_from_model(self, selected_model):
+    def load_data_from_model(self, selected_model, target_app_id=0):
 
         if selected_model.parent() is None:
             """
@@ -152,7 +154,7 @@ class DBMWindow(QObject):
                 series_uid = series.itemData['SeriesInstanceUID']
                 vtk_img, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
                 self._win.send_message.emit(['slice::init_vtk',
-                                             (vtk_img, wwl, patient_info, study_uid, series_uid, 'append')])
+                                             (vtk_img, wwl, patient_info, study_uid, series_uid, target_app_id)])
         else:
             """
             case of series
@@ -176,4 +178,4 @@ class DBMWindow(QObject):
             series_uid = selected_model.itemData['SeriesInstanceUID']
             vtk_img, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
             self._win.send_message.emit(['slice::init_vtk',
-                                         (vtk_img, wwl, patient_info, study_uid, series_uid, 'new')])
+                                         (vtk_img, wwl, patient_info, study_uid, series_uid, target_app_id)])

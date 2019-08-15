@@ -37,10 +37,10 @@ Component {
       id: menuModel
 
       ListElement {
-        menuType: "view"
+        menuType: "view(1)"
       }
       ListElement {
-        menuType: "append"
+        menuType: "view(2)"
       }
       ListElement {
         menuType: "..."

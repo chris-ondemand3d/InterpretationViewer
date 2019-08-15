@@ -306,6 +306,7 @@ class DBMManager(QObject):
                 if _w[1].isRunning():
                     continue
                 self.WORKERS.remove(_w)
+                _w[1].quit()
                 del _w
             vtk_img.GetFieldData().RemoveArray('BUSY')
             self._win.send_message.emit(["slice::busy_check", None])

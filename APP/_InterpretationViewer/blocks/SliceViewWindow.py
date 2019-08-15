@@ -36,6 +36,10 @@ class SliceViewWindow(QObject):
 
         self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
 
+        self.menu_common_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_common')
+        self.menu_measure_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_measure')
+
+
         if not hasattr(self, '_mgr'):
             return
 
@@ -59,6 +63,9 @@ class SliceViewWindow(QObject):
         self.topbar_thumbnail_item.sigClose.connect(self.on_close_data)
         self.topbar_thumbnail_item.sigPositionChanged_Global.connect(self.on_thumbnail_position_changed)
         self.topbar_thumbnail_item.sigDropToOtherApp.connect(self.on_dropped_thumbnail_to_other_app)
+        # menu panel
+        self.menu_common_item.sigSelected.connect(self.on_selected_menu)
+        self.menu_measure_item.sigSelected.connect(self.on_selected_menu)
 
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         for i in range(layout_cnt):
@@ -617,3 +624,26 @@ class SliceViewWindow(QObject):
 
         # garbage collect
         gc.collect()
+
+    def on_selected_menu(self, name, selected):
+
+        print("selected button :: ", self.sender().objectName(), name, selected)
+
+        if name == "select":
+            pass
+        elif name == "pan":
+            pass
+        elif name == "zoom":
+            pass
+        elif name == "fit":
+            pass
+        elif name == "windowing":
+            pass
+        elif name == "auto_windowing":
+            pass
+        elif name == "key_image":
+            pass
+        elif name == "report":
+            pass
+
+        self._mgr.on_selected_menu(name, selected)

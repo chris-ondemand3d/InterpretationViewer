@@ -43,11 +43,9 @@ class Slice(I2G_IMG_HOLDER):
     def initialize(self):
         # self.init_sub_renderer([0.75, 0, 1, 0.3])
 
-        ISTYLES = cyCafe.cyVtkInteractorStyles()
-        # istyle = ISTYLES.get_vtk_interactor_style_image()
-        istyle = ISTYLES.get_vtk_interactor_style_image(False, 0)
-        # istyle = ISTYLES.get_vtk_interactor_style_volume_3d()
-        # istyle = vtk.vtkInteractorStyleUser()
+        # NOTE !!!
+        self.cyistyle_wrapper = cyCafe.cyVtkInteractorStyles()
+        istyle = self.cyistyle_wrapper.get_interactor("image")
         istyle.AddObserver('MouseWheelForwardEvent', self.on_mouse_wheel)
         istyle.AddObserver('MouseWheelBackwardEvent', self.on_mouse_wheel)
         istyle.AddObserver('MouseMoveEvent', self.on_mouse_move)
@@ -316,20 +314,10 @@ class Slice(I2G_IMG_HOLDER):
         x, y = i.GetEventPosition()
         prev_x, prev_y = i.GetLastEventPosition()
 
-        # if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
-        #     self.need_to_refresh_all = True
-
-        if self.l_btn_pressed:
-            pass
-
-        elif self.r_btn_pressed:
-            if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
-                ww, wl = self.get_windowing()
-                self.sig_change_wwl.emit(ww, wl)
-        else:
-            pass
-
-        self.refresh()
+        if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
+            ww, wl = self.get_windowing()
+            self.sig_change_wwl.emit(ww, wl)
+            self.refresh()
 
     def on_mouse_press_normal(self, _rwi, _event):
         i = _rwi.GetInteractor()
@@ -573,3 +561,18 @@ class Slice(I2G_IMG_HOLDER):
 
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)
+
+    def set_interactor_mode(self, mode):
+        assert hasattr(self, 'cyistyle_wrapper'), "!!!"
+        self.cyistyle_wrapper.set_state(mode)
+
+    def fit_img_to_screen(self):
+        _o, _n = self.get_plane()
+        d = self.vtk_img.GetDimensions()
+        _scale, _axis = (CAM_SCALE_NORMAL_X, 'x') if d[0] / d[1] >= 1.3 else (CAM_SCALE_NORMAL, 'y')
+        self.set_camera_scale(_scale, _axis)
+        cam = self.ren.GetActiveCamera()
+        cam_pos = np.array(_o) + (np.array(_n) * 100)
+        cam.SetFocalPoint(_o)
+        cam.SetPosition(cam_pos)
+        self.refresh()

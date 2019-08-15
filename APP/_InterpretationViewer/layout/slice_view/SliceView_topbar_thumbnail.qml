@@ -36,6 +36,19 @@ Item {
   Rectangle{
     anchors.fill: parent
     color: '#303030'
+
+    Text {
+      width: parent.width
+      height: parent.height
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+      text: "S    E    R    I    E    S"
+      color: 'lightgray'
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize + 10
+      font.bold: true
+      opacity: 0.1
+    }
+
   }
 
   Rectangle {
@@ -44,8 +57,10 @@ Item {
     anchors.left: parent.left
     anchors.top: parent.top
 
-    width: 30
+    width: 35
     height: parent.height
+
+    visible: false
 
     Text {
       anchors.fill: parent

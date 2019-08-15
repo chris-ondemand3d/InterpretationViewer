@@ -20,6 +20,23 @@ Item {
     color: 'darkgray'
   }
 
+  Rectangle{
+    width: 35
+    height: sliceview_topbar_panel.height + sliceview_topbar_thumbnail.height
+    color: CyStyle.dbmwindow.data_infomation_bg_color
+    z: 1
+
+    Text {
+      anchors.fill: parent
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+      text: "D\nA\nT\nA"
+      color: 'lightgray'
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      font.bold: true
+    }
+  }
+
   // Topbar Panel
   SliceView_topbar_panel {
     id: sliceview_topbar_panel
@@ -40,7 +57,6 @@ Item {
     anchors.left: parent.left
     anchors.top: sliceview_topbar_panel.bottom
     anchors.right: parent.right
-    z:10
   }
 
   // Menu Panel
@@ -48,7 +64,7 @@ Item {
     id: sliceview_menu_panel
     objectName: "sliceview_menu_panel"
 
-    width: 66
+    width: 70
 
     anchors.left: parent.left
     anchors.top: sliceview_topbar_thumbnail.bottom

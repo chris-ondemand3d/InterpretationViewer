@@ -237,3 +237,31 @@ class SliceViewManager(QObject):
     def on_change_wwl(self, ww, wl):
         if self.sender() in self.SELECTED_SLICES:
             self.sig_change_wwl.emit(ww, wl, self.SELECTED_SLICES[self.sender()])
+
+    def on_selected_menu(self, name, selected):
+
+        if name == "select":
+            _mode = 'none' if selected is True else 'none'
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_interactor_mode(_mode)
+        elif name == "pan":
+            _mode = 'pan' if selected is True else 'none'
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_interactor_mode(_mode)
+        elif name == "zoom":
+            _mode = 'zoom' if selected is True else 'none'
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_interactor_mode(_mode)
+        elif name == "fit":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.fit_img_to_screen()
+        elif name == "windowing":
+            _mode = 'windowing' if selected is True else 'none'
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_interactor_mode(_mode)
+        elif name == "auto_windowing":
+            pass
+        elif name == "key_image":
+            pass
+        elif name == "report":
+            pass
