@@ -95,6 +95,9 @@ class Slice(I2G_IMG_HOLDER):
         if hasattr(self, 'image_filter_type'):
             del self.image_filter_type
 
+        if hasattr(self, 'initial_wwl'):
+            del self.initial_wwl
+
         self.l_btn_pressed = False
         self.r_btn_pressed = False
 
@@ -379,7 +382,6 @@ class Slice(I2G_IMG_HOLDER):
             return
         self.sig_change_slice_num.emit(slice_num)
         self.set_plane(o, n)
-        self.refresh()
 
     def refresh(self):
         super().refresh()

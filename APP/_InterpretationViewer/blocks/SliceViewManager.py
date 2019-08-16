@@ -84,6 +84,7 @@ class SliceViewManager(QObject):
             wwl = [2000, 4000]
 
         for _s, _i in self.SELECTED_SLICES.items():
+            _s.initial_wwl = wwl
             if _i == layout_idx:
                 p = vtk.vtkImageProperty()
                 p.SetColorWindow(wwl[0])
@@ -207,6 +208,25 @@ class SliceViewManager(QObject):
             self.SELECTED_SLICES = self.ALL_SLICES[study_uid]
             return True
         return False
+
+    def move_selected_slice(self, value, indices):
+        _keys = list(self.SELECTED_SLICES.keys())
+        _values = list(self.SELECTED_SLICES.values())
+        for _i in indices:
+            try:
+                _s = _keys[_values.index(_i)]
+            except IndexError:
+                continue
+            _s.move_slice(value)
+            _s.refresh()
+
+    def reset_wwl(self):
+        for _s, _i in self.SELECTED_SLICES.items():
+            if hasattr(_s, 'initial_wwl'):
+                _wwl = _s.initial_wwl
+                _s.set_windowing(*_wwl)
+                self.sig_change_wwl.emit(_wwl[0], _wwl[1], _i)
+            _s.refresh()
 
     def read_dcm_test(self):
         # # DCM Read

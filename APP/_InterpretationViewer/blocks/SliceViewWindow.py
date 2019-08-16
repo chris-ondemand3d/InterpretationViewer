@@ -361,14 +361,7 @@ class SliceViewWindow(QObject):
             except ValueError:
                 pass
 
-        _keys = list(self._mgr.SELECTED_SLICES.keys())
-        _values = list(self._mgr.SELECTED_SLICES.values())
-        for _i in indices:
-            try:
-                _s = _keys[_values.index(_i)]
-            except IndexError:
-                continue
-            _s.move_slice(value)
+        self._mgr.move_selected_slice(value, indices)
 
     @pyqtSlot(object, object)
     def on_changed_slice(self, value, layout_id):
@@ -406,6 +399,7 @@ class SliceViewWindow(QObject):
         if layout_id in list(self._mgr.SELECTED_SLICES.values()):
             s = list(self._mgr.SELECTED_SLICES.keys())[list(self._mgr.SELECTED_SLICES.values()).index(layout_id)]
             s.set_thickness(thickness)
+            s.refresh()
 
     @pyqtSlot(object, object)
     def on_change_filter(self, img_filter, layout_id):
@@ -681,6 +675,10 @@ class SliceViewWindow(QObject):
         elif name == "windowing":
             pass
         elif name == "auto_windowing":
+            pass
+        elif name == 'reset_wwl':
+            self._mgr.reset_wwl()
+        elif name == 'reset_all':
             pass
         elif name == "key_image":
             pass
