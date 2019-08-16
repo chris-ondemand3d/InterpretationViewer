@@ -128,6 +128,9 @@ class SliceViewWindow(QObject):
         self._mgr.init_vtk(_vtk_img, _wwl, next_id)
         self.select_study(study_uid)
 
+        #
+        self._mgr.fit_screen_all()
+
     # will be deprecated
     def get_next_layout_id(self, force=False):
 

@@ -18,8 +18,6 @@ import platform
 IS_OSX = (platform.system() == 'Darwin')
 
 CY_VTK_STATE_LOCK = 9919
-CAM_SCALE_NORMAL = 0.50
-CAM_SCALE_NORMAL_X = 0.4
 
 
 """ MouseEvent Mode """
@@ -138,28 +136,19 @@ class Slice(I2G_IMG_HOLDER):
         c = self.vtk_img.GetCenter()
 
         plane_pos = [c[0], c[1], o[2]]
-        _scale, _axis = (CAM_SCALE_NORMAL_X, 'x') if d[0] / d[1] >= 1.3 else (CAM_SCALE_NORMAL, 'y')
-        _params = [plane_pos, np.array([0, 0, -1]), np.array([0, -1, 0]), _scale, _axis]
+        _params = [plane_pos, np.array([0, 0, -1]), np.array([0, -1, 0])]
 
         # set plane and camera
         self.set_plane(_params[0], _params[1], _params[2], _camera_fit_type=1)
-        self.set_camera_scale(_params[3], _params[4])
+        self.fit_img_to_screen()
 
     def get_vtk_img(self):
         return self.vtk_img if hasattr(self, 'vtk_img') else None
 
-    def set_camera_scale(self, scale, axis='y'):
-        axis = axis.upper()
-        if axis == 'X':
-            B = self.slice_img.get_actor().GetMaxXBound() - self.slice_img.get_actor().GetMinXBound()
-        elif axis == 'Y':
-            B = self.slice_img.get_actor().GetMaxYBound() - self.slice_img.get_actor().GetMinYBound()
-        else:
-            B = self.slice_img.get_actor().GetMaxYBound() - self.slice_img.get_actor().GetMinYBound()
+    def set_camera_scale(self, scale):
         cam = self.ren.GetActiveCamera()
         cam.ParallelProjectionOn()
-        cameraResetParallelScale = B * scale
-        cam.SetParallelScale(cameraResetParallelScale)
+        cam.SetParallelScale(scale)
 
     def set_actor_property(self, img_prop):
         assert self.slice_img
@@ -396,15 +385,6 @@ class Slice(I2G_IMG_HOLDER):
         #     self.EventMode = ENUM_EVENT.E_MEASURE_ANGLE
         # else:
         #     self.EventMode = ENUM_EVENT.E_NORMAL
-        #     self.visible_actor('dsi', True) # TODO
-        #     self.remove_dsi_implant()
-        #     if self.slice_type == 'cross':
-        #         self.set_camera_scale(CAM_SCALE_NORMAL_THREE[0])
-        #     elif self.slice_type == 'parallel':
-        #         self.set_camera_scale(CAM_SCALE_NORMAL_THREE[1])
-        #     elif self.slice_type == 'axial':
-        #         self.arch_line.set_visible(True)
-        #         self.set_camera_scale(CAM_SCALE_NORMAL_THREE[2])
         pass
 
     def set_measure_mode(self, _mode):
@@ -588,10 +568,19 @@ class Slice(I2G_IMG_HOLDER):
     def fit_img_to_screen(self):
         _o, _n = self.get_plane()
         d = self.vtk_img.GetDimensions()
-        _scale, _axis = (CAM_SCALE_NORMAL_X, 'x') if d[0] / d[1] >= 1.3 else (CAM_SCALE_NORMAL, 'y')
-        self.set_camera_scale(_scale, _axis)
+        s = self.vtk_img.GetSpacing()
+        w = self.ren.GetRenderWindow().GetSize()
+
+        ratio_screen = w[0] / w[1]
+        ratio_img = d[0] / d[1]
+
+        if ratio_screen < ratio_img:
+            scale = (w[1] * d[0] / w[0]) * s[0] * 0.5  # dx
+        else:
+            scale = d[1] * s[1] * 0.5  # dy
+
+        self.set_camera_scale(scale)
         cam = self.ren.GetActiveCamera()
         cam_pos = np.array(_o) + (np.array(_n) * 100)
         cam.SetFocalPoint(_o)
         cam.SetPosition(cam_pos)
-        self.refresh()

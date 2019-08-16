@@ -228,6 +228,11 @@ class SliceViewManager(QObject):
                 self.sig_change_wwl.emit(_wwl[0], _wwl[1], _i)
             _s.refresh()
 
+    def fit_screen_all(self):
+        for _s in self.SELECTED_SLICES.keys():
+            _s.fit_img_to_screen()
+            _s.refresh()
+
     def read_dcm_test(self):
         # # DCM Read
         # f = open(dcm[0], 'r')
@@ -282,8 +287,7 @@ class SliceViewManager(QObject):
             for _s in self.SELECTED_SLICES.keys():
                 _s.set_interactor_mode(_mode)
         elif name == "fit":
-            for _s in self.SELECTED_SLICES.keys():
-                _s.fit_img_to_screen()
+            self.fit_screen_all()
         elif name == "windowing":
             _mode = 'windowing' if selected is True else 'none'
             for _s in self.SELECTED_SLICES.keys():
