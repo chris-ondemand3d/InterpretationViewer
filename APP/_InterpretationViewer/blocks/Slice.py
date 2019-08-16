@@ -29,6 +29,7 @@ CAM_SCALE_NORMAL_X = 0.4
 
 class Slice(I2G_IMG_HOLDER):
 
+    sig_changed_slice = pyqtSignal(object)
     sig_change_slice_num = pyqtSignal(object)
     sig_change_wwl = pyqtSignal(object, object)
 
@@ -362,7 +363,23 @@ class Slice(I2G_IMG_HOLDER):
         if slice_num < 0 or slice_num >= src_d[2]: # TODO
             return
         self.sig_change_slice_num.emit(slice_num)
+        self.sig_changed_slice.emit(_interval * _sign)
         self.set_plane(o, n)
+
+    def move_slice(self, value):
+        thickness = self.spacing[2] if hasattr(self, 'spacing') else 0.2
+        o, n = self.get_plane()
+        o = list(np.array(o) + np.array(n) * (thickness * value))
+        # TODO !!!!!!!!!!!!
+        src_d = np.array(self.vtk_img.GetDimensions())
+        src_s = np.array(self.vtk_img.GetSpacing())
+        src_o = np.array(self.vtk_img.GetOrigin())
+        slice_num = int(((o - src_o)[2] / src_s[2]))
+        if slice_num < 0 or slice_num >= src_d[2]:  # TODO
+            return
+        self.sig_change_slice_num.emit(slice_num)
+        self.set_plane(o, n)
+        self.refresh()
 
     def refresh(self):
         super().refresh()

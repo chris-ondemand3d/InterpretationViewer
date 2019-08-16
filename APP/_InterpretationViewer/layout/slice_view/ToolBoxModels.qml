@@ -19,6 +19,10 @@ Item {
     return items_measure;
   }
 
+  function getDicomModel(){
+    return items_dicom;
+  }
+
   // Common
   ListModel {
     id: items_common
@@ -78,26 +82,12 @@ Item {
         selected: false
     }
     ListElement {
-        name: "cross_link"
-        img_src: ""
-        toggle: false
-        selected: false
-    }
-    ListElement {
-        name: "scout_img"
-        img_src: ""
-        toggle: false
-        selected: false
-    }
-    ListElement {
         name: "report"
         img_src: ""
         toggle: false
         selected: false
     }
   }
-
-  // Selection
 
   // Measure
   ListModel {
@@ -139,6 +129,25 @@ Item {
         toggle: true
         selected: false
     }
+  }
+
+  // Dicom
+  ListModel {
+    id: items_dicom
+
+    ListElement {
+        name: "cross_link"
+        img_src: ""
+        toggle: true
+        selected: false
+    }
+    ListElement {
+        name: "scout_img"
+        img_src: ""
+        toggle: false
+        selected: false
+    }
+
   }
 
 }

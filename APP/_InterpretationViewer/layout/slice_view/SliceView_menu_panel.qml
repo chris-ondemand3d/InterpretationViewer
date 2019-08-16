@@ -65,6 +65,7 @@ Item {
       onSigToggleOn: {
         // NOTE be sure to add other toolbox's releaseAll() when adding a new toolbox.
         sliceview_menu_measure.releaseAll();
+        sliceview_menu_dcm.releaseAll();
       }
     }
 
@@ -81,6 +82,24 @@ Item {
       onSigToggleOn: {
         // NOTE be sure to add other toolbox's releaseAll() when adding a new toolbox.
         sliceview_menu_common.releaseAll();
+        sliceview_menu_dcm.releaseAll();
+      }
+    }
+
+    ToolBox {
+      id: sliceview_menu_dcm
+      objectName: "sliceview_menu_dcm"
+
+      Layout.preferredWidth: width
+      Layout.preferredHeight: height
+
+      title: "Dicom"
+      itemModel: toolbox_models.getDicomModel()
+
+      onSigToggleOn: {
+        // NOTE be sure to add other toolbox's releaseAll() when adding a new toolbox.
+        sliceview_menu_common.releaseAll();
+        sliceview_menu_measure.releaseAll();
       }
     }
 

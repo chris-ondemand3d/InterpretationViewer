@@ -2,7 +2,7 @@ import platform
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 from PyQt5.QtCore import Qt, QTimer, QEvent, QPoint, QPointF, QLineF, QVariant, QUrl, QRectF, QSize
-from PyQt5.QtGui import QImage, QScreen, QMouseEvent, QWheelEvent, QHoverEvent, qAlpha, QColor
+from PyQt5.QtGui import QImage, QScreen, QMouseEvent, QWheelEvent, QHoverEvent, qAlpha, QColor, QKeyEvent
 from PyQt5.QtQuick import QQuickView, QQuickItem, QSGSimpleTextureNode
 from PyQt5 import QtQml
 
@@ -34,6 +34,8 @@ class ImageHolder(QQuickItem):
     mouseDoubleClicked = pyqtSignal(QVariant)
     mousePressed = pyqtSignal(QVariant)
     mouseReleased = pyqtSignal(QVariant)
+    keyPressed = pyqtSignal(QVariant, QVariant)
+    keyReleased = pyqtSignal(QVariant, QVariant)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -173,10 +175,12 @@ class ImageHolder(QQuickItem):
         pass
 
     def keyPressEvent(self, e):
+        self.keyPressed.emit(e.key(), e.modifiers())
         if self.vtk_obj:
             self.vtk_obj.keyPressEvent(e)
 
     def keyReleaseEvent(self, e):
+        self.keyReleased.emit(e.key(), e.modifiers())
         if self.vtk_obj:
             self.vtk_obj.keyReleaseEvent(e)
 

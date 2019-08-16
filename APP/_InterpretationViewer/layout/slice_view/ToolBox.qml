@@ -184,4 +184,16 @@ Item {
     }
   }
 
+  function retrySelect()
+  {
+    for (var i=0; i<itemModel.count; i++)
+    {
+      var _model = itemModel.get(i);
+      if (_model.selected)
+      {
+        toolbox_menu_item.sigSelected(_model.name, _model.selected);
+      }
+    }
+  }
+
 }

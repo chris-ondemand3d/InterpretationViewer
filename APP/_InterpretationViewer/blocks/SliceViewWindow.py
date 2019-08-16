@@ -44,12 +44,20 @@ class SliceViewWindow(QObject):
             return
 
         # initialize sig/slot of Python
+
+        self._mgr.sig_changed_slice.connect(self.on_changed_slice) # TODO
+
         self._mgr.sig_change_slice_num.connect(self.on_change_slice_num)
         self._mgr.sig_change_thickness.connect(self.on_change_thickness)
         self._mgr.sig_change_filter.connect(self.on_change_filter)
         self._mgr.sig_change_wwl.connect(self.on_change_wwl)
 
         # initialize sig/slot of QML
+        # keyboard signal
+        self.layout_item.sigKeyPressed.connect(lambda _key, _modifiers:
+                                               self._win.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
+        self.layout_item.sigKeyReleased.connect(lambda _key, _modifiers:
+                                                self._win.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
         # for study
         self.topbar_study_item.sigSelected.connect(self.on_selected_study)
         self.topbar_study_item.sigReleaseDummyThumbnail.connect(self.on_release_dummy_thumbnail)
@@ -66,6 +74,7 @@ class SliceViewWindow(QObject):
         # menu panel
         self.menu_common_item.sigSelected.connect(self.on_selected_menu)
         self.menu_measure_item.sigSelected.connect(self.on_selected_menu)
+        self.menu_common_item.retrySelect()
 
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
         for i in range(layout_cnt):
@@ -98,6 +107,9 @@ class SliceViewWindow(QObject):
 
         if hasattr(self, 'items'):
             _remove(self.items)
+
+    def set_key_event(self, _key, _modifiers):
+        self.layout_item.setKeyInfo(_key, _modifiers)
 
     def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
         _dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}           # TODO
@@ -335,6 +347,35 @@ class SliceViewWindow(QObject):
 
     def get_slice_objs(self, study_uid):
         return self._mgr.get_slice_objs(study_uid)
+
+    def move_selected_slice(self, value, layout_id=None):
+        # 1. get selected items (view) & send wheel event
+        indices = self.layout_item.getSelectedIndices()
+        if indices is None:
+            return
+        indices = indices.toVariant()
+
+        if not layout_id is None:
+            try:
+                indices.remove(layout_id)
+            except ValueError:
+                pass
+
+        _keys = list(self._mgr.SELECTED_SLICES.keys())
+        _values = list(self._mgr.SELECTED_SLICES.values())
+        for _i in indices:
+            try:
+                _s = _keys[_values.index(_i)]
+            except IndexError:
+                continue
+            _s.move_slice(value)
+
+    @pyqtSlot(object, object)
+    def on_changed_slice(self, value, layout_id):
+        # 1. get selected items (view) & send wheel event
+        self.move_selected_slice(value, layout_id)
+        # 2. send msg to others app
+        self._win.send_message.emit(['slice::change_selected_slice_of_other_app', [value, self._win]])
 
     @pyqtSlot(object, object)
     def on_change_slice_num(self, slice_num, layout_id):
@@ -630,7 +671,7 @@ class SliceViewWindow(QObject):
         print("selected button :: ", self.sender().objectName(), name, selected)
 
         if name == "select":
-            pass
+            self.layout_item.setSelector(selected)
         elif name == "pan":
             pass
         elif name == "zoom":

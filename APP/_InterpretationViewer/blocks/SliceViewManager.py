@@ -38,6 +38,7 @@ DCM_INTERVAL = 1
 
 class SliceViewManager(QObject):
 
+    sig_changed_slice = pyqtSignal(object, object)
     sig_change_slice_num = pyqtSignal(object, object)
     sig_change_wwl = pyqtSignal(object, object, object)
 
@@ -71,6 +72,7 @@ class SliceViewManager(QObject):
 
     def create_new_slice(self):
         _slice = Slice()
+        _slice.sig_changed_slice.connect(self.on_changed_slice)  # TODO
         _slice.sig_change_slice_num.connect(self.on_change_slice_num)
         _slice.sig_change_wwl.connect(self.on_change_wwl)
         _slice.resize(2000, 2000)
@@ -132,8 +134,10 @@ class SliceViewManager(QObject):
         """
         NOTE should connect sig/slot again, since sloce_obj may have been delivered by the other app.
         """
+        slice_obj.sig_changed_slice.disconnect()
         slice_obj.sig_change_slice_num.disconnect()
         slice_obj.sig_change_wwl.disconnect()
+        slice_obj.sig_changed_slice.connect(self.on_changed_slice)
         slice_obj.sig_change_slice_num.connect(self.on_change_slice_num)
         slice_obj.sig_change_wwl.connect(self.on_change_wwl)
         return _target_id
@@ -227,6 +231,11 @@ class SliceViewManager(QObject):
     def on_refresh_all(self):
         for s in self.SELECTED_SLICES.keys():
             s.refresh()
+
+    # TODO
+    @pyqtSlot(object)
+    def on_changed_slice(self, value):
+        self.sig_changed_slice.emit(value, self.SELECTED_SLICES[self.sender()])
 
     @pyqtSlot(object)
     def on_change_slice_num(self, slice_num):

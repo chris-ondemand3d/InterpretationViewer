@@ -86,6 +86,9 @@ class slice_app(CyQQuickView):
     #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
         return super().eventFilter(obj, event)
 
+    def set_key_event(self, _key, _modifiers):
+        self.slice_win.set_key_event(_key, _modifiers)
+
     def get_next_layout_id(self, force=False):
         return self.slice_win.get_next_layout_id(force)
 
@@ -165,6 +168,9 @@ class slice_app(CyQQuickView):
 
         return True
 
+    def move_selected_slice(self, value):
+        self.slice_win.move_selected_slice(value)
+
 
 class mpr_app(CyQQuickView):
 
@@ -194,6 +200,11 @@ def onClose(event):
 
 def onMsg(msg):
     _msg, _params = msg
+
+    if _msg == 'common::set_key_event':
+        _key, _modifiers = _params
+        app_slice.set_key_event(_key, _modifiers)
+        app_slice2.set_key_event(_key, _modifiers)
 
     if _msg == 'dbm::stop':
         _study_uid, _series_uid = _params
@@ -282,6 +293,13 @@ def onMsg(msg):
             for _s, _i in zip(_slices, _indices):
                 if app_slice2.insert_slice_obj(_s, _i):
                     app_slice.remove_slice_obj(_study_uid, _series_uid)
+
+    elif _msg == 'slice::change_selected_slice_of_other_app':
+        _value, _sender = _params
+        if _sender is app_slice:
+            app_slice2.move_selected_slice(_value)
+        elif _sender is app_slice2:
+            app_slice.move_selected_slice(_value)
 
     # MPR
     elif _msg == 'mpr::init_vtk':

@@ -1,4 +1,4 @@
-import QtQuick 2.5
+import QtQuick 2.10
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
@@ -14,6 +14,11 @@ Item {
 
   width: 400
   height: 400
+
+  property var activationSelector: false
+  signal sigKeyPressed(var key, var modifiers)
+  signal sigKeyReleased(var key, var modifiers)
+
 
   Rectangle{
     width: parent.width
@@ -84,6 +89,8 @@ Item {
           Layout.preferredWidth: prefWidth(parent)
           Layout.preferredHeight: prefHeight(parent) - vtk_img_topbar.height;
           fullscreenTrigger: false
+
+          property var selected: false
 
           // patient info (LT) - Patient ID, Name, Age, Sex, Date, Series ID
           Column{
@@ -398,6 +405,16 @@ Item {
             }
           }
 
+          // Selector
+          Rectangle {
+            id: selector
+            anchors.fill: parent
+            color: 'transparent'
+            border.width: 1
+            border.color: 'yellow'
+            visible: (slice_view_layout_item.activationSelector == true) ? vtk_img_holder.selected : false
+          }
+
           // Busy Indicator
           BusyIndicator {
             id: busy_indicator
@@ -418,7 +435,10 @@ Item {
           }
 
           onMouseReleased: {
-            // TODO
+            if (slice_view_layout_item.pressed_key_info['modifiers'] == Qt.ControlModifier)
+              select(index, true);
+            else
+              select(index, false);
           }
 
           // fullscreen event
@@ -493,10 +513,23 @@ Item {
           function setWWL(ww, wl){
             text_sv_wwl.text = ('WW : %1\nWL : %2').arg(parseInt(ww)).arg(parseInt(wl));
           }
+
+          Component.onCompleted: {
+            keyPressed.connect(slice_view_layout_item.sigKeyPressed);
+            keyReleased.connect(slice_view_layout_item.sigKeyReleased);
+          }
         }
       }
     }
 
+  }
+
+  // NOTE
+  property var pressed_key_info: {'key': undefined, 'modifiers': undefined}
+  function setKeyInfo(key, modifiers)
+  {
+    pressed_key_info['key'] = key;
+    pressed_key_info['modifiers'] = modifiers;
   }
 
   Component.onCompleted: {
@@ -600,9 +633,9 @@ Item {
   {
     for (var i=0; i < repeater_imgholder_sliceview.count; i++)
     {
-      var _item = repeater_imgholder_sliceview.itemAt(i)
-      var _topbar_item = _item.children[0]
-      var _vtkimg_item = _item.children[1]
+      var _item = repeater_imgholder_sliceview.itemAt(i);
+      var _topbar_item = _item.children[0];
+      var _vtkimg_item = _item.children[1];
       _vtkimg_item.clear();
     }
   }
@@ -615,6 +648,55 @@ Item {
   function getGridLayoutItem()
   {
     return grid_layout;
+  }
+
+  function setSelector(on)
+  {
+    slice_view_layout_item.activationSelector = on;
+  }
+
+  function select(index, continous)
+  {
+    if (slice_view_layout_item.activationSelector == false)
+      return;
+
+    if (continous)
+    {
+      var _item = repeater_imgholder_sliceview.itemAt(index);
+      var _topbar_item = _item.children[0];
+      var _vtkimg_item = _item.children[1];
+      _vtkimg_item.selected = true;
+    }
+    else
+    {
+      for (var i=0; i < repeater_imgholder_sliceview.count; i++)
+      {
+        var _item = repeater_imgholder_sliceview.itemAt(i);
+        var _topbar_item = _item.children[0];
+        var _vtkimg_item = _item.children[1];
+        _vtkimg_item.selected = (i == index) ? true : false;
+      }
+    }
+
+  }
+
+  function getSelectedIndices()
+  {
+    var selectedIndices = []
+
+    if (!slice_view_layout_item.activationSelector)
+      return selectedIndices;
+
+    for (var i=0; i < repeater_imgholder_sliceview.count; i++)
+    {
+      var _item = repeater_imgholder_sliceview.itemAt(i);
+      var _topbar_item = _item.children[0];
+      var _vtkimg_item = _item.children[1];
+      if (_vtkimg_item.selected == true)
+        selectedIndices.push(i);
+    }
+
+    return selectedIndices;
   }
 
 }
