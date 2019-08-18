@@ -111,7 +111,7 @@ class SliceViewWindow(QObject):
     def set_key_event(self, _key, _modifiers):
         self.layout_item.setKeyInfo(_key, _modifiers)
 
-    def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
+    def init_vtk(self, _vtk_img, patient_pos_ori, _wwl, _patient_info, study_uid, series_uid, next_id):
         _dcm_info = {'study_uid': study_uid, 'series_uid': series_uid}           # TODO
 
         # generate slices[...]
@@ -125,7 +125,7 @@ class SliceViewWindow(QObject):
         # ...
         self.append_study_series_model(_patient_info, study_uid, series_uid)
         self.set_metadata(_patient_info, _dcm_info, next_id)
-        self._mgr.init_vtk(_vtk_img, _wwl, next_id)
+        self._mgr.init_vtk(_vtk_img, patient_pos_ori, _wwl, next_id)
         self.select_study(study_uid)
 
         #
@@ -380,6 +380,19 @@ class SliceViewWindow(QObject):
             return
         _obj = _obj.childItems()[1]
         self.layout_item.setSliceNumber(_obj, slice_num)
+
+        # TODO CROSS LINK TEST!!!
+        _keys = list(self._mgr.SELECTED_SLICES.keys())
+        _values = list(self._mgr.SELECTED_SLICES.values())
+        _cur_slice = _keys[_values.index(layout_id)]
+        try:
+            _senders_pos_ori = _cur_slice.patient_pos_ori[slice_num]
+        except IndexError:
+            return
+        for _s, _i in self._mgr.SELECTED_SLICES.items():
+            if _i == layout_id:
+                continue
+            _s.cross_link_test(_senders_pos_ori)
 
     def on_changed_slice_num(self, slice_num, layout_id):
         # TODO

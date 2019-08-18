@@ -9,8 +9,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.Qt import QApplication, Qt
 from PyQt5.QtGui import QCursor
 
-from COMMON import I2G_IMG_HOLDER
-from COMMON import SliceImage, pt_on_plane, get_angle_between_vectors, get_rotation_matrix
+from COMMON import I2G_IMG_HOLDER, Sphere, Sphere2D, LINE2D
+from COMMON import SliceImage, pt_on_plane, get_angle_between_vectors, get_rotation_matrix, get_vtkmat_from_list
 from _qapp import create_task
 # from _IN2GUIDE_DENTAL.blocks.I2G.Measure.MeasureMgr import MeasureMgr
 
@@ -96,6 +96,10 @@ class Slice(I2G_IMG_HOLDER):
         if hasattr(self, 'initial_wwl'):
             del self.initial_wwl
 
+        if hasattr(self, 'patient_pos_ori'):
+            self.patient_pos_ori.clear()
+            del self.patient_pos_ori
+
         self.l_btn_pressed = False
         self.r_btn_pressed = False
 
@@ -119,9 +123,10 @@ class Slice(I2G_IMG_HOLDER):
     def get_dcm_info(self):
         return self.dcm_info if hasattr(self, 'dcm_info') else None
 
-    def set_vtk_img(self, vtk_img):
+    def set_vtk_img(self, vtk_img, patient_pos_ori=None):
         assert vtk_img, 'vtk_img is invalid!!!'
         self.vtk_img = vtk_img
+        self.patient_pos_ori = patient_pos_ori
         self.slice_img.set_vtk_img(self.vtk_img)
 
         self.spacing = self.vtk_img.GetSpacing()
@@ -584,3 +589,34 @@ class Slice(I2G_IMG_HOLDER):
         cam_pos = np.array(_o) + (np.array(_n) * 100)
         cam.SetFocalPoint(_o)
         cam.SetPosition(cam_pos)
+
+    def cross_link_test(self, _senders_pos_ori):
+        # mine
+        _cur_num = self.get_slice_num()
+        _cur_pos, _cur_ori = self.patient_pos_ori[_cur_num]
+
+        # sender's
+        _senders_pos, _senders_ori = _senders_pos_ori
+
+        if not hasattr(self, '_line'):
+            self._line = LINE2D(radius=1, color=[1,0,0])
+            self.ren.AddActor(self._line.get_actor())
+
+        # mat00 = np.column_stack([_cur_ori[0:3]+[0], _cur_ori[3:6]+[0], np.cross(_cur_ori[0:3], _cur_ori[3:6]).tolist()+[0], [0, 0, 0, 1]])
+        mat00 = np.column_stack([np.append(_cur_ori[:3], [0]),
+                                 np.append(_cur_ori[3:], [0]),
+                                 np.append(np.cross(_cur_ori[:3], _cur_ori[3:]), [0]),
+                                 [0, 0, 0, 1]])
+        mat000 = np.column_stack([[1, 0, 0, 0],
+                                  [0, 1, 0, 0],
+                                  [0, 0, 1, 0],
+                                  _cur_pos+[1]])
+
+        #
+        mat = np.matmul(np.linalg.inv(mat00), np.linalg.inv(mat000))
+        disp = np.array(_senders_pos)
+        _pt0 = np.matmul(mat, np.asmatrix(np.append(disp, [1])).transpose())[:3]
+        _pt1 = np.matmul(mat, np.asmatrix(np.append((disp + np.multiply(_senders_ori[:3], 100)), [1])).transpose())[:3]
+
+        self._line.set_points([_pt0, _pt1])
+        self.refresh()

@@ -24,6 +24,7 @@ TAG_SOPInstanceUID = '00080018'
 TAG_AccessionNumber = '00080050'
 TAG_PixelSpacing = '00280030'
 TAG_ImagePosition = '00200032'
+TAG_ImageOrientation = '00200037'
 TAG_SliceThickness ='00180050'
 TAG_SliceLocation = '00201041'
 TAG_Rows = '00280010'
@@ -103,6 +104,9 @@ class cyDicomWeb(object):
             del self.thickness
         if hasattr(self, 'origin'):
             del self.origin
+        if hasattr(self, 'patient_pos_ori'):
+            self.patient_pos_ori.clear()
+            del self.patient_pos_ori
 
     @pyqtProperty(bool)
     def stop(self):
@@ -150,9 +154,17 @@ class cyDicomWeb(object):
         self.spacing = self.metadata[0][TAG_PixelSpacing]['Value']
         # self.thickness = self.metadata[0][TAG_SliceThickness]['Value'][0]
         self.thickness = abs(self.metadata[0][TAG_ImagePosition]['Value'][2] - self.metadata[1][TAG_ImagePosition]['Value'][2]) if len(self.metadata) > 1 else 1
-        self.origin = self.metadata[0][TAG_ImagePosition]['Value'] if TAG_ImagePosition in self.metadata[0] else [0,0,0]
+        self.origin = [0, 0, 0] # NOTE do not assign  the img position of dcm tag!!
         self.window_center = self.metadata[0][TAG_WindowCenter]['Value'][0]
         self.window_width = self.metadata[0][TAG_WindowWidth]['Value'][0]
+
+        # orientation
+        self.patient_pos_ori = []
+        if len(self.metadata) > 1:
+            for m in self.metadata:
+                _pos = m[TAG_ImagePosition]['Value']
+                _ori = m[TAG_ImageOrientation]['Value']
+                self.patient_pos_ori.append([_pos, _ori])
 
         # debug check
         print("width, height :: ", self.width, self.height)

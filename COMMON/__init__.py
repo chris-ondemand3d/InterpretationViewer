@@ -470,6 +470,42 @@ class Sphere:
         self.a.Modified()
 
 
+class Sphere2D:
+    def __init__(self, pos=[0,0,0], radius=1, color=[1,0,0], opacity=1):
+        self.pos = pos
+        self.s = vtk.vtkSphereSource()
+        self.s.SetCenter(pos)
+        self.s.SetRadius(radius)
+        self.s.Update()
+        self.m = vtk.vtkPolyDataMapper2D()
+        self.m.SetInputData(self.s.GetOutput())
+        self.m.Update()
+        self.a = vtk.vtkActor2D()
+        self.a.SetMapper(self.m)
+        self.a.GetProperty().SetColor(color)
+        self.a.GetProperty().SetOpacity(opacity)
+
+        coordinate = vtk.vtkCoordinate()
+        coordinate.SetCoordinateSystemToWorld()
+        self.m.SetTransformCoordinate(coordinate)
+
+    def __del__(self):
+        del self.a
+        del self.m
+        del self.s
+        del self.pos
+
+    def get_actor(self):
+        return self.a
+
+    def set_position(self, pos):
+        self.pos = pos
+        self.s.SetCenter(pos)
+        self.s.Update()
+        self.m.Update()
+        self.a.Modified()
+
+
 class CurveLine:
     def __init__(self, _LINES, fn_coord_convert=None):
         if fn_coord_convert:
@@ -741,6 +777,72 @@ class LINE:
         return self.actor_line
 
 
+class LINE2D:
+    def __init__(self, radius=0.2, color=[0,0,1], opacity=1, *args, **kwds):
+        self.radius = radius
+        self.color = color
+
+        self.points = vtk.vtkPoints()
+        self.polyline = vtk.vtkPolyLine()
+        self.cells = vtk.vtkCellArray()
+        self.polyData = vtk.vtkPolyData()
+        self.tube = vtk.vtkTubeFilter()
+        self.tube.SetInputData(self.polyData)
+        self.tube.SetNumberOfSides(36)
+        self.tube.SetRadius(radius)
+        self.tube.SetCapping(True)
+        self.tube.Update()
+
+        self.mapper_line = vtk.vtkPolyDataMapper2D()
+        self.mapper_line.SetInputData(self.tube.GetOutput())
+        self.mapper_line.Update()
+
+        self.actor_line = vtk.vtkActor2D()
+        self.actor_line.SetMapper(self.mapper_line)
+        self.actor_line.GetProperty().SetColor(color)
+        # self.actor_line.GetProperty().SetOpacity(opacity)
+
+        coordinate = vtk.vtkCoordinate()
+        coordinate.SetCoordinateSystemToWorld()
+        self.mapper_line.SetTransformCoordinate(coordinate)
+
+    def __del__(self):
+        del self.actor_line
+        del self.mapper_line
+        del self.tube
+        del self.polyData
+        del self.cells
+        del self.polyline
+        del self.points
+
+    def set_points(self, points):
+        self.points.Reset()
+        self.cells.Reset()
+        self.polyData.Reset()
+
+        for p in points:
+            self.points.InsertNextPoint(p)
+        self.polyline.GetPointIds().SetNumberOfIds(len(points))
+        for i in range(len(points)):
+            self.polyline.GetPointIds().SetId(i, i)
+
+        self.cells.InsertNextCell(self.polyline)
+        self.polyData.SetPoints(self.points)
+        self.polyData.SetLines(self.cells)
+
+        self.points.Modified()
+        self.polyline.Modified()
+        self.cells.Modified()
+        self.polyData.Modified()
+        self.tube.Update()
+        self.tube.Modified()
+        self.mapper_line.Update()
+        self.actor_line.Modified()
+
+    def get_actor(self):
+        return self.actor_line
+
+
 class LINE_SHAPE:
     def __init__(self, line_radius, line_color, shape_color, opacity=0.45, *args, **kwds):
         self.polydata = vtk.vtkPolyData()
@@ -927,6 +1029,7 @@ class SliceImage:
             elif _value == "MPR":
                 self.mapper.SetSlabTypeToMean()
             self.mapper.Update()
+
 
 """
 Matrix

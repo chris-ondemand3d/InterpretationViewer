@@ -95,8 +95,8 @@ class slice_app(CyQQuickView):
     def get_next_layout_id2(self, _study_uid):
         return self.slice_win.get_next_layout_id2(_study_uid)
 
-    def init_vtk(self, _vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id):
-        self.slice_win.init_vtk(_vtk_img, _wwl, _patient_info, study_uid, series_uid, next_id)
+    def init_vtk(self, _vtk_img, patient_pos_ori, _wwl, _patient_info, study_uid, series_uid, next_id):
+        self.slice_win.init_vtk(_vtk_img, patient_pos_ori, _wwl, _patient_info, study_uid, series_uid, next_id)
         self.slice_win.busy_check()
 
     def busy_check(self):
@@ -211,15 +211,15 @@ def onMsg(msg):
         app_dbm.release_downloader(_study_uid, _series_uid)
 
     if _msg == 'slice::init_vtk':
-        _vtk_img, _wwl, _patient_info, _study_uid, _series_uid, _target_app_id = _params
+        _vtk_img, patient_pos_ori, _wwl, _patient_info, _study_uid, _series_uid, _target_app_id = _params
         if _target_app_id == 0:
             next_id = app_slice.get_next_layout_id2(_study_uid)
             if next_id >= 0:
-                app_slice.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+                app_slice.init_vtk(_vtk_img, patient_pos_ori, _wwl, _patient_info, _study_uid, _series_uid, next_id)
         elif _target_app_id == 1:
             next_id = app_slice2.get_next_layout_id2(_study_uid)
             if next_id >= 0:
-                app_slice2.init_vtk(_vtk_img, _wwl, _patient_info, _study_uid, _series_uid, next_id)
+                app_slice2.init_vtk(_vtk_img, patient_pos_ori, _wwl, _patient_info, _study_uid, _series_uid, next_id)
 
     elif _msg == 'slice::busy_check':
         app_slice.busy_check()
@@ -401,8 +401,8 @@ if __name__ == '__main__':
         # app_mpr.show(isMaximize=False)
 
         # slice view
-        # app_dbm.resize(app_sz[0], app_sz[1] * 2 / 3)
-        app_dbm.resize(*app_sz)
+        app_dbm.resize(app_sz[0], app_sz[1] * 2 / 3)
+        # app_dbm.resize(*app_sz)
         app_dbm.setPosition(0, titlebar_height)
         app_slice.resize(*app_sz)
         app_slice.setPosition(app_sz[0], titlebar_height)

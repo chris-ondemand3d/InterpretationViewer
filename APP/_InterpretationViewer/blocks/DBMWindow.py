@@ -152,9 +152,9 @@ class DBMWindow(QObject):
                                 }
                 study_uid = selected_model.itemData['StudyInstanceUID']
                 series_uid = series.itemData['SeriesInstanceUID']
-                vtk_img, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
+                vtk_img, patient_pos_ori, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
                 self._win.send_message.emit(['slice::init_vtk',
-                                             (vtk_img, wwl, patient_info, study_uid, series_uid, target_app_id)])
+                                             (vtk_img, patient_pos_ori, wwl, patient_info, study_uid, series_uid, target_app_id)])
         else:
             """
             case of series
@@ -176,6 +176,6 @@ class DBMWindow(QObject):
                             }
             study_uid = selected_model.parent().itemData['StudyInstanceUID']
             series_uid = selected_model.itemData['SeriesInstanceUID']
-            vtk_img, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
+            vtk_img, patient_pos_ori, wwl = self._mgr.retrieve_dicom(study_uid, series_uid)
             self._win.send_message.emit(['slice::init_vtk',
-                                         (vtk_img, wwl, patient_info, study_uid, series_uid, target_app_id)])
+                                         (vtk_img, patient_pos_ori, wwl, patient_info, study_uid, series_uid, target_app_id)])

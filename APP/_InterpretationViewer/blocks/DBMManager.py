@@ -16,7 +16,7 @@ from PyQt5.QtQml import QQmlProperty
 
 import gc
 
-from COMMON import WorkerThread, WorkerThread
+from COMMON import WorkerThread, WorkerThread, get_vtkmat_from_list, get_matrix_from_vtkmat
 
 import multiprocessing
 from multiprocessing.managers import BaseManager
@@ -201,6 +201,9 @@ class DBMManager(QObject):
         vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
         vtk_img_narray = buf.reshape(dim, order='F')
 
+        # orientation
+        patient_pos_ori = copy.deepcopy(dicom_web.patient_pos_ori)
+
         # busy flag
         _vtk_busy = dsa.numpyTovtkDataArray(np.array([]))
         _vtk_busy.SetName('BUSY')
@@ -342,7 +345,7 @@ class DBMManager(QObject):
         self.WORKERS.append(W0)
         WorkerThread.start_worker(*W0, _do, dicom_web,
                                    _finished_func=lambda: _on_finished(W0, study_uid, series_uid))
-        return vtk_img, wwl
+        return vtk_img, patient_pos_ori, wwl
 
     def release_dicom_web(self, study_uid, series_uid):
         if study_uid in self.DICOM_WEB and series_uid in self.DICOM_WEB[study_uid]:

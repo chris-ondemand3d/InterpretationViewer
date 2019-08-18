@@ -78,7 +78,7 @@ class SliceViewManager(QObject):
         _slice.resize(2000, 2000)
         return _slice
 
-    def init_vtk(self, vtk_img, wwl, layout_idx):
+    def init_vtk(self, vtk_img, patient_pos_ori, wwl, layout_idx):
 
         if wwl is None:
             wwl = [2000, 4000]
@@ -90,7 +90,7 @@ class SliceViewManager(QObject):
                 p.SetColorWindow(wwl[0])
                 p.SetColorLevel(wwl[1])
                 p.SetInterpolationTypeToLinear()
-                _s.set_vtk_img(vtk_img)
+                _s.set_vtk_img(vtk_img, patient_pos_ori)
                 _s.set_actor_property(p)
                 # default
                 slice_num = _s.get_slice_num()
