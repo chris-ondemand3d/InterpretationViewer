@@ -38,6 +38,7 @@ class SliceViewWindow(QObject):
 
         self.menu_common_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_common')
         self.menu_measure_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_measure')
+        self.menu_dcm_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_dcm')
 
 
         if not hasattr(self, '_mgr'):
@@ -74,6 +75,7 @@ class SliceViewWindow(QObject):
         # menu panel
         self.menu_common_item.sigSelected.connect(self.on_selected_menu)
         self.menu_measure_item.sigSelected.connect(self.on_selected_menu)
+        self.menu_dcm_item.sigSelected.connect(self.on_selected_menu)
         self.menu_common_item.retrySelect()
 
         layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
@@ -382,17 +384,7 @@ class SliceViewWindow(QObject):
         self.layout_item.setSliceNumber(_obj, slice_num)
 
         # TODO CROSS LINK TEST!!!
-        _keys = list(self._mgr.SELECTED_SLICES.keys())
-        _values = list(self._mgr.SELECTED_SLICES.values())
-        _cur_slice = _keys[_values.index(layout_id)]
-        try:
-            _senders_pos_ori = _cur_slice.patient_pos_ori[slice_num]
-        except IndexError:
-            return
-        for _s, _i in self._mgr.SELECTED_SLICES.items():
-            if _i == layout_id:
-                continue
-            _s.cross_link_test(_senders_pos_ori)
+        self._mgr.calc_cross_link(slice_num, layout_id)
 
     def on_changed_slice_num(self, slice_num, layout_id):
         # TODO
@@ -699,6 +691,8 @@ class SliceViewWindow(QObject):
         elif name == "key_image":
             pass
         elif name == "report":
+            pass
+        elif name == "cross_link":
             pass
 
         self._mgr.on_selected_menu(name, selected)

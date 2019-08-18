@@ -100,6 +100,16 @@ class Slice(I2G_IMG_HOLDER):
             self.patient_pos_ori.clear()
             del self.patient_pos_ori
 
+        if hasattr(self, '_line_x'):
+            self.ren.RemoveActor(self._line_x.get_actor())
+            del self._line_x
+        if hasattr(self, '_line_y'):
+            self.ren.RemoveActor(self._line_y.get_actor())
+            del self._line_y
+        if hasattr(self, '_line_z'):
+            self.ren.RemoveActor(self._line_z.get_actor())
+            del self._line_z
+
         self.l_btn_pressed = False
         self.r_btn_pressed = False
 
@@ -591,32 +601,62 @@ class Slice(I2G_IMG_HOLDER):
         cam.SetPosition(cam_pos)
 
     def cross_link_test(self, _senders_pos_ori):
-        # mine
+        if not hasattr(self, '_line_x'):
+            self._line_x = LINE2D(radius=0.5, color=[1,0,0])
+            self.ren.AddActor(self._line_x.get_actor())
+        if not hasattr(self, '_line_y'):
+            self._line_y = LINE2D(radius=0.5, color=[0,0,1])
+            self.ren.AddActor(self._line_y.get_actor())
+        if not hasattr(self, '_line_z'):
+            self._line_z = LINE2D(radius=0.5, color=[0,1,0])
+            self.ren.AddActor(self._line_z.get_actor())
+
+        if _senders_pos_ori is None:
+            self._line_x.get_actor().SetVisibility(False)
+            self._line_y.get_actor().SetVisibility(False)
+            self._line_z.get_actor().SetVisibility(False)
+            self.refresh()
+            return
+
+        # itself
         _cur_num = self.get_slice_num()
         _cur_pos, _cur_ori = self.patient_pos_ori[_cur_num]
 
         # sender's
         _senders_pos, _senders_ori = _senders_pos_ori
 
-        if not hasattr(self, '_line'):
-            self._line = LINE2D(radius=1, color=[1,0,0])
-            self.ren.AddActor(self._line.get_actor())
-
-        # mat00 = np.column_stack([_cur_ori[0:3]+[0], _cur_ori[3:6]+[0], np.cross(_cur_ori[0:3], _cur_ori[3:6]).tolist()+[0], [0, 0, 0, 1]])
-        mat00 = np.column_stack([np.append(_cur_ori[:3], [0]),
-                                 np.append(_cur_ori[3:], [0]),
-                                 np.append(np.cross(_cur_ori[:3], _cur_ori[3:]), [0]),
-                                 [0, 0, 0, 1]])
-        mat000 = np.column_stack([[1, 0, 0, 0],
-                                  [0, 1, 0, 0],
-                                  [0, 0, 1, 0],
-                                  _cur_pos+[1]])
-
-        #
-        mat = np.matmul(np.linalg.inv(mat00), np.linalg.inv(mat000))
+        mat = np.column_stack([np.append(_cur_ori[:3], [0]),
+                               np.append(_cur_ori[3:], [0]),
+                               np.append(np.cross(_cur_ori[:3], _cur_ori[3:]), [0]),
+                               _cur_pos+[1]])
+        mat_inv = np.linalg.inv(mat)
         disp = np.array(_senders_pos)
-        _pt0 = np.matmul(mat, np.asmatrix(np.append(disp, [1])).transpose())[:3]
-        _pt1 = np.matmul(mat, np.asmatrix(np.append((disp + np.multiply(_senders_ori[:3], 100)), [1])).transpose())[:3]
+        _pt0 = np.matmul(mat_inv, np.asmatrix(np.append(disp, [1])).transpose())[:3]
+        _pt1 = np.matmul(mat_inv, np.asmatrix(np.append((disp + np.multiply(_senders_ori[:3], 100)), [1])).transpose())[:3]
+        _pt2 = np.matmul(mat_inv, np.asmatrix(np.append((disp + np.multiply(_senders_ori[3:], 100)), [1])).transpose())[:3]
 
-        self._line.set_points([_pt0, _pt1])
+        vec_a = np.asarray(_pt1).flatten() - np.asarray(_pt0).flatten()
+        vec_a = vec_a / np.linalg.norm(vec_a)
+        vec_b = np.asarray(_pt2).flatten() - np.asarray(_pt0).flatten()
+        vec_b = vec_b / np.linalg.norm(vec_b)
+        vec_c = np.cross(vec_a, vec_b)
+        vec_c = vec_c / np.linalg.norm(vec_c)
+
+        _pt3 = np.multiply(vec_c, 100)
+
+        _, vec_d = self.get_plane()
+        vec_d = vec_d / np.linalg.norm(vec_d)
+
+        if np.abs(np.inner(vec_c, vec_d)) > 0.7:
+            self._line_x.get_actor().SetVisibility(False)
+            self._line_y.get_actor().SetVisibility(False)
+            self._line_z.get_actor().SetVisibility(False)
+        else:
+            self._line_x.get_actor().SetVisibility(True)
+            self._line_y.get_actor().SetVisibility(True)
+            self._line_z.get_actor().SetVisibility(True)
+
+        self._line_x.set_points([_pt0, _pt1])
+        self._line_y.set_points([_pt0, _pt2])
+        self._line_z.set_points([_pt0, _pt3])
         self.refresh()

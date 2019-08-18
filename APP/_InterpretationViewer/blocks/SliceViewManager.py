@@ -54,6 +54,9 @@ class SliceViewManager(QObject):
         self.reset()
         self.initialize()
 
+        # TODO
+        self.mode_cross_link = False
+
     def __del__(self):
         pass
 
@@ -69,6 +72,8 @@ class SliceViewManager(QObject):
             s.reset()
             del s
         self.ALL_SLICES.clear()
+
+        self.mode_cross_link = False
 
     def create_new_slice(self):
         _slice = Slice()
@@ -233,6 +238,24 @@ class SliceViewManager(QObject):
             _s.fit_img_to_screen()
             _s.refresh()
 
+    def calc_cross_link(self, slice_num, layout_id):
+        if not self.mode_cross_link:
+            for _s, _i in self.SELECTED_SLICES.items():
+                _s.cross_link_test(None)
+            return
+        _keys = list(self.SELECTED_SLICES.keys())
+        _values = list(self.SELECTED_SLICES.values())
+        _cur_slice = _keys[_values.index(layout_id)]
+        try:
+            _senders_pos_ori = _cur_slice.patient_pos_ori[slice_num]
+        except IndexError:
+            return
+        for _s, _i in self.SELECTED_SLICES.items():
+            if _i == layout_id:
+                _s.cross_link_test(None)
+                continue
+            _s.cross_link_test(_senders_pos_ori)
+
     def read_dcm_test(self):
         # # DCM Read
         # f = open(dcm[0], 'r')
@@ -298,3 +321,7 @@ class SliceViewManager(QObject):
             pass
         elif name == "report":
             pass
+        elif name == "cross_link":
+            self.mode_cross_link = selected
+            if selected is False:
+                self.calc_cross_link(None, None)
