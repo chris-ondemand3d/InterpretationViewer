@@ -172,8 +172,8 @@ Item {
         margins: 15
     }
     color: '#484848'
-    width: 360
-    height: 120
+    width: 350
+    height: 110
     radius: 0
     visible: false
 
@@ -181,7 +181,7 @@ Item {
 
     Timer {
         id: timer_dbm_message_box
-        interval: 10000 // triggers every 5000 ms
+        interval: 5000 // triggers every 5000 ms
         onTriggered: dbm_message_box.clear()
         running: false
     }

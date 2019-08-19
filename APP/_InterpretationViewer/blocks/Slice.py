@@ -602,13 +602,13 @@ class Slice(I2G_IMG_HOLDER):
 
     def cross_link_test(self, _senders_pos_ori):
         if not hasattr(self, '_line_x'):
-            self._line_x = LINE2D(radius=0.5, color=[1,0,0])
+            self._line_x = LINE2D(radius=0.2, color=[1,0,0])
             self.ren.AddActor(self._line_x.get_actor())
         if not hasattr(self, '_line_y'):
-            self._line_y = LINE2D(radius=0.5, color=[0,0,1])
+            self._line_y = LINE2D(radius=0.2, color=[0,0,1])
             self.ren.AddActor(self._line_y.get_actor())
         if not hasattr(self, '_line_z'):
-            self._line_z = LINE2D(radius=0.5, color=[0,1,0])
+            self._line_z = LINE2D(radius=0.2, color=[0,1,0])
             self.ren.AddActor(self._line_z.get_actor())
 
         if _senders_pos_ori is None:

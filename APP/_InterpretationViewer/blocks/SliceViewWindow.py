@@ -12,9 +12,9 @@ from PyQt5.QtGui import QImage
 
 
 class SliceViewWindow(QObject):
-    def __init__(self, _win, _mgr, *args, **kdws):
+    def __init__(self, _app, _mgr, *args, **kdws):
         super().__init__()
-        self._win = _win
+        self._app = _app
         self._mgr = _mgr
 
         # self.reset()
@@ -23,22 +23,22 @@ class SliceViewWindow(QObject):
     def initialize(self):
         # win init
         _win_source = QUrl.fromLocalFile(os.path.join(os.path.dirname(__file__), '../layout/slice_view/SliceView_layout.qml'))
-        self._win.setSource(_win_source)
+        self._app.setSource(_win_source)
 
-        self.root_itme = self._win.rootObject()
-        self.layout_item = self._win.rootObject().findChild(QObject, 'sliceview_mxn_layout')
+        self.root_itme = self._app.rootObject()
+        self.layout_item = self._app.rootObject().findChild(QObject, 'sliceview_mxn_layout')
 
-        self.topbar_study_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_panel')
-        self.repeater_study = self._win.rootObject().findChild(QObject, 'repeater_sv_study')
+        self.topbar_study_item = self._app.rootObject().findChild(QObject, 'sliceview_topbar_panel')
+        self.repeater_study = self._app.rootObject().findChild(QObject, 'repeater_sv_study')
 
-        self.topbar_thumbnail_item = self._win.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
-        self.repeater_series = self._win.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
+        self.topbar_thumbnail_item = self._app.rootObject().findChild(QObject, 'sliceview_topbar_thumbnail')
+        self.repeater_series = self._app.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
 
-        self.repeater_imgholder = self._win.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
+        self.repeater_imgholder = self._app.rootObject().findChild(QObject, 'repeater_imgholder_sliceview')
 
-        self.menu_common_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_common')
-        self.menu_measure_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_measure')
-        self.menu_dcm_item = self._win.rootObject().findChild(QObject, 'sliceview_menu_dcm')
+        self.menu_common_item = self._app.rootObject().findChild(QObject, 'sliceview_menu_common')
+        self.menu_measure_item = self._app.rootObject().findChild(QObject, 'sliceview_menu_measure')
+        self.menu_dcm_item = self._app.rootObject().findChild(QObject, 'sliceview_menu_dcm')
 
 
         if not hasattr(self, '_mgr'):
@@ -56,9 +56,9 @@ class SliceViewWindow(QObject):
         # initialize sig/slot of QML
         # keyboard signal
         self.layout_item.sigKeyPressed.connect(lambda _key, _modifiers:
-                                               self._win.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
+                                               self._app.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
         self.layout_item.sigKeyReleased.connect(lambda _key, _modifiers:
-                                                self._win.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
+                                                self._app.send_message.emit(['common::set_key_event', (_key, _modifiers)]))
         # for study
         self.topbar_study_item.sigSelected.connect(self.on_selected_study)
         self.topbar_study_item.sigReleaseDummyThumbnail.connect(self.on_release_dummy_thumbnail)
@@ -88,7 +88,7 @@ class SliceViewWindow(QObject):
             # item.set_vtk(None)
             item.setHeight(_w)
             item.setWidth(_h)
-            # item.installEventFilter(self._win) # to grab mouse hover leave, add eventfilter
+            # item.installEventFilter(self._app) # to grab mouse hover leave, add eventfilter
 
             # initialize sig/slot of QML ImageHolder
             _obj_th = item.findChild(QObject, 'col_sv_thickness')
@@ -99,7 +99,7 @@ class SliceViewWindow(QObject):
     def reset(self):
         #TODO!!!
         # win reset
-        # self._win.reset()
+        # self._app.reset()
 
         def _remove(X):
             if type(X) is not dict:
@@ -180,8 +180,8 @@ class SliceViewWindow(QObject):
 
     def refresh_thumbnail_img(self):
 
-        _repeater_sv_thumbnail = self._win.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
-        _thumbnail_item = self._win.rootObject().findChild(QObject, 'thumbnail_item')
+        _repeater_sv_thumbnail = self._app.rootObject().findChild(QObject, 'repeater_sv_thumbnail')
+        _thumbnail_item = self._app.rootObject().findChild(QObject, 'thumbnail_item')
 
         thumbnail_cnt = QQmlProperty.read(_repeater_sv_thumbnail, 'count')
 
@@ -285,12 +285,12 @@ class SliceViewWindow(QObject):
             _item.clear()
 
     def is_contained(self, global_mouse):
-        _pos = self._win.mapFromGlobal(global_mouse.toPoint())
+        _pos = self._app.mapFromGlobal(global_mouse.toPoint())
         return self.root_itme.contains(_pos)
 
     def set_dummy_thumbnail(self, global_pos, img_url, mode):
-        _pos = self._win.mapFromGlobal(global_pos.toPoint())
-        _item = self._win.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
+        _pos = self._app.mapFromGlobal(global_pos.toPoint())
+        _item = self._app.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
         if mode == 'study_thumbnail':
             _item.set_study_preview_mode()
         elif mode == 'series_thumbnail':
@@ -307,7 +307,7 @@ class SliceViewWindow(QObject):
         _item.setProperty('source', img_url)
 
     def release_dummy_thumbnail(self):
-        _item = self._win.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
+        _item = self._app.rootObject().findChild(QObject, 'img_sc_dummythumbnail')
         _item.set_default_mode()
         _item.setProperty('visible', False)
         _item.setProperty('x', 0)
@@ -315,7 +315,7 @@ class SliceViewWindow(QObject):
         _item.setProperty('source', None)
 
     def get_layout_id(self, global_mouse):
-        _item = self._win.rootObject().findChild(QObject, 'grid_layout')
+        _item = self._app.rootObject().findChild(QObject, 'grid_layout')
         _pos = _item.mapFromGlobal(global_mouse.toPoint())
         _obj = _item.childAt(_pos.x(), _pos.y())
         if _obj and _obj.objectName() == 'img_holder_root':
@@ -373,7 +373,7 @@ class SliceViewWindow(QObject):
         # 1. get selected items (view) & send wheel event
         self.move_selected_slice(value, layout_id)
         # 2. send msg to others app
-        self._win.send_message.emit(['slice::change_selected_slice_of_other_app', [value, self._win]])
+        self._app.send_message.emit(['slice::change_selected_slice_of_other_app', [value, self._app]])
 
     @pyqtSlot(object, object)
     def on_change_slice_num(self, slice_num, layout_id):
@@ -506,7 +506,7 @@ class SliceViewWindow(QObject):
                 _series_uid = dcm_info['series_uid']
 
                 # stop dicom web
-                self._win.send_message.emit(['dbm::stop', [_study_uid, _series_uid]])
+                self._app.send_message.emit(['dbm::stop', [_study_uid, _series_uid]])
 
                 if study_uid == _study_uid:
                     if series_uid == _series_uid:
@@ -595,23 +595,23 @@ class SliceViewWindow(QObject):
                         _item.childItems()[0].setProperty('highlight', on)
 
     def on_release_dummy_thumbnail(self):
-        self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
+        self._app.send_message.emit(['slice::release_dummy_thumbnail', None])
 
     def on_thumbnail_position_changed(self, global_mouse, img_url, mode):
         if not global_mouse:
             return
         _contained = self.is_contained(global_mouse)
         if not _contained:
-            self._win.send_message.emit(['slice::set_dummy_thumbnail', [global_mouse, img_url, mode]])
+            self._app.send_message.emit(['slice::set_dummy_thumbnail', [global_mouse, img_url, mode]])
         else:
-            self._win.send_message.emit(['slice::release_dummy_thumbnail', None])
+            self._app.send_message.emit(['slice::release_dummy_thumbnail', None])
 
     def on_dropped_thumbnail_to_other_app(self, global_mouse, study_uid, series_uid=None):
         if not global_mouse:
             return
         _contained = self.is_contained(global_mouse)
         if not _contained:
-            self._win.send_message.emit(['slice::send_to_other_app', [global_mouse, study_uid, series_uid]])
+            self._app.send_message.emit(['slice::send_to_other_app', [global_mouse, study_uid, series_uid]])
 
     def on_selected_study(self, selected_index):
         if selected_index is None or selected_index == -1:

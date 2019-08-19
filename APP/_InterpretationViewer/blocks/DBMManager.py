@@ -27,13 +27,13 @@ from . import DicomWeb as dw
 
 class DBMManager(QObject):
 
-    def __init__(self, _win=None, _dicom_web=None, *args, **kdws):
+    def __init__(self, _app=None, _dicom_web=None, *args, **kdws):
         super().__init__()
 
         self.reset()
         self.initialize()
 
-        self._win = _win
+        self._app = _app
 
     def initialize(self):
         self.study_model = StudyModel()
@@ -173,7 +173,11 @@ class DBMManager(QObject):
         # TODO
         dicom_web = dw.cyDicomWeb()
         if study_uid in self.DICOM_WEB:
-            self.DICOM_WEB[study_uid][series_uid] = dicom_web
+            if series_uid in self.DICOM_WEB[study_uid]:
+                # TODO
+                return None
+            else:
+                self.DICOM_WEB[study_uid][series_uid] = dicom_web
         else:
             self.DICOM_WEB[study_uid] = {series_uid: dicom_web}
 
@@ -244,7 +248,7 @@ class DBMManager(QObject):
                     vtk_img_narray[x_b:x_e, y_b:y_e, _idx] = _frame.reshape((_w, _h), order='F')[:, :]
 
                 vtk_img.Modified()
-                self._win.send_message.emit(['slice::refresh_all', None])
+                self._app.send_message.emit(['slice::refresh_all', None])
 
             def _update_thumbnail_scout_img(_frame_info):
                 for _frame, _idx in _frame_info:
@@ -257,7 +261,7 @@ class DBMManager(QObject):
                     _vtk_scout_array = dsa.numpyTovtkDataArray(_scout_img)
                     _vtk_scout_array.SetName('SCOUT_IMG')
                     vtk_img.GetFieldData().AddArray(_vtk_scout_array)
-                    self._win.send_message.emit(['slice::update_thumbnail_img', None])
+                    self._app.send_message.emit(['slice::update_thumbnail_img', None])
 
             def _update_thumbnail_center_img(_frame_info):
                 for _frame, _idx in _frame_info:
@@ -273,7 +277,7 @@ class DBMManager(QObject):
                     _vtk_thumbnail_array = dsa.numpyTovtkDataArray(_thumbnail_img)
                     _vtk_thumbnail_array.SetName('THUMBNAIL_IMG')
                     vtk_img.GetFieldData().AddArray(_vtk_thumbnail_array)
-                    self._win.send_message.emit(['slice::update_thumbnail_img', None])
+                    self._app.send_message.emit(['slice::update_thumbnail_img', None])
 
             processes_cnt = 4
             uid_infos = [[url + "instances/%s/frames/1" % uid, header, i, dicom_web.bits, rescale_params] for i, uid in enumerate(uids)]
@@ -330,7 +334,7 @@ class DBMManager(QObject):
                 _w[1].quit()
                 del _w
             vtk_img.GetFieldData().RemoveArray('BUSY')
-            self._win.send_message.emit(["slice::busy_check", None])
+            self._app.send_message.emit(["slice::busy_check", None])
             # delete dicom_web
             _w = self.DICOM_WEB[_study_uid].pop(_series_uid)
             _w.reset()

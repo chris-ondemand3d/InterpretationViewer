@@ -83,6 +83,15 @@ class SliceViewManager(QObject):
         _slice.resize(2000, 2000)
         return _slice
 
+    def is_exist(self, study_uid, series_uid):
+        if study_uid in self.ALL_SLICES:
+            _values = self.ALL_SLICES[study_uid].keys()
+            for _s in _values:
+                _dcm_info = _s.get_dcm_info()
+                if series_uid == _dcm_info['series_uid']:
+                    return True
+        return False
+
     def init_vtk(self, vtk_img, patient_pos_ori, wwl, layout_idx):
 
         if wwl is None:
