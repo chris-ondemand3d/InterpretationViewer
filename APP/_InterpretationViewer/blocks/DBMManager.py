@@ -199,7 +199,7 @@ class DBMManager(QObject):
         vtk_img.SetOrigin(o)
         vtk_img.SetSpacing(s)
         # # vtk_img.SetExtent(e)
-        vtk_img.AllocateScalars(vtk.VTK_CHAR, 1)
+        vtk_img.AllocateScalars(vtk.VTK_SHORT, 1)
         buf = np.zeros(np.product(dim)).astype(np.int16)     # NOTE make sure np.int16 type!
         buf.fill(-1000)
         vtk_img.GetPointData().SetScalars(dsa.numpyTovtkDataArray(buf))
