@@ -383,7 +383,7 @@ class SliceViewWindow(QObject):
         _obj = _obj.childItems()[1]
         self.layout_item.setSliceNumber(_obj, slice_num)
 
-        # TODO CROSS LINK TEST!!!
+        # TODO CROSS LINK..
         self._mgr.calc_cross_link(slice_num, layout_id)
 
     def on_changed_slice_num(self, slice_num, layout_id):

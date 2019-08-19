@@ -173,7 +173,7 @@ Item {
     }
     color: '#484848'
     width: 350
-    height: 110
+    height: layout_dbm_messagebox.height + 30
     radius: 0
     visible: false
 

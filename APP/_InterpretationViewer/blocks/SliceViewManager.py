@@ -250,7 +250,7 @@ class SliceViewManager(QObject):
     def calc_cross_link(self, slice_num, layout_id):
         if not self.mode_cross_link:
             for _s, _i in self.SELECTED_SLICES.items():
-                _s.cross_link_test(None)
+                _s.cross_link(None)
             return
         _keys = list(self.SELECTED_SLICES.keys())
         _values = list(self.SELECTED_SLICES.values())
@@ -261,9 +261,9 @@ class SliceViewManager(QObject):
             return
         for _s, _i in self.SELECTED_SLICES.items():
             if _i == layout_id:
-                _s.cross_link_test(None)
+                _s.cross_link(None)
                 continue
-            _s.cross_link_test(_senders_pos_ori)
+            _s.cross_link(_senders_pos_ori)
 
     def read_dcm_test(self):
         # # DCM Read

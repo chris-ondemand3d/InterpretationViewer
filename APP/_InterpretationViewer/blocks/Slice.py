@@ -9,8 +9,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.Qt import QApplication, Qt
 from PyQt5.QtGui import QCursor
 
-from COMMON import I2G_IMG_HOLDER, Sphere, Sphere2D, LINE2D
-from COMMON import SliceImage, pt_on_plane, get_angle_between_vectors, get_rotation_matrix, get_vtkmat_from_list
+from COMMON import I2G_IMG_HOLDER, Sphere, Sphere2D, LINE, LINE2D, Glyph3D
+from COMMON import SliceImage, pt_on_plane, get_angle_between_vectors, get_rotation_matrix, get_vtkmat_from_list, intersection_of_two_planes, intersection_of_two_lines
 from _qapp import create_task
 # from _IN2GUIDE_DENTAL.blocks.I2G.Measure.MeasureMgr import MeasureMgr
 
@@ -45,6 +45,7 @@ class Slice(I2G_IMG_HOLDER):
         # NOTE !!!
         self.cyistyle_wrapper = cyCafe.cyVtkInteractorStyles()
         istyle = self.cyistyle_wrapper.get_interactor("image")
+        # istyle = self.cyistyle_wrapper.get_vtk_interactor_style_volume_3d()
         istyle.AddObserver('MouseWheelForwardEvent', self.on_mouse_wheel)
         istyle.AddObserver('MouseWheelBackwardEvent', self.on_mouse_wheel)
         istyle.AddObserver('MouseMoveEvent', self.on_mouse_move)
@@ -100,15 +101,9 @@ class Slice(I2G_IMG_HOLDER):
             self.patient_pos_ori.clear()
             del self.patient_pos_ori
 
-        if hasattr(self, '_line_x'):
-            self.ren.RemoveActor(self._line_x.get_actor())
-            del self._line_x
-        if hasattr(self, '_line_y'):
-            self.ren.RemoveActor(self._line_y.get_actor())
-            del self._line_y
-        if hasattr(self, '_line_z'):
-            self.ren.RemoveActor(self._line_z.get_actor())
-            del self._line_z
+        if hasattr(self, '_line_intersection'):
+            self.ren.RemoveActor(self._line_intersection.get_actor())
+            del self._line_intersection
 
         self.l_btn_pressed = False
         self.r_btn_pressed = False
@@ -600,21 +595,17 @@ class Slice(I2G_IMG_HOLDER):
         cam.SetFocalPoint(_o)
         cam.SetPosition(cam_pos)
 
-    def cross_link_test(self, _senders_pos_ori):
-        if not hasattr(self, '_line_x'):
-            self._line_x = LINE2D(radius=0.2, color=[1,0,0])
-            self.ren.AddActor(self._line_x.get_actor())
-        if not hasattr(self, '_line_y'):
-            self._line_y = LINE2D(radius=0.2, color=[0,0,1])
-            self.ren.AddActor(self._line_y.get_actor())
-        if not hasattr(self, '_line_z'):
-            self._line_z = LINE2D(radius=0.2, color=[0,1,0])
-            self.ren.AddActor(self._line_z.get_actor())
+    def cross_link(self, _senders_pos_ori):
+        if not hasattr(self, '_line_intersection'):
+            self._line_intersection = LINE2D(radius=0.2, color=[0,1,1], opacity=0.3)
+            self.ren.AddActor(self._line_intersection.get_actor())
+        # if not hasattr(self, '_glyph'):
+        #     self._glyph = Glyph3D(radius=1.0, color=[1, 0, 1])
+        #     self.ren.AddActor(self._glyph.get_actor())
 
         if _senders_pos_ori is None:
-            self._line_x.get_actor().SetVisibility(False)
-            self._line_y.get_actor().SetVisibility(False)
-            self._line_z.get_actor().SetVisibility(False)
+            self._line_intersection.get_actor().SetVisibility(False)
+            # self._glyph.get_actor().SetVisibility(False)
             self.refresh()
             return
 
@@ -647,16 +638,50 @@ class Slice(I2G_IMG_HOLDER):
         _, vec_d = self.get_plane()
         vec_d = vec_d / np.linalg.norm(vec_d)
 
-        if np.abs(np.inner(vec_c, vec_d)) > 0.7:
-            self._line_x.get_actor().SetVisibility(False)
-            self._line_y.get_actor().SetVisibility(False)
-            self._line_z.get_actor().SetVisibility(False)
-        else:
-            self._line_x.get_actor().SetVisibility(True)
-            self._line_y.get_actor().SetVisibility(True)
-            self._line_z.get_actor().SetVisibility(True)
+        # calc intersection line of two planes
+        _plane1 = np.asarray(_pt0).flatten(), vec_c.flatten()
+        _p, _n = self.get_plane()
+        _plane2 = np.asarray(_p), np.asarray(_n)
+        _p, _v = intersection_of_two_planes(*_plane1, *_plane2)
+        _p1_of_i = _p
+        _p2_of_i = _p + _v
 
-        self._line_x.set_points([_pt0, _pt1])
-        self._line_y.set_points([_pt0, _pt2])
-        self._line_z.set_points([_pt0, _pt3])
+        # bound check
+        _bds = self.slice_img.get_actor().GetBounds()
+        _bounding_pt0 = np.array([_bds[0], _bds[2], _bds[4]])
+        _bounding_pt1 = np.array([_bds[1], _bds[2], _bds[4]])
+        _bounding_pt2 = np.array([_bds[1], _bds[3], _bds[4]])
+        _bounding_pt3 = np.array([_bds[0], _bds[3], _bds[4]])
+        _bounding_vec0 = _bounding_pt1 - _bounding_pt0
+        _bounding_vec0 = _bounding_vec0 / np.linalg.norm(_bounding_vec0)
+        _bounding_vec1 = _bounding_pt2 - _bounding_pt1
+        _bounding_vec1 = _bounding_vec1 / np.linalg.norm(_bounding_vec1)
+        _bounding_vec2 = _bounding_pt3 - _bounding_pt2
+        _bounding_vec2 = _bounding_vec2 / np.linalg.norm(_bounding_vec2)
+        _bounding_vec3 = _bounding_pt0 - _bounding_pt3
+        _bounding_vec3 = _bounding_vec3 / np.linalg.norm(_bounding_vec3)
+        results = []
+
+        for _line in [[_bounding_pt0, _bounding_pt1], [_bounding_pt1, _bounding_pt2],
+                      [_bounding_pt2, _bounding_pt3], [_bounding_pt3, _bounding_pt0]]:
+            _xyz = intersection_of_two_lines([_p1_of_i, _p2_of_i], _line)
+            results.append(_xyz)
+        _center = np.mean([_bounding_pt0, _bounding_pt1, _bounding_pt2, _bounding_pt3], axis=0)
+        results = sorted(results, key=lambda _key: np.fabs(np.linalg.norm(_key - _center)))
+
+        _p1_of_i = results[0]
+        _p2_of_i = results[1]
+        # self._glyph.set_pts(np.asarray(results))
+
+        """
+        """
+
+        if np.abs(np.inner(vec_c, vec_d)) > 0.7:
+            self._line_intersection.get_actor().SetVisibility(False)
+            # self._glyph.get_actor().SetVisibility(False)
+        else:
+            self._line_intersection.get_actor().SetVisibility(True)
+            # self._glyph.get_actor().SetVisibility(True)
+
+        self._line_intersection.set_points([_p1_of_i, _p2_of_i])
         self.refresh()

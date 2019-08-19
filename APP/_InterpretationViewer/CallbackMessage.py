@@ -5,6 +5,7 @@ from cyhub import is_available_memory
 
 
 def register_global_attribute(attrs_dict):
+    # TODO is this correct..?
     for k, v in attrs_dict.items():
         if k in globals():
             assert False, "[***] global attribute's name is repeated.! [***]"
@@ -51,7 +52,7 @@ def onMessage(msg):
                     # is exist
                     if app_slice.slice_mgr.is_exist(_study_uid, _series_uid) or app_slice2.slice_mgr.is_exist(
                             _study_uid, _series_uid):
-                        _exist_list.append(_patient_info['series_id'])
+                        _exist_list.append([_patient_info['id'], _patient_info['series_id']])
                         continue
                     # Memory check!!!
                     if not is_available_memory(app_dbm.sig_msgbox):
@@ -76,7 +77,7 @@ def onMessage(msg):
                                  }
                 if app_slice.slice_mgr.is_exist(_study_uid, _series_uid) or app_slice2.slice_mgr.is_exist(_study_uid,
                                                                                                           _series_uid):
-                    _exist_list.append(_patient_info['series_id'])
+                    _exist_list.append([_patient_info['id'], _patient_info['series_id']])
                     continue
                 # Memory check!!!
                 if not is_available_memory(app_dbm.sig_msgbox):
@@ -89,16 +90,14 @@ def onMessage(msg):
             _exist_list.reverse()
             _str_sids = ""
             while True:
-                _str_sids += str(_exist_list.pop())
+                _pid, _sid = _exist_list.pop()
+                _str_sids += " * %s [%s]"%(str(_pid), str(_sid))
                 if len(_exist_list) == 0:
                     break
                 else:
-                    _str_sids += ", "
+                    _str_sids += "\n"
             app_dbm.sig_msgbox.emit('Already loaded.',
-                                    'The dicom file is already loaded.\n'
-                                    '  * Patient ID : %s\n  * Series ID : %s'
-                                    % (
-                                    _model.itemData['PatientID'], _str_sids))  # TODO make sure patient id is correct.
+                                    'The dicom file is already loaded.\n%s' % _str_sids)
             _exist_list.clear()
 
 

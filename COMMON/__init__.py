@@ -1,6 +1,8 @@
 import sys, os
 import vtk
 import numpy as np
+from vtk.util import numpy_support
+from vtk.numpy_interface import dataset_adapter as dsa
 import math
 from _qapp import create_task
 # from cyhub.block import Block_meta
@@ -506,6 +508,40 @@ class Sphere2D:
         self.a.Modified()
 
 
+class Glyph3D:
+    def __init__(self, pts=None, radius=1, color=[1,0,0]):
+        self.pts = pts
+        # _vpts = vtk.vtkPoints()
+        # _vpts.SetData(dsa.numpyTovtkDataArray(pts))
+        # _subsampled = vtk.vtkStructuredGrid()
+        # _subsampled.SetPoints(_vpts)
+        self.sphere_source = vtk.vtkSphereSource()
+        self.sphere_source.SetRadius(radius)
+        self.glyp = vtk.vtkGlyph3D()
+        self.glyp.ScalingOff()
+        self.glyp.SetSourceConnection(self.sphere_source.GetOutputPort())
+        # self.glyp.SetInputData(_subsampled)
+        # self.glyp.Update()
+        self.polymapper = vtk.vtkPolyDataMapper()
+        self.polymapper.SetInputData(self.glyp.GetOutput())
+        self.polyactor = vtk.vtkActor()
+        self.polyactor.SetMapper(self.polymapper)
+
+    def get_actor(self):
+        return self.polyactor
+
+    def set_pts(self, pts):
+        self.pts = pts
+        _vpts = vtk.vtkPoints()
+        _vpts.SetData(dsa.numpyTovtkDataArray(np.asarray(pts)))
+        _subsampled = vtk.vtkStructuredGrid()
+        _subsampled.SetPoints(_vpts)
+        self.glyp.SetInputData(_subsampled)
+        self.glyp.Update()
+        self.polymapper.Update()
+        self.polyactor.Modified()
+
+
 class CurveLine:
     def __init__(self, _LINES, fn_coord_convert=None):
         if fn_coord_convert:
@@ -800,7 +836,7 @@ class LINE2D:
         self.actor_line = vtk.vtkActor2D()
         self.actor_line.SetMapper(self.mapper_line)
         self.actor_line.GetProperty().SetColor(color)
-        # self.actor_line.GetProperty().SetOpacity(opacity)
+        self.actor_line.GetProperty().SetOpacity(opacity)
 
         coordinate = vtk.vtkCoordinate()
         coordinate.SetCoordinateSystemToWorld()
@@ -1099,6 +1135,52 @@ def quaternion_to_mat(w, x, y, z, return_type='list'):
 def get_rotation_matrix(angle, axis, return_type='list'):
     v = np.multiply(axis, math.sin(angle / 2))
     return quaternion_to_mat(math.cos(angle / 2), v[0], v[1], v[2], return_type)
+
+def intersection_of_two_planes(plane1_o, plane1_n, plane2_o, plane2_n):
+    """
+    calc intersection line of two planes
+    """
+    # two planes
+    plane1_o = np.asarray(plane1_o).flatten()
+    plane1_n = np.asarray(plane1_n).flatten()
+    plane2_o = np.asarray(plane2_o).flatten()
+    plane2_n = np.asarray(plane2_n).flatten()
+    # equation
+    d1 = (-1 * plane1_n[0] * plane1_o[0]) + \
+         (-1 * plane1_n[1] * plane1_o[1]) + \
+         (-1 * plane1_n[2] * plane1_o[2])
+    d2 = (-1 * plane2_n[0] * plane2_o[0]) + \
+         (-1 * plane2_n[1] * plane2_o[1]) + \
+         (-1 * plane2_n[2] * plane2_o[2])
+    a = np.array([plane1_n, plane2_n])
+    b = np.array([-1 * d1, -1 * d2])
+    # solve
+    i = np.linalg.pinv(a)
+    b = np.matmul(i, b)
+    _pos_of_intersection = np.asarray(b).flatten()
+    _vector_of_intersection = np.cross(plane2_n, plane1_n)
+    return _pos_of_intersection, _vector_of_intersection
+
+
+def intersection_of_two_lines(line1, line2):
+    line1_vec = np.subtract(line1[1], line1[0])
+    line1_vec = line1_vec / np.linalg.norm(line1_vec)
+    line2_vec = np.subtract(line2[1], line2[0])
+    line2_vec = line2_vec / np.linalg.norm(line2_vec)
+    # param T, S
+    _aa = np.array([[line1_vec[0], line2_vec[0] * -1],
+                    [line1_vec[1], line2_vec[1] * -1],
+                    [line1_vec[2], line2_vec[2] * -1]])
+    _bb = np.array([[line2[0][0] - line1[0][0]],
+                    [line2[0][1] - line1[0][1]],
+                    [line2[0][2] - line1[0][2]]])
+    pi_aa = np.linalg.pinv(_aa)
+    val = np.matmul(pi_aa, _bb)
+    _x = float((line1_vec[0] * val[0]) + line1[0][0])
+    _y = float((line1_vec[1] * val[0]) + line1[0][1])
+    _z = float((line1_vec[2] * val[0]) + line1[0][2])
+    return _x, _y, _z
+
 
 """
 Bundle Path (path for deployment using the pyinstaller)
