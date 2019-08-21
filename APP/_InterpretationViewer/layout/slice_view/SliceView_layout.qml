@@ -21,6 +21,7 @@ Item {
   }
 
   Rectangle{
+    id: title_data_bar
     width: 35
     height: sliceview_topbar_panel.height + sliceview_topbar_thumbnail.height
     color: CyStyle.dbmwindow.data_infomation_bg_color
@@ -43,7 +44,7 @@ Item {
     objectName: "sliceview_topbar_panel"
     height: 60
 
-    anchors.left: parent.left
+    anchors.left: title_data_bar.right
     anchors.top: parent.top
     anchors.right: parent.right
   }
@@ -54,7 +55,7 @@ Item {
     objectName: "sliceview_topbar_thumbnail"
     height: 120
 
-    anchors.left: parent.left
+    anchors.left: title_data_bar.right
     anchors.top: sliceview_topbar_panel.bottom
     anchors.right: parent.right
   }
@@ -64,7 +65,7 @@ Item {
     id: sliceview_menu_panel
     objectName: "sliceview_menu_panel"
 
-    width: 70
+    width: 80
 
     anchors.left: parent.left
     anchors.top: sliceview_topbar_thumbnail.bottom

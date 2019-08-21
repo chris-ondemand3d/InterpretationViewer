@@ -24,6 +24,26 @@ Item {
     color: 'darkgray'
   }
 
+  // Top Panel
+  Rectangle {
+    id: dbm_top_panel
+    color: '#2e2e2e'
+    height: 60
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+  }
+
+  Rectangle {
+    id: dbm_seperator
+    //color: '#000000'
+    color: 'darkgray'
+    height: 2
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: dbm_top_panel.bottom
+  }
+
   // Bottom Panel
   COMMON_bottombar {
     id: bottombar_panel
@@ -39,7 +59,7 @@ Item {
   SplitView {
     id: dbm_split_view
     anchors.left: parent.left
-    anchors.top: parent.top
+    anchors.top: dbm_seperator.bottom
     anchors.right: parent.right
     anchors.bottom: bottombar_panel.top
     orientation: Qt.Vertical
@@ -79,6 +99,19 @@ Item {
           Layout.fillWidth: parent.width
           Layout.fillHeight: parent.height
         }
+
+        // selected data thumbnail
+        Rectangle{
+          color: 'transparent'
+          width: 20
+          Layout.fillHeight: parent.height
+        }
+        DBMThumbnail {
+          id: dbm_study_thumbnail_item
+          objectName: "dbm_study_thumbnail_item"
+          width: 230
+          Layout.fillHeight: parent.height
+        }
       }
 
     }
@@ -115,6 +148,19 @@ Item {
 
         DBMRelatedStudyTreeView {
           Layout.fillWidth: parent.width
+          Layout.fillHeight: parent.height
+        }
+
+        // selected data thumbnail
+        Rectangle{
+          color: 'transparent'
+          width: 20
+          Layout.fillHeight: parent.height
+        }
+        DBMThumbnail {
+          id: dbm_related_study_thumbnail_item
+          objectName: "dbm_related_study_thumbnail_item"
+          width: 230
           Layout.fillHeight: parent.height
         }
       }

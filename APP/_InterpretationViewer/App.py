@@ -54,6 +54,9 @@ class DBMApp(CyQQuickView):
     def release_downloader(self, study_uid, series_uid):
         self.dbm_mgr.release_dicom_web(study_uid, series_uid)
 
+    def refresh_thumbnail_img(self):
+        self.dbm_win.refresh_thumbnail_img()
+
 
 class SliceApp(CyQQuickView):
     """

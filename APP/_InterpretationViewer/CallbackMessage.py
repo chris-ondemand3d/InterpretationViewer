@@ -105,6 +105,9 @@ def onMessage(msg):
         _study_uid, _series_uid = _params
         app_dbm.release_downloader(_study_uid, _series_uid)
 
+    elif _msg == 'dbm::update_thumbnail_img':
+        app_dbm.refresh_thumbnail_img()
+
 
     """
     # SLICE

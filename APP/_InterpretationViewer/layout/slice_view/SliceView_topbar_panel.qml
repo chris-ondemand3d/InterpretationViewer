@@ -56,7 +56,7 @@ Item {
     width: 35
     height: parent.height
 
-    visible: false
+    visible: true
 
     Text {
       anchors.fill: parent

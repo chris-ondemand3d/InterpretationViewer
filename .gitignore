@@ -3,3 +3,4 @@ APP/test
 *.qmlc
 *.pyc
 vtklog.txt
+*.thumb

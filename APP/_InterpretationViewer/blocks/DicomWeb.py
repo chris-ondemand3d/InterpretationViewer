@@ -44,7 +44,9 @@ TAG_WindowWidth = '00281051'
 
 # sang-am url
 # HOST_URL = "http://192.168.50.14:44301"
-HOST_URL = "http://182.214.51.130:44301"
+# HOST_URL = "http://182.214.51.130:44301"
+HOST_URL = "http://58.151.4.37:44301"
+
 
 QIDORS_PREFIX = 'qidors'
 WADORS_PREFIX = 'wadors'
@@ -123,6 +125,36 @@ class cyDicomWeb(object):
 
     def query_series(self, study_uid):
         return self.requests_series(study_uid)
+
+    def query_thumbnail_img(self, study_uid, series_uid, num):
+
+        def _get_img_buf(_instance):
+            if _instance is None:
+                return None
+            _thumbnail_uid = instance[0][TAG_SOPInstanceUID]['Value'][0]
+            _thumbnail_bits = instance[0][TAG_BitsAllocated]['Value'][0]
+            url = "%s/%s/studies/%s/series/%s/instances/%s/frames/1" \
+                  % (self.host_url, self.wadors_prefix,
+                     study_uid, series_uid, _thumbnail_uid)
+            x = requests.get(url, headers=HEADERS3)
+            if x.status_code != 200:
+                return None
+            v = x.content
+            idx_begin = v.find(b"\r\n\r\n")
+            idx_begin = idx_begin + 4
+            idx_end = v.rfind(b"\r\n--DICOM DATA BOUNDARY--")
+            return v[idx_begin:idx_end]
+
+        instance = self.requests_instances(study_uid, series_uid, {'BitsAllocated':8})
+        if len(instance) != 0:
+            return _get_img_buf(instance)
+        instance = self.requests_instances(study_uid, series_uid, {'InstanceNumber':num})
+        if len(instance) != 0:
+            return _get_img_buf(instance)
+
+        # TODO else
+
+        return None
 
     def query_metadata(self, study_uid=STUDY_UID, series_uid=SERIES_UID):
         self.reset()
@@ -212,6 +244,20 @@ class cyDicomWeb(object):
 
     def requests_series(self, study_uid):
         url = "%s/%s/series?StudyInstanceUID=%s" % (self.host_url, self.qidors_prefix, study_uid)
+        x = requests.get(url, headers=HEADERS1)
+        if x.status_code != 200:
+            return None
+        x = eval(x.text)
+        return x
+
+    def requests_instances(self, study_uid, series_uid, conditions=None):
+        search = ""
+        if conditions:
+            _cond = "&"
+            for k, v in conditions.items():
+                _cond += "%s=%s&" % (k, v)
+            search = _cond[:-1]
+        url = "%s/%s/instances?StudyInstanceUID=%s&SeriesInstanceUID=%s%s" % (self.host_url, self.qidors_prefix, study_uid, series_uid, search)
         x = requests.get(url, headers=HEADERS1)
         if x.status_code != 200:
             return None

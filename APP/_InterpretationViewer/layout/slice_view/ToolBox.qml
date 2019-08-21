@@ -31,13 +31,13 @@ Item {
   ColumnLayout {
     id: layout_toolbox
     anchors.fill: parent
-    spacing: 5
+    spacing: 2
     height: title_toolbox.height + grid_toolbox.height + ((layout_toolbox.children.length-1) * spacing)
 
     Rectangle {
       id: title_toolbox
       width: parent.width
-      height: 20
+      height: 25
       Layout.preferredWidth: parent.width
       Layout.preferredHeight: height
       color: CyStyle.dbmwindow.data_infomation_bg_color
@@ -78,8 +78,8 @@ Item {
         Rectangle {
           id: btn_toolbox
           color: 'black'
-          width: 30
-          height: 30
+          width: 35
+          height: 35
 
           signal sigSelected(string btnName, bool bSelected)
 

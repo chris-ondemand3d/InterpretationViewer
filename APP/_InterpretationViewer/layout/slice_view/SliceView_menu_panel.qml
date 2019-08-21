@@ -12,7 +12,7 @@ Item {
   id: sliceview_menu_panel_item
   objectName: "sliceview_menu_panel_item"
 
-  width: 150
+  width: 80
   height: 600
 
   Rectangle{
@@ -48,9 +48,9 @@ Item {
       right: parent.right
       bottom: parent.bottom
     }
-    anchors.topMargin: 5
-    anchors.bottomMargin: 5
-    spacing: 20
+    anchors.topMargin: 2
+    anchors.bottomMargin: 2
+    spacing: 10
 
     ToolBox {
       id: sliceview_menu_common

@@ -4,6 +4,7 @@ import copy
 import collections
 
 from datetime import datetime
+import time
 
 import numpy as np
 import vtk
@@ -39,6 +40,7 @@ class DBMManager(QObject):
         self.study_model = StudyModel()
         self.related_study_model = StudyModel()
         self.DICOM_WEB = collections.OrderedDict()
+        self.thumbnails = {}
 
     def reset(self):
         pass
@@ -101,6 +103,7 @@ class DBMManager(QObject):
     def query_studies_series(self, conditions=None):
         dicom_web = dw.cyDicomWeb()
         studies = dicom_web.query_studies(conditions)
+
         if not studies:
             return None
 
@@ -167,6 +170,55 @@ class DBMManager(QObject):
                 _series['Comments'] = ""
                 _study['Series'][_j] = _series
         return _items
+
+    def retrieve_thumbnail(self, study_uid, series_uid, num):
+
+        def _do(_study_uid, _series_uid, _num):
+            def _retrieve():
+                _dicom_web = dw.cyDicomWeb()
+                _buf = _dicom_web.query_thumbnail_img(_study_uid, _series_uid, (int(_num)//2) + 1)
+
+                if not _buf:
+                    return
+
+                _path = os.path.join(os.path.abspath("."), "../_tmp/")
+                if not os.path.exists(_path):
+                    os.mkdir(_path)
+                _path = os.path.join(_path, "%s%d.thumb" %
+                                     (datetime.now().strftime("%m%d%Y"), int(round(time.time() * 1000))))
+                _file = open(_path, 'wb')
+                _file.write(_buf)
+                _file.close()
+                _url = QUrl.fromLocalFile(_path)
+                _dicom_web.reset()
+                del _dicom_web
+                return _url
+
+            if _study_uid in self.thumbnails:
+                if not(_series_uid in self.thumbnails[_study_uid] and
+                       self.thumbnails[_study_uid][_series_uid] is not None):
+                    self.thumbnails[_study_uid][_series_uid] = _retrieve()
+            else:
+                self.thumbnails[_study_uid] = {}
+                self.thumbnails[_study_uid][_series_uid] = _retrieve()
+
+
+        # finished fn
+        def _on_finished(_worker):
+            for _w in self.WORKERS:
+                if _w[1].isRunning():
+                    continue
+                self.WORKERS.remove(_w)
+                _w[1].quit()
+                del _w
+            self._app.send_message.emit(['dbm::update_thumbnail_img', None])
+
+        # do
+        if not hasattr(self, 'WORKERS'):
+            self.WORKERS = []
+        W0 = WorkerThread.create_worker(0)
+        self.WORKERS.append(W0)
+        WorkerThread.start_worker(*W0, _do, study_uid, series_uid, num, _finished_func=lambda: _on_finished(W0))
 
     def retrieve_dicom(self, study_uid, series_uid):
 

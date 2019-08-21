@@ -36,7 +36,7 @@ Item {
     focus: true
 
     //horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
-    //verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+    verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
 
     selectionMode: SelectionMode.ExtendedSelection
 
