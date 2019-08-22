@@ -81,14 +81,14 @@ Item {
     // style
     style: ScrollViewStyle{
       handle: Rectangle {
-        implicitWidth: 13
-        implicitHeight: 13
+        implicitWidth: 10
+        implicitHeight: 10
         radius: 7
         color: "#474747"
       }
       scrollBarBackground: Rectangle {
-        implicitWidth: 13
-        implicitHeight: 13
+        implicitWidth: 9
+        implicitHeight: 9
         color: "transparent"
       }
       decrementControl: Rectangle {
@@ -134,12 +134,22 @@ Item {
   // function
   function appendThumbnail(_id, _name, _study_uid, _series_uid, _series_id, _date, _modality, _num)
   {
+    // check exist
+    for (var i=0; i<items_dbm_thumbnail.count; i++)
+    {
+      var _item = items_dbm_thumbnail.get(i);
+      if ((_item.study_uid == _study_uid) && (_item.series_uid == _series_uid))
+        return false;
+    }
+
     items_dbm_thumbnail.append({patient_id: _id, patient_name: _name, study_uid: _study_uid,
                                series_uid: _series_uid, series_id: _series_id,
                                date: _date, modality: _modality, num: _num});
 
     // should call generateThumbnails()!
     generateThumbnails();
+
+    return true;
   }
 
   function clearThumbnail()

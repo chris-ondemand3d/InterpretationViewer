@@ -53,6 +53,14 @@ Item {
           related_study_treeview.sig_changed_index(currentIndex, true)
         }
       }
+
+      onSelectionChanged: {
+        var indices = []
+        selection.forEach(function(rowIndex){
+          indices.push(rowIndex);
+        })
+        related_study_treeview.sig_selection_changed(indices);
+      }
     }
 
     property var prev_child_index
@@ -63,6 +71,7 @@ Item {
     signal sig_header_clicked_for_sort(var sortIndicatorColumn, var sortIndicatorOrder)
     signal sig_childitem_dclick(var index)
     signal sig_changed_index(var index, bool trigger)
+    signal sig_selection_changed(var indices)
 
     function set_prev_index(parent_index, child_index){
       var _p_index = parent_index
@@ -79,14 +88,14 @@ Item {
       backgroundColor: CyStyle.dbmwindow.treeview_bg_color
 
       handle: Rectangle {
-        implicitWidth: 13
-        implicitHeight: 13
+        implicitWidth: 10
+        implicitHeight: 10
         radius: 7
         color: "#474747"
       }
       scrollBarBackground: Rectangle {
-        implicitWidth: 13
-        implicitHeight: 13
+        implicitWidth: 9
+        implicitHeight: 9
         color: "transparent"
       }
       decrementControl: Rectangle {
@@ -174,6 +183,6 @@ Item {
     onDoubleClicked: {
       related_study_treeview.sig_childitem_dclick(related_study_treeview_itemselectionmodel.selectedIndexes[0])
     }
-  }
 
+  }
 }

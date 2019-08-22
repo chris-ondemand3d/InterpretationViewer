@@ -58,6 +58,83 @@ Item {
         }
       }
     }
+
+    Text {
+      id: txt_dbm_thumbnail_modality
+      anchors{
+        left: inner_rect_thumbnail.left
+        top: inner_rect_thumbnail.top
+        leftMargin: 5
+        topMargin: 5
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize
+      verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
+      id: txt_dbm_thumbnail_patient_name
+      anchors{
+        left: inner_rect_thumbnail.left
+        right: inner_rect_thumbnail.right
+        bottom: txt_dbm_thumbnail_date.top
+        leftMargin: 5
+        rightMargin: 5
+        topMargin: 0
+        bottomMargin: 0
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 1
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+      id: txt_dbm_thumbnail_date
+      anchors{
+        left: inner_rect_thumbnail.left
+        right: inner_rect_thumbnail.right
+        bottom: txt_dbm_thumbnail_series_id.top
+        leftMargin: 5
+        rightMargin: 5
+        topMargin: 0
+        bottomMargin: 0
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 3
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+      id: txt_dbm_thumbnail_series_id
+      anchors{
+        left: inner_rect_thumbnail.left
+        right: inner_rect_thumbnail.right
+        bottom: inner_rect_thumbnail.bottom
+        leftMargin: 5
+        rightMargin: 5
+        topMargin: 0
+        bottomMargin: 2
+      }
+      text: ""
+      clip: true
+      color: "white"
+      font.bold: true
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 1
+      verticalAlignment: Text.AlignVCenter
+      horizontalAlignment: Text.AlignHCenter
+    }
+
   }
 
   // function
@@ -71,11 +148,10 @@ Item {
     var _date = _model.date;
     var _modality = _model.modality;
 
-    /*txt_thumbnail.text = ('ID : %1\nName : %2\nSeries : %3\nDate : %4\nModality : %5')
-                          .arg(_patient_id).arg(_patient_name).arg(_series_id).arg(_date).arg(_modality);*/
-    /*txt_thumbnail_modality.text = _modality;
-    txt_thumbnail_patient_name.text = _patient_name;
-    txt_thumbnail_date.text = _date;*/
+    txt_dbm_thumbnail_modality.text = _modality;
+    txt_dbm_thumbnail_patient_name.text = _patient_name;
+    txt_dbm_thumbnail_date.text = _date;
+    txt_dbm_thumbnail_series_id.text = _series_id;
 
     model = _model;
   }

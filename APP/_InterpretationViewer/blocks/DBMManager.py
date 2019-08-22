@@ -337,7 +337,8 @@ class DBMManager(QObject):
             a = total_cnt // processes_cnt
             b = total_cnt % processes_cnt
 
-            with multiprocessing.Pool(processes=processes_cnt) as pool:
+            # NOTE multiprocessing.Pool vs multiprocessing.pool.ThreadPool !!
+            with multiprocessing.pool.ThreadPool(processes=processes_cnt) as pool:
                 pool.daemon = True
 
                 if _dicom_web.scout_img_data:

@@ -39,14 +39,16 @@ class DBMWindow(QObject):
         self.dbm_related_study_thumbnail_item = self._app.rootObject().findChild(QObject, 'dbm_related_study_thumbnail_item')
 
         # connect signals
-        study_treeview_item = self._app.rootObject().findChild(QObject, 'study_treeview')
-        study_treeview_item.sig_changed_index.connect(self.on_index_changed)
-        study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
-        study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
-        related_study_treeview_item = self._app.rootObject().findChild(QObject, 'related_study_treeview')
-        related_study_treeview_item.sig_changed_index.connect(self.on_index_changed)
-        related_study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
-        related_study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
+        self.study_treeview_item = self._app.rootObject().findChild(QObject, 'study_treeview')
+        self.study_treeview_item.sig_changed_index.connect(self.on_index_changed)
+        self.study_treeview_item.sig_selection_changed.connect(self.on_selection_changed)
+        self.study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+        self.study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
+        self.related_study_treeview_item = self._app.rootObject().findChild(QObject, 'related_study_treeview')
+        self.related_study_treeview_item.sig_changed_index.connect(self.on_index_changed)
+        self.related_study_treeview_item.sig_selection_changed.connect(self.on_selection_changed)
+        self.related_study_treeview_item.sig_childitem_dclick.connect(self.on_childitem_dblclick)
+        self.related_study_treeview_item.sig_menu_trigger.connect(self.on_data_load)
 
     def reset(self):
         #TODO!!!
@@ -85,7 +87,7 @@ class DBMWindow(QObject):
         # 3. filter by patiend id & set model
         self._mgr.refresh_related_study_model(_patiend_id)
 
-    def initialize_thumbnail(self, model, which_model=None):
+    def initialize_thumbnail(self, model, which_model=None, append=False):
         _model_item = None
         if which_model == 'study_model':
             _model_item = self.dbm_study_thumbnail_item
@@ -96,7 +98,8 @@ class DBMWindow(QObject):
             return
 
         # 1. clear model
-        _model_item.clearThumbnail()
+        if not append:
+            _model_item.clearThumbnail()
 
         def _parse(_model):
             _a = _model.parent().itemData['PatientID']
@@ -115,23 +118,20 @@ class DBMWindow(QObject):
             """
             case of study
             """
-            from random import random
             _children = model.children()
             for _series in _children[:]:
                 _params = _parse(_series)
                 _study_uid, _series_uid, _num = _params[2], _params[3], _params[7]
-                _model_item.appendThumbnail(*_params)
-
-                # thumbnail
-                self._mgr.retrieve_thumbnail(_study_uid, _series_uid, _num)
+                if _model_item.appendThumbnail(*_params):
+                    self._mgr.retrieve_thumbnail(_study_uid, _series_uid, _num)
         else:
             """
             case of series
             """
             _params = _parse(model)
             _study_uid, _series_uid, _num = _params[2], _params[3], _params[7]
-            _model_item.appendThumbnail(*_params)
-            self._mgr.retrieve_thumbnail(_study_uid, _series_uid, _num)
+            if _model_item.appendThumbnail(*_params):
+                self._mgr.retrieve_thumbnail(_study_uid, _series_uid, _num)
 
     def clear_thumbnail(self, which_model=None):
         _model_item = None
@@ -174,13 +174,30 @@ class DBMWindow(QObject):
         if index is None:
             return
         selected_model = index.internalPointer()
-
         if index.model() is self.study_model:
             self.refresh_related_study_model(selected_model)
+
+    @pyqtSlot(QVariant)
+    def on_selection_changed(self, selection_range):
+        ranges = selection_range.toVariant()
+        if len(ranges) == 0:
+            return
+        if ranges[0].model() is self.study_model:
+            self.clear_thumbnail('study_model')
             self.clear_thumbnail('related_study_model')
-            self.initialize_thumbnail(selected_model, 'study_model')
-        elif index.model() is self.related_study_model:
-            self.initialize_thumbnail(selected_model, 'related_study_model')
+            for _r in ranges:
+                _indexes = _r.indexes()
+                for _i in _indexes:
+                    _selected_model = _i.internalPointer()
+                    self.initialize_thumbnail(_selected_model, 'study_model', append=True)
+        elif ranges[0].model() is self.related_study_model:
+            self.clear_thumbnail('related_study_model')
+            for _r in ranges:
+                _indexes = _r.indexes()
+                for _i in _indexes:
+                    _selected_model = _i.internalPointer()
+                    self.initialize_thumbnail(_selected_model, 'related_study_model', append=True)
+
 
     @pyqtSlot(QVariant)
     def on_childitem_dblclick(self, index):
