@@ -38,13 +38,15 @@ Item {
   // bg
   Rectangle{
     anchors.fill: parent
-    color: CyStyle.dbmwindow.treeview_bg_color
+    //color: CyStyle.dbmwindow.treeview_bg_color
+    color: "#262626"
   }
 
   // title
   Rectangle {
     id: title_dbm_thumbnail
-    color: CyStyle.dbmwindow.treeview_bg_color
+    //color: CyStyle.dbmwindow.treeview_bg_color
+    color: "#262626"
     anchors.left: parent.left
     anchors.top: parent.top
     anchors.right: parent.right
@@ -107,6 +109,7 @@ Item {
         id: layout_dbm_thumbnail
         objectName: "layout_dbm_thumbnail"
         width: dbm_thumbnail_item.width - 20
+        spacing: 20
 
         Repeater {
           id: repeater_dbm_thumbnail

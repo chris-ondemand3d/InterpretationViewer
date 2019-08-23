@@ -38,7 +38,7 @@ class MPRWindow(QObject):
                 _item.set_vtk(_slice)
                 _item.setHeight(_w)
                 _item.setWidth(_h)
-                _item.installEventFilter(self._app) # to grab mouse hover leave, add eventfilter
+                # _item.installEventFilter(self._app) # to grab mouse hover leave, add eventfilter
 
     def reset(self):
         #TODO!!!

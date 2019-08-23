@@ -28,7 +28,7 @@ Item {
   Rectangle {
     id: dbm_top_panel
     color: '#2e2e2e'
-    height: 60
+    height: 100
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
@@ -66,7 +66,8 @@ Item {
 
     // Top
     Rectangle {
-      color: CyStyle.dbmwindow.treeview_bg_color
+      //color: CyStyle.dbmwindow.treeview_bg_color
+      color: "#262626"
       height: dbm_split_view.height * 4 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 1000
@@ -118,7 +119,8 @@ Item {
 
     // Middle
     Rectangle {
-      color: CyStyle.dbmwindow.treeview_bg_color
+      //color: CyStyle.dbmwindow.treeview_bg_color
+      color: "#262626"
       height: dbm_split_view.height * 2.5 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 700
@@ -169,7 +171,8 @@ Item {
 
     // Bottom
     Rectangle {
-      color: CyStyle.dbmwindow.treeview_bg_color
+      //color: CyStyle.dbmwindow.treeview_bg_color
+      color: "#262626"
       height: dbm_split_view.height * 3.5 / 10
       Layout.minimumHeight: 100
       Layout.maximumHeight: 700
@@ -198,7 +201,8 @@ Item {
         }
 
         Rectangle {
-          color: CyStyle.dbmwindow.treeview_bg_color
+          //color: CyStyle.dbmwindow.treeview_bg_color
+          color: "#262626"
           Layout.fillWidth: parent.width
           Layout.fillHeight: parent.height
         }

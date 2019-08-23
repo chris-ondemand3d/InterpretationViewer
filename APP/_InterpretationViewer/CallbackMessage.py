@@ -203,18 +203,18 @@ def onMessage(msg):
         elif _sender is app_slice2:
             app_slice.move_selected_slice(_value)
 
-    # MPR
-    elif _msg == 'mpr::init_vtk':
-        app_mpr.mpr_mgr.init_vtk(_params)
-        # app_mpr2.mpr_mgr.init_vtk(_params)
-    elif _msg == 'mpr::clear_all_actors':
-        app_mpr.mpr_mgr.clear_all_actors()
-        app_mpr.mpr_mgr.on_refresh_all()
-        # app_mpr2.mpr_mgr.clear_all_actors()
-        # app_mpr2.mpr_mgr.on_refresh_all()
-    elif _msg == 'mpr::refresh_all':
-        app_mpr.sig_refresh_all.emit()
-        # app_mpr2.sig_refresh_all.emit()
+    # # MPR
+    # elif _msg == 'mpr::init_vtk':
+    #     app_mpr.mpr_mgr.init_vtk(_params)
+    #     # app_mpr2.mpr_mgr.init_vtk(_params)
+    # elif _msg == 'mpr::clear_all_actors':
+    #     app_mpr.mpr_mgr.clear_all_actors()
+    #     app_mpr.mpr_mgr.on_refresh_all()
+    #     # app_mpr2.mpr_mgr.clear_all_actors()
+    #     # app_mpr2.mpr_mgr.on_refresh_all()
+    # elif _msg == 'mpr::refresh_all':
+    #     app_mpr.sig_refresh_all.emit()
+    #     # app_mpr2.sig_refresh_all.emit()
 
     # debug
     elif _msg == 'test_msg':

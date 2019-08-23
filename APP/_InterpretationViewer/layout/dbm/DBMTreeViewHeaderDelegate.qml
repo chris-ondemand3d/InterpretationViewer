@@ -6,7 +6,8 @@ import "../style"
 Component {
   Rectangle{
     //color: CyStyle.dbmwindow.treeview_header_bg_color
-    color: CyStyle.dbmwindow.treeview_bg_color
+    //color: CyStyle.dbmwindow.treeview_bg_color
+    color: "#262626"
     width: parent.width
     height: 40
 

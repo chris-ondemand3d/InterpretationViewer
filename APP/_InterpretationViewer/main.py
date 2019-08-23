@@ -17,6 +17,12 @@ def clear_tmp_directory():
         shutil.rmtree(_tmp_path)
 
 
+def make_tmp_directory():
+    _tmp_path = os.path.join(os.path.abspath("."), "../_tmp/")
+    if not os.path.exists(_tmp_path):
+        os.mkdir(_tmp_path)
+
+
 def onClose(event):
     clear_tmp_directory()
     sys.exit()
@@ -24,22 +30,24 @@ def onClose(event):
 
 if __name__ == '__main__':
 
-    # clear tmp directory
+    # clear and make tmp directory
     clear_tmp_directory()
+    make_tmp_directory()
 
     # create and register
     app_dbm = App.DBMApp()
     app_slice = App.SliceApp(app_index=1)
     app_slice2 = App.SliceApp(app_index=2)
-    app_mpr = App.MPRApp()
-    CallbackMessage.register_global_attribute({'app_dbm': app_dbm,
-                                               'app_slice': app_slice,
-                                               'app_slice2': app_slice2,
-                                               'app_mpr': app_mpr})
+    # app_mpr = App.MPRApp()
+    CallbackMessage.register_global_attribute({'app_dbm': app_dbm
+                                               ,'app_slice': app_slice
+                                               ,'app_slice2': app_slice2
+                                               # ,'app_mpr': app_mpr
+                                               })
 
     app_dbm.closing.connect(onClose)
     app_dbm.send_message.connect(CallbackMessage.onMessage)
-    app_mpr.closing.connect(onClose)
+    # app_mpr.closing.connect(onClose)
     app_slice.closing.connect(onClose)
     app_slice.send_message.connect(CallbackMessage.onMessage)
     app_slice2.closing.connect(onClose)

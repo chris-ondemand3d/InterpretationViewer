@@ -84,11 +84,11 @@ class SliceApp(CyQQuickView):
         self.slice_win = SliceViewWindow(_app=self, _mgr=self.slice_mgr)
         self.sig_refresh_all.connect(lambda: self.slice_mgr.on_refresh_all())
 
-    def eventFilter(self, obj, event):
-    #     # print("event filter (mpr_app):: ", obj, event)
-    #     if event.type() == QEvent.HoverLeave:
-    #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
-        return super().eventFilter(obj, event)
+    # def eventFilter(self, obj, event):
+    # #     # print("event filter (mpr_app):: ", obj, event)
+    # #     if event.type() == QEvent.HoverLeave:
+    # #         QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+    #     return super().eventFilter(obj, event)
 
     def set_key_event(self, _key, _modifiers):
         self.slice_win.set_key_event(_key, _modifiers)
@@ -194,8 +194,8 @@ class MPRApp(CyQQuickView):
         self.mpr_win = MPRWindow(_app=self, _mgr=self.mpr_mgr)
         self.sig_refresh_all.connect(lambda: self.mpr_mgr.on_refresh_all())
 
-    def eventFilter(self, obj, event):
-        # print("event filter (mpr_app):: ", obj, event)
-        # if event.type() == QEvent.HoverLeave:
-        #     QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
-        return super().eventFilter(obj, event)
+    # def eventFilter(self, obj, event):
+    #     # print("event filter (mpr_app):: ", obj, event)
+    #     # if event.type() == QEvent.HoverLeave:
+    #     #     QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+    #     return super().eventFilter(obj, event)

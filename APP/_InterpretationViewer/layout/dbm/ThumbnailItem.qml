@@ -21,13 +21,13 @@ Item {
   Rectangle{
     id: outer_rect_thumbnail
     anchors.fill: parent
-    color: '#232323'
+    color: '#474747'
     radius: 7
 
     Rectangle{
       id: inner_rect_thumbnail
       anchors.fill: parent
-      anchors.margins: 4
+      anchors.margins: 2
       color: '#636363'
       radius: 7
     }
@@ -36,7 +36,7 @@ Item {
       id: img_thumbnail
       objectName: "img_thumbnail"
       anchors.fill: parent
-      anchors.margins: 4
+      anchors.margins: 2
       fillMode: Image.PreserveAspectCrop
       smooth: true
       source: thumbnail_item.img
@@ -110,7 +110,7 @@ Item {
       clip: true
       color: "white"
       font.bold: true
-      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 3
+      font.pointSize: CyStyle.i2gwindow._i2g_title_font_pointSize - 1
       verticalAlignment: Text.AlignVCenter
       horizontalAlignment: Text.AlignHCenter
     }

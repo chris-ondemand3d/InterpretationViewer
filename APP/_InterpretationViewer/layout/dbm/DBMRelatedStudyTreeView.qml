@@ -85,7 +85,8 @@ Item {
     }
 
     style: TreeViewStyle{
-      backgroundColor: CyStyle.dbmwindow.treeview_bg_color
+      //backgroundColor: CyStyle.dbmwindow.treeview_bg_color
+      backgroundColor: "#262626"
 
       handle: Rectangle {
         implicitWidth: 10
@@ -113,8 +114,15 @@ Item {
     rowDelegate: Component{
       Rectangle {
         id : related_study_treeview_row_delegate
+        width: related_study_treeview.width
         height: 40
-        color: styleData.selected ? CyStyle.dbmwindow.treeview_select_bg_color : "transparent"
+        //color: styleData.selected ? CyStyle.dbmwindow.treeview_select_bg_color : "transparent"
+        color: styleData.selected ? "#161616" : "transparent"
+        Rectangle {
+          width: related_study_treeview.width * 0.95
+          height: 1
+          color: '#2e2e2e'
+        }
       }
     }
 

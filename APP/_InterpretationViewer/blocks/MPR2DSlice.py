@@ -614,14 +614,17 @@ class MPR2DSlice(I2G_IMG_HOLDER):
             obj_rotate = None  # self.guide_line.get_actors()[...] # TODO!!!
             if self.picker_dsi.Pick(x, y, 0, self.ren):
                 if self.picker_dsi.GetActor2D() is obj_move:
-                    QApplication.setOverrideCursor(QCursor(Qt.DragMoveCursor))
+                    # QApplication.setOverrideCursor(QCursor(Qt.DragMoveCursor))
+                    pass
             else:
                 renwin_size = self.ren.GetRenderWindow().GetSize()
                 if x / renwin_size[0] < 0.15 or x / renwin_size[0] > 0.85 or \
                         y / renwin_size[1] < 0.15 or y / renwin_size[1] > 0.85:
-                    QApplication.setOverrideCursor(QCursor(Qt.SizeAllCursor))
+                    # QApplication.setOverrideCursor(QCursor(Qt.SizeAllCursor))
+                    pass
                 else:
-                    QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+                    # QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+                    pass
 
         self.refresh()
 
