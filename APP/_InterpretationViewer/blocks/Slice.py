@@ -12,18 +12,13 @@ from PyQt5.QtGui import QCursor
 from COMMON import I2G_IMG_HOLDER, Sphere, Sphere2D, LINE, LINE2D, Glyph3D
 from COMMON import SliceImage, pt_on_plane, get_angle_between_vectors, get_rotation_matrix, get_vtkmat_from_list, intersection_of_two_planes, intersection_of_two_lines
 from _qapp import create_task
-# from _IN2GUIDE_DENTAL.blocks.I2G.Measure.MeasureMgr import MeasureMgr
+from APP._InterpretationViewer.blocks.Measure import Measure, E_MEASURE
 
 import platform
 IS_OSX = (platform.system() == 'Darwin')
 
 CY_VTK_STATE_LOCK = 9919
 
-
-""" MouseEvent Mode """
-# from enum import Enum
-# ENUM_EVENT = Enum('event', 'E_NORMAL E_NEW_NERVE E_VERIFICATION E_Reserved')
-# ENUM_EVENT_MEASURE = Enum('event', 'E_NONE E_MEASURE_RULER E_MEASURE_ANGLE E_MEASURE_AREA E_MEASURE_TAPELINE E_MEASURE_PROFILE E_MEASURE_ANGLE_4PT E_MEASURE_NOTE')
 
 class Slice(I2G_IMG_HOLDER):
 
@@ -64,6 +59,16 @@ class Slice(I2G_IMG_HOLDER):
         self.picker_vol.InitializePickList()
         self.picker_vol.AddPickList(self.slice_img.get_actor())
 
+        self.event_mode = E_MEASURE.NONE
+        self.measure = Measure(self.ren, self.slice_img.get_actor())
+
+    def resize(self, w, h):
+        super().resize(w, h)
+
+        if hasattr(self, 'measure') and type(self.measure) is Measure:
+            self.measure.resize(w, h)
+            self.refresh()
+
     def reset(self):
         self.ren.RemoveAllViewProps()
 
@@ -72,6 +77,13 @@ class Slice(I2G_IMG_HOLDER):
                 for o in X:
                     del o
             X.clear()
+
+        if hasattr(self, 'event_mode'):
+            del self.event_mode
+
+        if hasattr(self, 'measure'):
+            # self.measure.reset()
+            del self.measure
 
         if hasattr(self, 'vtk_img'):
             del self.vtk_img
@@ -115,6 +127,10 @@ class Slice(I2G_IMG_HOLDER):
 
     def clear_all_actors(self):
         self.ren.RemoveAllViewProps()
+
+    def reset_measure(self):
+        if hasattr(self, 'measure'):
+            self.measure.reset_all()
 
     def set_patient_info(self, patient_info):
         self.patient_info = patient_info
@@ -255,49 +271,47 @@ class Slice(I2G_IMG_HOLDER):
         # self.set_plane(_origin, _new_normal, _camera_fit=True)
         pass
 
+
     """
     Mouse Event Generic
     """
-    def on_mouse_move(self, _rwi, _event):
-        # if self.EventMode is ENUM_EVENT.E_NORMAL:
-        #     self.on_mouse_move_normal(_rwi, _event)
-        # # Measure
-        # if self.EventMode_Measure is not ENUM_EVENT_MEASURE.E_NONE:
-        #     self.on_mouse_move_measure(_rwi, _event)
+    def on_mouse_move(self, rwi, event):
+        if self.event_mode is not E_MEASURE.NONE and self.event_mode in E_MEASURE:
+            self.measure.mouse_move(rwi, event)
+            self.refresh()
+        else:
+            self.on_mouse_move_normal(rwi, event)
 
-        self.on_mouse_move_normal(_rwi, _event)
-
-    def on_mouse_press(self, _rwi, _event):
-        i = _rwi.GetInteractor()
+    def on_mouse_press(self, rwi, event):
+        i = rwi.GetInteractor()
         x, y = i.GetEventPosition()
         prev_x, prev_y = i.GetLastEventPosition()
 
-        if _event == "LeftButtonPressEvent":
+        if event == "LeftButtonPressEvent":
             self.l_btn_pressed = True
 
             # TODO check handle type(move or rotate) of picked obj
             if not hasattr(self, 'vtk_img') or not self.vtk_img:
                 return
 
-        elif _event == "RightButtonPressEvent":
+        elif event == "RightButtonPressEvent":
             self.r_btn_pressed = True
-        # # Measure
-        # if self.EventMode_Measure is not ENUM_EVENT_MEASURE.E_NONE:
-        #     self.on_mouse_press_measure(_rwi, _event)
-        #     return
-        # if self.EventMode is ENUM_EVENT.E_NORMAL:
-        #     self.on_mouse_press_normal(_rwi, _event)
 
-    def on_mouse_release(self, _rwi, _event):
+        # Measure
+        if self.event_mode is not E_MEASURE.NONE and self.event_mode in E_MEASURE:
+            self.measure.mouse_press(rwi, event)
+        else:
+            self.on_mouse_press_normal(rwi, event)
+
+    def on_mouse_release(self, rwi, event):
         self.l_btn_pressed = False
         self.r_btn_pressed = False
 
-        # # Measure
-        # if self.EventMode_Measure is not ENUM_EVENT_MEASURE.E_NONE:
-        #     self.on_mouse_release_measure(_rwi, _event)
-        #     return
-        # if self.EventMode is ENUM_EVENT.E_NORMAL:
-        #     self.on_mouse_release_normal(_rwi, _event)
+        # Measure
+        if self.event_mode is not E_MEASURE.NONE and self.event_mode in E_MEASURE:
+            self.measure.mouse_release(rwi, event)
+        else:
+            self.on_mouse_release_normal(rwi, event)
 
     def on_mouse_wheel(self, _rwi, _event=""):
         # if self.EventMode is ENUM_EVENT.E_NORMAL:
@@ -312,43 +326,43 @@ class Slice(I2G_IMG_HOLDER):
     """
     Mouse Event Normal
     """
-    def on_mouse_move_normal(self, _rwi, _event):
-        i = _rwi.GetInteractor()
+    def on_mouse_move_normal(self, rwi, event):
+        i = rwi.GetInteractor()
         x, y = i.GetEventPosition()
         prev_x, prev_y = i.GetLastEventPosition()
 
-        if _rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
+        if rwi.GetState() == vtk.VTKIS_WINDOW_LEVEL:
             ww, wl = self.get_windowing()
             self.sig_change_wwl.emit(ww, wl)
             self.refresh()
 
-    def on_mouse_press_normal(self, _rwi, _event):
-        i = _rwi.GetInteractor()
+    def on_mouse_press_normal(self, rwi, event):
+        i = rwi.GetInteractor()
         x, y = i.GetEventPosition()
-        if _event == "LeftButtonPressEvent":
+        if event == "LeftButtonPressEvent":
             pass
-        elif _event == "RightButtonPressEvent":
+        elif event == "RightButtonPressEvent":
             pass
 
-    def on_mouse_release_normal(self, _rwi, _event):
-        i = _rwi.GetInteractor()
+    def on_mouse_release_normal(self, rwi, event):
+        i = rwi.GetInteractor()
         x, y = i.GetEventPosition()
 
-        if _event == "LeftButtonReleaseEvent":
+        if event == "LeftButtonReleaseEvent":
             pass
 
-        elif _event == "RightButtonReleaseEvent":
+        elif event == "RightButtonReleaseEvent":
             pass
 
-    def on_mouse_wheel_normal(self, _rwi, _event):
-        _ctrl = _rwi.GetInteractor().GetControlKey()
-        _shift = _rwi.GetInteractor().GetShiftKey()
-        _alt = _rwi.GetInteractor().GetAltKey()
+    def on_mouse_wheel_normal(self, rwi, event):
+        _ctrl = rwi.GetInteractor().GetControlKey()
+        _shift = rwi.GetInteractor().GetShiftKey()
+        _alt = rwi.GetInteractor().GetAltKey()
 
         if self.vtk_img is None:
             return
 
-        _sign = 1 if _event == r'MouseWheelForwardEvent' else -1
+        _sign = 1 if event == r'MouseWheelForwardEvent' else -1
         _sign *= -1 if IS_OSX else 1
         _interval = 5 if _ctrl else 1
 
@@ -389,15 +403,26 @@ class Slice(I2G_IMG_HOLDER):
     #     self.Measure.check_plane_measure(self.get_plane())
 
     def set_mode(self, _mode):
-        # if _mode == 'measure_ruler':
-        #     self.EventMode = ENUM_EVENT.E_MEASURE_RULER
-        # elif _mode == 'measure_angle':
-        #     self.EventMode = ENUM_EVENT.E_MEASURE_ANGLE
-        # else:
-        #     self.EventMode = ENUM_EVENT.E_NORMAL
-        pass
 
-    def set_measure_mode(self, _mode):
+        if _mode is None:
+            self.event_mode = E_MEASURE.NONE
+            self.measure.set_activation(self.event_mode)
+            return
+
+        _mode = _mode.upper()
+
+        if not _mode in [e.name for e in E_MEASURE]:
+            self.event_mode = E_MEASURE.NONE
+            self.measure.set_activation(self.event_mode)
+            return
+
+        self.event_mode = E_MEASURE[_mode]
+
+        if self.event_mode is E_MEASURE.NONE:
+            pass
+        elif self.event_mode is E_MEASURE.RULER:
+            self.measure.set_activation(self.event_mode)
+
         # if _mode == 'ruler':
         #     self.EventMode_Measure = ENUM_EVENT_MEASURE.E_MEASURE_RULER
         #     self.Measure.set_active_mode(_mode)
@@ -428,7 +453,6 @@ class Slice(I2G_IMG_HOLDER):
         #     self.Measure.create_new_measure()
         # else:
         #     self.EventMode_Measure = ENUM_EVENT_MEASURE.E_NONE
-        pass
 
     def measure_reset(self):
         # self.Measure.reset_all()

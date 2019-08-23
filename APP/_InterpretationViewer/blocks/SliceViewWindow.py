@@ -133,6 +133,22 @@ class SliceViewWindow(QObject):
         #
         self._mgr.fit_screen_all()
 
+        """
+        NOTE inital renwin size has incorrect values and doesn't works 'setWidth', 'setHeight'.
+             so, tried to fix it with the callback function.
+        """
+        def _resize():
+            layout_cnt = QQmlProperty.read(self.repeater_imgholder, 'count')
+            for i in range(layout_cnt):
+                item = self.repeater_imgholder.itemAt(i).childItems()[1]
+                _w = QQmlProperty.read(item, 'width')
+                _h = QQmlProperty.read(item, 'height')
+                item.setHeight(2000)
+                item.setWidth(2000)
+                item.setWidth(_w)
+                item.setHeight(_h)
+        QTimer.singleShot(100, _resize)
+
     # will be deprecated
     def get_next_layout_id(self, force=False):
 
@@ -672,6 +688,7 @@ class SliceViewWindow(QObject):
 
         print("selected button :: ", self.sender().objectName(), name, selected)
 
+        # common
         if name == "select":
             self.layout_item.setSelector(selected)
         elif name == "pan":
@@ -685,13 +702,29 @@ class SliceViewWindow(QObject):
         elif name == "auto_windowing":
             pass
         elif name == 'reset_wwl':
-            self._mgr.reset_wwl()
+            pass
         elif name == 'reset_all':
             pass
         elif name == "key_image":
             pass
         elif name == "report":
             pass
+
+        # measure
+        elif name == "ruler":
+            pass
+        elif name == "tapeline":
+            pass
+        elif name == "angle3":
+            pass
+        elif name == "angle4":
+            pass
+        elif name == "area":
+            pass
+        elif name == "arrow":
+            pass
+
+        # dicom
         elif name == "cross_link":
             pass
 

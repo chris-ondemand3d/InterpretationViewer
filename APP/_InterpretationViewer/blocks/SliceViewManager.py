@@ -326,10 +326,38 @@ class SliceViewManager(QObject):
                 _s.set_interactor_mode(_mode)
         elif name == "auto_windowing":
             pass
+        elif name == 'reset_wwl':
+            self.reset_wwl()
+        elif name == 'reset_all':
+            for _s in self.SELECTED_SLICES.keys():
+                _s.reset_measure()
+                _s.refresh()
         elif name == "key_image":
             pass
         elif name == "report":
             pass
+
+        # measure
+        elif name == "ruler":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+        elif name == "tapeline":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+        elif name == "angle3":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+        elif name == "angle4":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+        elif name == "area":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+        elif name == "arrow":
+            for _s in self.SELECTED_SLICES.keys():
+                _s.set_mode(name if selected else None)
+
+        # dicom
         elif name == "cross_link":
             self.mode_cross_link = selected
             if selected is False:
