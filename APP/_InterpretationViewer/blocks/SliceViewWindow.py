@@ -122,7 +122,16 @@ class SliceViewWindow(QObject):
             self._mgr.ALL_SLICES[study_uid][_new_slice] = next_id
         else:
             self._mgr.ALL_SLICES[study_uid] = {_new_slice: next_id}
+
+        # should release mode, before 'SELECTED_SLICES' is changed.
+        _mode = self._mgr.mode
+        self.on_selected_menu(_mode, False)
+
+        # replace 'SELECTED_SLICES'
         self._mgr.SELECTED_SLICES = self._mgr.ALL_SLICES[study_uid]
+
+        # should set mode again, after 'SELECTED_SLICES' had changed.
+        self.on_selected_menu(_mode, True)
 
         # ...
         self.append_study_series_model(_patient_info, study_uid, series_uid)
@@ -351,6 +360,9 @@ class SliceViewWindow(QObject):
         layout_id = self._mgr.insert_slice_obj(slice_obj, next_id)
         if layout_id == -1:
             return False
+
+        # release mode
+        slice_obj.set_mode(None)
 
         # set vtk & set metadata
         self.set_vtk_img_from_slice_obj(slice_obj, layout_id)
@@ -641,8 +653,15 @@ class SliceViewWindow(QObject):
         # 1. clear thumbnail items
         self.topbar_thumbnail_item.clearThumbnail()
 
+        # should release mode, before 'select_study' is called
+        _mode = self._mgr.mode
+        self.on_selected_menu(_mode, False)
+
         # 2. re-generate the selected slices by study uid
         self._mgr.select_study(_study_uid)
+
+        # should set mode again, after 'select_study' is called.
+        self.on_selected_menu(_mode, True)
 
         # 3. set vtk and info & set thumbnails & refresh items
         # set

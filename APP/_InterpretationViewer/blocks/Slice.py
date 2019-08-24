@@ -407,6 +407,7 @@ class Slice(I2G_IMG_HOLDER):
         if _mode is None:
             self.event_mode = E_MEASURE.NONE
             self.measure.set_activation(self.event_mode)
+            self.set_interactor_mode('none')
             return
 
         _mode = _mode.upper()
@@ -414,6 +415,7 @@ class Slice(I2G_IMG_HOLDER):
         if not _mode in [e.name for e in E_MEASURE]:
             self.event_mode = E_MEASURE.NONE
             self.measure.set_activation(self.event_mode)
+            self.set_interactor_mode('none')
             return
 
         self.event_mode = E_MEASURE[_mode]

@@ -55,6 +55,7 @@ class SliceViewManager(QObject):
         self.initialize()
 
         # TODO
+        self.mode = None
         self.mode_cross_link = False
 
     def __del__(self):
@@ -73,6 +74,7 @@ class SliceViewManager(QObject):
             del s
         self.ALL_SLICES.clear()
 
+        self.mode = None
         self.mode_cross_link = False
 
     def create_new_slice(self):
@@ -218,6 +220,7 @@ class SliceViewManager(QObject):
         return _slices, _indicces
 
     def select_study(self, study_uid):
+
         if study_uid in self.ALL_SLICES:
             self.SELECTED_SLICES = self.ALL_SLICES[study_uid]
             return True
@@ -305,6 +308,16 @@ class SliceViewManager(QObject):
             self.sig_change_wwl.emit(ww, wl, self.SELECTED_SLICES[self.sender()])
 
     def on_selected_menu(self, name, selected):
+        # True / False / None
+        if selected is True:
+            self.mode = name
+        elif selected is False:
+            self.mode = None
+        else:
+            """
+            NOTE if selected is None, do nothing
+            """
+            pass
 
         if name == "select":
             _mode = 'none' if selected is True else 'none'

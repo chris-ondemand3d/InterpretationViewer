@@ -101,7 +101,7 @@ class Measure(QObject):
                     self.ren.RemoveViewProp(ta)
             for n in m.M:
                 self.ren.RemoveViewProp(n)
-        del m
+            del m
         self.current_measures_idx = -1
         self.measure_list.clear()
 

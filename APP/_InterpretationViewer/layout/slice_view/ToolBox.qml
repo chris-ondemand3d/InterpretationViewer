@@ -16,7 +16,8 @@ Item {
   height: layout_toolbox.height
 
   signal sigSelect(string btnName, bool bSelected)
-  signal sigSelected(string btnName, bool bSelected)
+  //signal sigSelected(string btnName, bool bSelected)
+  signal sigSelected(string btnName, var bSelected)
   signal sigToggleOn()
 
   property var title: null
@@ -81,7 +82,8 @@ Item {
           width: 35
           height: 35
 
-          signal sigSelected(string btnName, bool bSelected)
+          //signal sigSelected(string btnName, bool bSelected)
+          signal sigSelected(string btnName, var bSelected)
 
           Rectangle {
             id: inner_rect_toolbox
@@ -118,7 +120,7 @@ Item {
               else
               {
                 _model.selected = false;
-                btn_toolbox.sigSelected(_model.name, true);
+                btn_toolbox.sigSelected(_model.name, null);
               }
             }
 
