@@ -27,7 +27,7 @@ Item {
   // Top Panel
   Rectangle {
     id: dbm_top_panel
-    color: '#2e2e2e'
+    color: '#3b3b3b'
     height: 100
     anchors.left: parent.left
     anchors.right: parent.right
@@ -80,7 +80,8 @@ Item {
         anchors.centerIn: parent
 
         Rectangle{
-          color: CyStyle.dbmwindow.data_infomation_bg_color
+          //color: CyStyle.dbmwindow.data_infomation_bg_color
+          color: '#3b3b3b'
           width: 30
           Layout.fillHeight: parent.height
 
@@ -133,7 +134,8 @@ Item {
         anchors.centerIn: parent
 
         Rectangle{
-          color: CyStyle.dbmwindow.data_infomation_bg_color
+          //color: CyStyle.dbmwindow.data_infomation_bg_color
+          color: '#3b3b3b'
           width: 30
           Layout.fillHeight: parent.height
 
@@ -185,7 +187,8 @@ Item {
         anchors.centerIn: parent
 
         Rectangle{
-          color: CyStyle.dbmwindow.data_infomation_bg_color
+          //color: CyStyle.dbmwindow.data_infomation_bg_color
+          color: '#3b3b3b'
           width: 30
           Layout.fillHeight: parent.height
 

@@ -60,7 +60,6 @@ class Slice(I2G_IMG_HOLDER):
         self.picker_vol.AddPickList(self.slice_img.get_actor())
 
         self.event_mode = E_MEASURE.NONE
-        self.measure = Measure(self.ren, self.slice_img.get_actor())
 
     def resize(self, w, h):
         super().resize(w, h)
@@ -168,6 +167,9 @@ class Slice(I2G_IMG_HOLDER):
         self.set_plane(_params[0], _params[1], _params[2], _camera_fit_type=1)
         self.fit_img_to_screen()
 
+        # create measure
+        self.measure = Measure(self.ren, self.get_plane_obj(), self.get_thickness())
+
     def get_vtk_img(self):
         return self.vtk_img if hasattr(self, 'vtk_img') else None
 
@@ -248,6 +250,9 @@ class Slice(I2G_IMG_HOLDER):
             _normal = (np.array(_normal) * -1).tolist()
         return _origin, _normal
 
+    def get_plane_obj(self):
+        return self.slice_img.get_plane()
+
     def set_camera_view_up(self, up_vec):
         cam = self.ren.GetActiveCamera()
         cam.SetViewUp(up_vec)
@@ -300,6 +305,7 @@ class Slice(I2G_IMG_HOLDER):
         # Measure
         if self.event_mode is not E_MEASURE.NONE and self.event_mode in E_MEASURE:
             self.measure.mouse_press(rwi, event)
+            self.refresh()
         else:
             self.on_mouse_press_normal(rwi, event)
 
@@ -310,6 +316,7 @@ class Slice(I2G_IMG_HOLDER):
         # Measure
         if self.event_mode is not E_MEASURE.NONE and self.event_mode in E_MEASURE:
             self.measure.mouse_release(rwi, event)
+            self.refresh()
         else:
             self.on_mouse_release_normal(rwi, event)
 
@@ -321,6 +328,9 @@ class Slice(I2G_IMG_HOLDER):
         #     self.on_mouse_wheel_measure(_rwi, _event)
 
         self.on_mouse_wheel_normal(_rwi, _event)
+
+        self.measure.plane_check()
+
         self.refresh()
 
     """

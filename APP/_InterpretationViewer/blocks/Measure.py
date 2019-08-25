@@ -26,7 +26,7 @@ class E_MEASURE(enum.Enum):
 
 class Measure(QObject):
 
-    def __init__(self, ren, target_actor):
+    def __init__(self, ren, plane_obj, slice_thickness):
         super().__init__()
 
         self.current_measures_idx = -1
@@ -36,6 +36,8 @@ class Measure(QObject):
         self.screen_pos = []
 
         self.ren = ren
+        self.plane_obj = plane_obj
+        self.slice_thickness = slice_thickness
 
         self.measure_list = []
 
@@ -108,6 +110,27 @@ class Measure(QObject):
         # NOTE To reset 'InitializePickList' should be called.
         self.picker_for_marker.InitializePickList()
 
+    def plane_check(self):
+        _plane = self.plane_obj.GetOrigin(), self.plane_obj.GetNormal()
+        for n in self.measure_list:
+            # Plane Check
+            for m in n.M:
+                if pt_on_plane(n.M[m][0].GetCenter(), _plane, self.slice_thickness):
+                    # show
+                    for _a in list(n.M.keys()) + [n.line_actor] + n.text_actor:
+                        if _a is None:
+                            continue
+                        self.ren.AddViewProp(_a)
+                        # _a.SetVisibility(True)
+                    break
+                else:
+                    #hide
+                    for _a in list(n.M.keys()) + [n.line_actor] + n.text_actor:
+                        if _a is None:
+                            continue
+                        self.ren.RemoveViewProp(_a)
+                        # _a.SetVisibility(False)
+
     def mouse_press(self, rwi, event):
 
         if self.mode is None or self.mode is E_MEASURE.NONE:
@@ -120,6 +143,15 @@ class Measure(QObject):
             self.ren.SetDisplayPoint(x, y, 0)
             self.ren.DisplayToWorld()
             pos = self.ren.GetWorldPoint()
+
+            # ray on a plane
+            _n = self.plane_obj.GetNormal()
+            _o = self.plane_obj.GetOrigin()
+            _vec_a = _n
+            _vec_b = np.subtract(pos[:3], _o[:3])
+            val = np.inner(_vec_a, _vec_b)
+            _vec_c = np.multiply(_vec_a, val)
+            pos = np.subtract(pos[:3], _vec_c)
 
             self.picker_for_marker.Pick(x, y, 0, self.ren)
             self._picked_actor = self.picker_for_marker.GetActor2D()
@@ -167,6 +199,15 @@ class Measure(QObject):
         self.ren.SetDisplayPoint(x, y, 0)
         self.ren.DisplayToWorld()
         pos = self.ren.GetWorldPoint()[:3]
+
+        # ray on a plane
+        _n = self.plane_obj.GetNormal()
+        _o = self.plane_obj.GetOrigin()
+        _vec_a = _n
+        _vec_b = np.subtract(pos[:3], _o[:3])
+        val = np.inner(_vec_a, _vec_b)
+        _vec_c = np.multiply(_vec_a, val)
+        pos = np.subtract(pos[:3], _vec_c)
 
         if self._picked_actor:
             if self._picked_actor in self.measure_list[self.current_measures_idx].M:

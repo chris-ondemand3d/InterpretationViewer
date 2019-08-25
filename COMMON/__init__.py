@@ -1092,7 +1092,8 @@ def get_vtkmat_from_list(list_mat, transpose=False):
     return matrix
 
 def pt_on_plane(pt, plane, tolerance):
-    return np.abs(np.inner((np.subtract(plane[0], pt)), plane[1])) <= tolerance
+    val = np.abs(np.inner((np.subtract(plane[0], pt)), plane[1]))
+    return val <= tolerance or np.isclose(val, tolerance)
 
 def get_angle_between_vectors(vec1, vec2):
     cos_theta = np.inner(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
