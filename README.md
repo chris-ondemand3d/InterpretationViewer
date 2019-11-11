@@ -106,6 +106,7 @@ HOST_URL = "http://localhost:44301"
 
 4. Execute the **main.py** with python. <br/>
 
+- **DBM / Viewer1 / Viewer2**
 ![image](/uploads/98b223de0525ccc69f94780ef4391b88/image.png) <br/>
 <br/>
 <br/>
