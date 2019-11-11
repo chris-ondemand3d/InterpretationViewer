@@ -1,9 +1,12 @@
 # **Contents** <br/>
 
-**[Requirements](#)** <br/>
-**[Folder Structure](#)** <br/>
-**[App Structure](#)** <br/>
-**[How to run](#)** <br/>
+**[Requirements](#requirements)** <br/>
+**[Folder Structure](#folder-structure)** <br/>
+**[App Structure](#app-structure)** <br/>
+**[App Module Structure - DBM](#app-module-structure-dbm)** <br/>
+**[App Module Structure - SliceView](#app-module-structure-sliceview)** <br/>
+**[App Module Structure - MPR](#app-module-structure-mpr)** <br/>
+**[How to run](#how-to-run)** <br/>
 <br/>
 <br/>
 
