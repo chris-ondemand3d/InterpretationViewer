@@ -104,7 +104,7 @@ HOST_URL = "http://localhost:44301"
 ```
 <br/>
 
-4. Execute the main.py with python. <br/>
+4. Execute the **main.py** with python. <br/>
 
 ![image](/uploads/98b223de0525ccc69f94780ef4391b88/image.png) <br/>
 <br/>
