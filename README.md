@@ -23,8 +23,8 @@ python 3.6.0 <br/>
 PyQt 5.13 <br/>
 cyCafe (Numpy, Boost, VTK, ...) <br/>
 QApp (**note.** including in this project) <br/>
-requests <br/>
-psutil <br/>
+requests (HTTP Request) <br/>
+psutil (Memory Check) <br/>
 <br/>
 <br/>
 <br/>
@@ -84,6 +84,29 @@ psutil <br/>
 # App Module Structure - MPR
 ![image](/uploads/334f94484e4d3443ad1b1472cbb0d57c/image.png) <br/>
 <br/>
+<br/>
+<br/>
+<br/>
+
+
+
+# How to run
+
+1. DICOMWeb Server should be running. (**DEMO Server :** https://github.com/DICOMcloud/DICOMcloud) <br/> 
+
+2. It's available to upload through **StowRS**. (**Example :** https://dicomcloud.github.io/docs/dicomcloud/stow/) <br/>
+
+3. HOST URL could be set in **DicomWeb.py 43-line** <br/>
+```python
+...
+HOST_URL = "http://localhost:44301"
+...
+```
+<br/>
+
+4. Execute the main.py with python. <br/>
+
+![image](/uploads/98b223de0525ccc69f94780ef4391b88/image.png) <br/>
 <br/>
 <br/>
 <br/>
