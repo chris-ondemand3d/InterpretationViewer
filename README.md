@@ -23,6 +23,8 @@ python 3.6.0 <br/>
 PyQt 5.13 <br/>
 cyCafe (Numpy, Boost, VTK, ...) <br/>
 QApp (**note.** including in this project) <br/>
+requests <br/>
+psutil <br/>
 <br/>
 <br/>
 <br/>
