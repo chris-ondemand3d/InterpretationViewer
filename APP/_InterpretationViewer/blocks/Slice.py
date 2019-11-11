@@ -1,6 +1,7 @@
 import math
 
-import cyCafe
+from cyCafe import cyBoostConversion
+from cyCafe import cyVtkInteractorStyles
 import numpy as np
 import vtk
 from vtk.util import numpy_support
@@ -38,7 +39,7 @@ class Slice(I2G_IMG_HOLDER):
         # self.init_sub_renderer([0.75, 0, 1, 0.3])
 
         # NOTE !!!
-        self.cyistyle_wrapper = cyCafe.cyVtkInteractorStyles()
+        self.cyistyle_wrapper = cyVtkInteractorStyles.cyVtkInteractorStyles()
         istyle = self.cyistyle_wrapper.get_interactor("image")
         # istyle = self.cyistyle_wrapper.get_vtk_interactor_style_volume_3d()
         istyle.AddObserver('MouseWheelForwardEvent', self.on_mouse_wheel)

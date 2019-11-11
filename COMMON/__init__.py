@@ -8,7 +8,9 @@ from _qapp import create_task
 # from cyhub.block import Block_meta
 from cyhub.cy_vtk import Vtk_image_holder
 
-import cyCafe
+from cyCafe import cyBoostConversion
+from cyCafe import cyPCMLoader
+from cyCafe import cyVtkImageResliceMapper
 
 
 # cube source
@@ -297,7 +299,7 @@ class PolyData:
         vertexlist = list()
         facelist = list()
 
-        pcmloader = cyCafe.cyPCMLoader()
+        pcmloader = cyPCMLoader.cyPCMLoader()
         pcmloader.loadpcmfile(pcm_path)
 
         pcmloader.getVertex(vertexlist)
@@ -1001,7 +1003,7 @@ class LINE_SHAPE:
 class SliceImage:
     def __init__(self):
 
-        self.cy_img_reslice_mapper = cyCafe.cyVtkImageResliceMapper()
+        self.cy_img_reslice_mapper = cyVtkImageResliceMapper.cyVtkImageResliceMapper()
         m = self.cy_img_reslice_mapper.get_mapper()
         self.mapper = m
 

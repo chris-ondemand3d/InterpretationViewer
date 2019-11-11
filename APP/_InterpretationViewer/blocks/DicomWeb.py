@@ -40,12 +40,7 @@ TAG_WindowCenter = '00281050'
 TAG_WindowWidth = '00281051'
 
 # home
-# HOST_URL = "http://192.168.200.159:44301"
-
-# sang-am url
-# HOST_URL = "http://192.168.50.14:44301"
-# HOST_URL = "http://182.214.51.130:44301"
-HOST_URL = "http://58.151.4.37:44301"
+HOST_URL = "http://localhost:44301"
 
 
 QIDORS_PREFIX = 'qidors'

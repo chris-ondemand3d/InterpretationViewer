@@ -4,3 +4,4 @@ APP/test
 *.pyc
 vtklog.txt
 *.thumb
+APP/_InterpretationViewer/blocks/cython/

@@ -1,6 +1,7 @@
 import math
 
-import cyCafe
+from cyCafe import cyBoostConversion
+from cyCafe import cyVtkInteractorStyles
 import numpy as np
 import vtk
 
@@ -296,7 +297,7 @@ class MPR2DSlice(I2G_IMG_HOLDER):
     def initialize(self):
         # self.init_sub_renderer([0.75, 0, 1, 0.3])
 
-        ISTYLES = cyCafe.cyVtkInteractorStyles()
+        ISTYLES = cyVtkInteractorStyles.cyVtkInteractorStyles()
         # istyle = ISTYLES.get_vtk_interactor_style_image()
         istyle = ISTYLES.get_vtk_interactor_style_image(False, 0)
         # istyle = ISTYLES.get_vtk_interactor_style_volume_3d()

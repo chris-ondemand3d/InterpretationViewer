@@ -4,8 +4,8 @@ import numpy as np
 import vtk
 from vtk.util import numpy_support
 from vtk.numpy_interface import dataset_adapter as dsa
-import SimpleITK as sitk
-import cyCafe
+from cyCafe import cyBoostConversion
+from cyCafe import cyDicomReader
 
 from cyhub.cy_image_holder import CyQQuickView
 from cyhub.cy_vtk import Vtk_image_holder
@@ -135,7 +135,7 @@ class MPRManager(QObject):
         # dcm_reader.generate_vtk_img()
         # vtk_img = dcm_reader.get_vtk_img()
 
-        dcm_reader = cyCafe.cyDicomReader()
+        dcm_reader = cyDicomReader.cyDicomReader()
         dcm_reader.read_dicom(DCM_PATH)
         vtk_img = dcm_reader.get_vtk_img()
         return vtk_img
