@@ -49,3 +49,38 @@ QApp (**note.** including in this project) <br/>
 
 
 
+# App Structure
+![image](/uploads/34213f8f61369f068c7f9da573dfee5a/image.png) <br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+# App Module Structure - DBM
+![image](/uploads/55d9ee1d2b71719155fea366653e0e90/image.png) <br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+# App Module Structure - SliceView
+![image](/uploads/8d55a9519c21a77a5898f4d56514a37e/image.png) <br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+# App Module Structure - MPR
+![image](/uploads/334f94484e4d3443ad1b1472cbb0d57c/image.png) <br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
